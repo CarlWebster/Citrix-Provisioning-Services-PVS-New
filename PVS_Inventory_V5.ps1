@@ -439,9 +439,9 @@
 	No objects are output from this script.  This script creates a Word or PDF document.
 .NOTES
 	NAME: PVS_Inventory_V5.ps1
-	VERSION: 5.19
+	VERSION: 5.20
 	AUTHOR: Carl Webster
-	LASTEDIT: December 17, 2019
+	LASTEDIT: December 20, 2019
 #>
 
 #endregion
@@ -582,6 +582,12 @@ Param(
 
 #HTML functions and sample text contributed by Ken Avram October 2014
 
+#Version 5.20 20-Dec-2019
+#	Fixed an extra set of {} on a Default Switch statement
+#		Default {{$xType = "Undefined"; Break }}
+#		This caused "$xType = "Undefined"; Break" to show in the console
+#	Tested with PVS 1912
+#	
 #Version 5.19 17-Dec-2019
 #	Fix Swedish Table of Contents (Thanks to Johan Kallio)
 #		From 
@@ -5515,7 +5521,7 @@ Function OutputAuditTrail
 				11 		{$xType = "Store"; Break }
 				12 		{$xType = "System"; Break }
 				13 		{$xType = "UserGroup"; Break }
-				Default { {$xType = "Undefined"; Break }}
+				Default {$xType = "Undefined"; Break }
 			}
 			If($MSWord -or $PDF)
 			{
