@@ -6,6 +6,9 @@
 #Thanks to Michael B. Smith, Joe Shonk and Stephane Thirion
 #for testing and fine-tuning tips 
 
+#Version 5.08 22-Oct-2016
+#	More refinement of HTML output
+
 #Version 5.07 19-Oct-2016
 #	Fixed formatting issues with HTML headings output
 
