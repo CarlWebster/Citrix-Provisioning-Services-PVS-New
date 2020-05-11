@@ -1,0 +1,84 @@
+#Carl Webster, CTP and Sr. Solutions Architect at Choice Solutions
+#webster@carlwebster.com
+#@carlwebster on Twitter
+#http://www.CarlWebster.com
+#This script written for "Benji", March 19, 2012
+#Thanks to Michael B. Smith, Joe Shonk and Stephane Thirion
+#for testing and fine-tuning tips 
+
+#Version 5.09 7-Nov-2016
+#	Added Chinese language support
+
+#Version 5.08 22-Oct-2016
+#	More refinement of HTML output
+
+#Version 5.07 19-Oct-2016
+#	Fixed formatting issues with HTML headings output
+
+#Version 5.06 14-Sep-2016
+#	Add support for PVS 7.11
+#	Change version checking to support a four character version number
+#	Add to Farm properties, Customer Experience Improvement Program
+#	Add to Farm properties, CIS Username
+#	Add to Site properties, Seconds between vDisk inventory scans
+#	Add to Server properties, Problem Report Date, Summary and Status
+#	Add, Fix, Remove or Update Audit Trail items:
+#		2009 Run WithReturnBoot
+#		2021 Run WithReturnDisplayMessage
+#		2033 Run WithReturnReboot
+#		2042 Run WithReturnShutdown
+#		2055 Run ExportDisk
+#		2056 Run AssignDisk
+#		2057 Run RemoveDisk
+#		2058 Run DiskUpdateStart
+#		2059 Run DiskUpdateCancel
+#		2060 Run SetOverrideVersion
+#		2061 Run CancelTask
+#		2062 Run ClearTask
+#		2063 Run ForceInventory
+#		2064 Run UpdateBDM
+#		2065 Run StartDeviceDiskTempVersionMode
+#		2066 Run StopDeviceDiskTempVersionMode
+#		Remove previous obsolete audit values 7013 through 7033
+#		Add the following new audit values 7013 through 7021
+#		7013 Set ListDiskLocatorCustomProperty
+#		7014 Set ListDiskLocatorCustomPropertyDelete
+#		7015 Set ListDiskLocatorCustomPropertyAdd
+#		7016 Set ListServerCustomProperty
+#		7017 Set ListServerCustomPropertyDelete
+#		7018 Set ListServerCustomPropertyAdd
+#		7019 Set ListUserGroupCustomProperty
+#		7020 Set ListUserGroupCustomPropertyDelete
+#		7021 Set ListUserGroupCustomPropertyAdd	
+#	Add write-cache type 6, Device RAM Disk, only because it is in the cmdlet's help text
+#	Fix issues with invalid variable names found by using the -Dev parameter
+
+#Version 5.05 12-Sep-2016
+#	Add ShowScriptOptions when using TEXT or HTML
+#	Add in support for the -Dev and -ScriptInfo parameters
+#	Fix several issues with HTML and Text output
+#	Some general code cleanup of unused variables
+#	Add missing function validObject
+
+#Version 5.04 12-Sep-2016
+#	If remoting is used (-AdminAddress), check if the script is being run elevated. If not,
+#		show the script needs elevation and end the script
+#	Added Break statements to most of the Switch statements
+#	Added checking the NIC's "Allow the computer to turn off this device to save power" setting
+
+#Version 5.03 17-Aug-2016
+#	Fixed a few Text and HTML output issues in the Hardware region
+
+#Version 5.02 12-Apr-2016
+#	Updated help text to show the console and snap-in installation
+
+#Version 5.01 8-Feb-2016
+#	Added specifying an optional output folder
+#	Added the option to email the output file
+#	Fixed several spacing and typo errors
+#	Corrected help text
+
+#Version 5.00 released 28-Dec-2015
+#	Support for PVS 7.7 and its new real PowerShell implementation
+#	5.00 will NOT work on any previous version of PVS
+
