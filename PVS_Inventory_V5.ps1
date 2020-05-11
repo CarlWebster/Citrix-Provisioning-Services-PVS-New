@@ -157,8 +157,8 @@
 .PARAMETER AddDateTime
 	Adds a date time stamp to the end of the file name.
 	Time stamp is in the format of yyyy-MM-dd_HHmm.
-	June 1, 2015 at 6PM is 2015-06-01_1800.
-	Output filename will be ReportName_2015-06-01_1800.docx (or .pdf).
+	June 1, 2017 at 6PM is 2017-06-01_1800.
+	Output filename will be ReportName_2017-06-01_1800.docx (or .pdf).
 	This parameter is disabled by default.
 	This parameter has an alias of ADT.
 .PARAMETER Folder
@@ -287,7 +287,7 @@
 		cwebster for User.
 		Script will prompt for the Domain and Password
 .EXAMPLE
-	PS C:\PSScript > .\PVS_Inventory_V5.ps1 -StartDate "01/01/2015" -EndDate "01/31/2015" 
+	PS C:\PSScript > .\PVS_Inventory_V5.ps1 -StartDate "01/01/2017" -EndDate "01/31/2017" 
 	
 	Will use all Default values.
 	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\Company="Carl Webster"
@@ -298,9 +298,9 @@
 	Sideline for the Cover Page format.
 	Administrator for the User Name.
 	LocalHost for AdminAddress.
-	Will return all Audit Trail entries from "01/01/2015" through "01/31/2015".
+	Will return all Audit Trail entries from "01/01/2017" through "01/31/2017".
 .EXAMPLE
-	PS C:\PSScript > .\PVS_Inventory_V5.ps1 -StartDate "01/01/2015 10:00:00" -EndDate "01/31/2015 14:00:00" 
+	PS C:\PSScript > .\PVS_Inventory_V5.ps1 -StartDate "01/01/2017 10:00:00" -EndDate "01/31/2017 14:00:00" 
 	
 	Will use all Default values.
 	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\Company="Carl Webster"
@@ -311,7 +311,7 @@
 	Sideline for the Cover Page format.
 	Administrator for the User Name.
 	LocalHost for AdminAddress.
-	Will return all Audit Trail entries from 01/01/2015 10:100AM through 01/31/2015 2:00PM.
+	Will return all Audit Trail entries from 01/01/2017 10:100AM through 01/31/2017 2:00PM.
 .EXAMPLE
 	PS C:\PSScript > .\PVS_Inventory_V5.ps1 -Folder \\FileServer\ShareName
 	
@@ -363,9 +363,9 @@
 	No objects are output from this script.  This script creates a Word or PDF document.
 .NOTES
 	NAME: PVS_Inventory_V5.ps1
-	VERSION: 5.12 
+	VERSION: 5.13 
 	AUTHOR: Carl Webster, Sr. Solutions Architect at Choice Solutions
-	LASTEDIT: February 21, 2017
+	LASTEDIT: March 30, 2017
 #>
 
 #endregion
@@ -563,6 +563,18 @@ Param(
 #		This was added back in PVS 7.13
 #	Fixed French wording for Table of Contents 2 (Thanks to David Rouquier)
 #
+#Version 5.13 30-Mar-2017 (aka The Jim Moyle Update)
+#	Added "Store free space" (reported by Jim Moyle)
+#	Changed checking for PVS version -eq 7.12 to -ge 7.12 to catch 7.13 and later versions (reported by Jim Moyle)
+#	Fixed numerous HTML output issues (found when fixing other bugs reported by Jim Moyle)
+#	Fixed PersonalityStrings for Managed vDisks (reported by Jim Moyle)
+#	Fixed the remaining $Var -eq $Null issues by changing them to $Null -eq $Var (found when fixing other bugs reported by Jim Moyle)
+#	Fixed the vDisk Update, Update limit property not showing in the output
+#	Fixed wording for Word output for "Default write-cache paths", was "Default store path"
+#	Fixed wrong cmdlet being used for getting vDiskUpdateDevice status (reported by Jim Moyle)
+#	For Store properties, for Word/PDF/HTML output, changed the text "Store owner" to 
+#		"Site that acts as the owner of this store" to match the PVS console
+#	Updated help text
 #endregion
 
 #region initial variable testing and setup
@@ -642,59 +654,63 @@ If(!(Test-Path Variable:ScriptInfo))
 	$ScriptInfo = $False
 }
 
-If($PDF -eq $Null)
+If($Null -eq $PDF)
 {
 	$PDF = $False
 }
-If($Text -eq $Null)
+If($Null -eq $Text)
 {
 	$Text = $False
 }
-If($MSWord -eq $Null)
+If($Null -eq $MSWord)
 {
 	$MSWord = $False
 }
-If($HTML -eq $Null)
+If($Null -eq $HTML)
 {
 	$HTML = $False
 }
-If($StartDate -eq $Null)
+If($Null -eq $StartDate)
 {
 	$StartDate = ((Get-Date -displayhint date).AddDays(-7))
 }
-If($EndDate -eq $Null)
+If($Null -eq $EndDate)
 {
 	$EndDate = ((Get-Date -displayhint date))
 }
-If($AddDateTime -eq $Null)
+If($Null -eq $AddDateTime)
 {
 	$AddDateTime = $False
 }
-If($Hardware -eq $Null)
+If($Null -eq $Hardware)
 {
 	$Hardware = $False
 }
-If($Folder -eq $Null)
+If($Null -eq $AdminAddress)
+{
+	$AdminAddress = ""
+}
+If($Null -eq $Folder)
 {
 	$Folder = ""
 }
-If($SmtpServer -eq $Null)
+If($Null -eq $SmtpServer)
 {
 	$SmtpServer = ""
 }
-If($SmtpPort -eq $Null)
+If($Null -eq $SmtpPort)
 {
 	$SmtpPort = 25
 }
-If($UseSSL -eq $Null)
+If($Null -eq $UseSSL)
 {
 	$UseSSL = $False
 }
-If($From -eq $Null)
+If($Null -eq $From)
 {
 	$From = ""
 }
-If($To -eq $Null)
+If($Null -eq $To)
 {
 	$To = ""
 }
@@ -713,7 +729,7 @@ If($Dev)
 	$Script:DevErrorFile = "$($pwd.Path)\PVSInventoryScriptErrors_$(Get-Date -f yyyy-MM-dd_HHmm).txt"
 }
 
-If($MSWord -eq $Null)
+If($Null -eq $MSWord)
 {
 	If($Text -or $HTML -or $PDF)
 	{
@@ -752,19 +768,19 @@ Else
 {
 	$ErrorActionPreference = $SaveEAPreference
 	Write-Verbose "$(Get-Date): Unable to determine output parameter"
-	If($MSWord -eq $Null)
+	If($Null -eq $MSWord)
 	{
 		Write-Verbose "$(Get-Date): MSWord is Null"
 	}
-	ElseIf($PDF -eq $Null)
+	ElseIf($Null -eq $PDF)
 	{
 		Write-Verbose "$(Get-Date): PDF is Null"
 	}
-	ElseIf($Text -eq $Null)
+	ElseIf($Null -eq $Text)
 	{
 		Write-Verbose "$(Get-Date): Text is Null"
 	}
-	ElseIf($HTML -eq $Null)
+	ElseIf($Null -eq $HTML)
 	{
 		Write-Verbose "$(Get-Date): HTML is Null"
 	}
@@ -1225,7 +1241,7 @@ Function GetComputerWMIInfo
 		$Nics = $Results | Where {$Null -ne $_.ipaddress}
 		$Results = $Null
 
-		If($Nics -eq $Null ) 
+		If($Null -eq $Nics) 
 		{ 
 			$GotNics = $False 
 		} 
@@ -4627,14 +4643,17 @@ Function OutputWarning
 	If($MSWord -or $PDF)
 	{
 		WriteWordLine 0 1 $txt
+		WriteWordLine 0 0 ""
 	}
 	ElseIf($Text)
 	{
 		Line 1 $txt
+		Line 0 ""
 	}
 	ElseIf($HTML)
 	{
 		WriteHTMLLine 0 1 $txt
+		WriteHTMLLine 0 0 ""
 	}
 }
 
@@ -4767,19 +4786,22 @@ Function DeviceStatus
 {
 	Param($xDevice)
 
-	If($xDevice -eq $Null -or $xDevice.status -eq "" -or $xDevice.status -eq "0")
+	If($Null -eq $xDevice -or $xDevice.status -eq "" -or $xDevice.status -eq "0")
 	{
 		If($MSWord -or $PDF)
 		{
 			WriteWordLine 0 0 "Target device inactive"
+			WriteWordLine 0 0 ""
 		}
 		ElseIf($Text)
 		{
 			Line 3 "Target device inactive"
+			Line 0 ""
 		}
 		ElseIf($HTML)
 		{
-			WriteHTMLLine 0 3 "Target device inactive"
+			WriteHTMLLine 0 0 "Target device inactive"
+			WriteHTMLLine 0 0 ""
 		}
 	}
 	Else
@@ -4914,11 +4936,11 @@ Function DeviceStatus
 			FormatHTMLTable $msg "auto" -rowArray $rowdata -columnArray $columnHeaders
 			WriteHTMLLine 0 0 " "
 			
-			WriteHTMLLine 4 0 "Logging"
+			#WriteHTMLLine 4 0 "Logging"
 			$rowdata = @()
 			$columnHeaders = @("Logging level",($htmlsilver -bor $htmlbold),$xDevicelogLevel,$htmlwhite)
 
-			$msg = ""
+			$msg = "Logging"
 			FormatHTMLTable $msg "auto" -rowArray $rowdata -columnArray $columnHeaders
 			WriteHTMLLine 0 0 " "
 		}
@@ -4960,7 +4982,7 @@ Function ProcessScriptSetup
 	{
 		Write-Verbose "$(Get-Date): PVS PSSnapin loaded"
 	}
-	
+
 	#setup remoting if $AdminAddress is not empty
 	[bool]$Script:Remoting = $False
 	If(![System.String]::IsNullOrEmpty($AdminAddress))
@@ -5024,20 +5046,28 @@ Function ProcessScriptSetup
 		}
 	}
 
+	#get real server name if AdminAddress is empty for use in Get-PvsStoreFreeSpace
+	#added 27-Mar-2017
+	If($AdminAddress -eq "")
+	{
+		$AdminAddress = $env:ComputerName
+		Write-Verbose "$(Get-Date): Server name has been renamed from localhost to $($AdminAddress)"
+	}
+	
 	Write-Verbose "$(Get-Date): Verifying PVS SOAP and Stream Services are running"
 	$soapserver = $Null
 	$StreamService = $Null
 
-	If($Script:Remoting)
-	{
+#	If($Script:Remoting)
+#	{
 		$soapserver = Get-Service -ComputerName $AdminAddress -EA 0 | Where-Object {$_.DisplayName -like "*Citrix PVS Soap Server*"}
 		$StreamService = Get-Service -ComputerName $AdminAddress -EA 0 | Where-Object {$_.DisplayName -like "*Citrix PVS Stream Service*"}
-	}
-	Else
-	{
-		$soapserver = Get-Service -EA 0 | Where-Object {$_.DisplayName -like "*Citrix PVS Soap Server*"}
-		$StreamService = Get-Service -EA 0 | Where-Object {$_.DisplayName -like "*Citrix PVS Stream Service*"}
-	}
+#	}
+#	Else
+#	{
+#		$soapserver = Get-Service -EA 0 | Where-Object {$_.DisplayName -like "*Citrix PVS Soap Server*"}
+#		$StreamService = Get-Service -EA 0 | Where-Object {$_.DisplayName -like "*Citrix PVS Stream Service*"}
+#	}
 
 	If($soapserver.Status -ne "Running")
 	{
@@ -5680,7 +5710,7 @@ Function OutputFarm
 	{
 		OutputauthGroups $authGroups
 	}
-	ElseIf($? -and $AuthGroups -eq $Null)
+	ElseIf($? -and $Null -eq $AuthGroups)
 	{
 		$txt = "There are no Farm authorization group"
 		OutputWarning $txt
@@ -5714,7 +5744,7 @@ Function OutputFarm
 	{
 		OutputauthGroups $authGroups
 	}
-	ElseIf($? -and $AuthGroups -eq $Null)
+	ElseIf($? -and $Null -eq $AuthGroups)
 	{
 		$txt = "There are no authorization groups"
 		OutputWarning $txt
@@ -5963,7 +5993,7 @@ Function OutputFarm
 	ElseIf($HTML)
 	{
 		WriteHTMLLine 2 0 "Status"
-		WriteHTMLLine 0 0 "Current status of the farm:"
+		#WriteHTMLLine 0 0 "Current status of the farm:"
 		$rowdata = @()
 		$columnHeaders = @("Database server",($htmlsilver -bor $htmlbold),$farm.databaseServerName,$htmlwhite)
 		If(![String]::IsNullOrEmpty($farm.databaseInstanceName))
@@ -5981,7 +6011,7 @@ Function OutputFarm
 		}
 		$rowdata += @(,('',($htmlsilver -bor $htmlbold),$xadGroupsEnabled,$htmlwhite))
 		
-		$msg = ""
+		$msg = "Current status of the farm"
 		FormatHTMLTable $msg "auto" -rowArray $rowdata -columnArray $columnHeaders
 		WriteHTMLLine 0 0 " "
 	}
@@ -6051,7 +6081,7 @@ Function OutputFarm
 	{
 		OutputAuditTrail $Audits "Farm"
 	}
-	ElseIf($? -and $Audits -eq $Null)
+	ElseIf($? -and $Null -eq $Audits)
 	{
 		$txt = "There are no Farm Audit Trail items"
 		OutputWarning $txt
@@ -6079,7 +6109,7 @@ Function ProcessSites
 			OutputSite $PVSSite
 		}
 	}
-	ElseIf($? -and $PVSSites -eq $Null)
+	ElseIf($? -and $Null -eq $PVSSites)
 	{
 		$txt = "There are no Sites"
 		OutputWarning $txt
@@ -6173,7 +6203,7 @@ Function OutputSite
 	{
 		OutputauthGroups $authGroups
 	}
-	ElseIf($? -and $AuthGroups -eq $Null)
+	ElseIf($? -and $Null -eq $AuthGroups)
 	{
 		$txt = "There are no Site Administrators defined"
 		OutputWarning $txt
@@ -6330,7 +6360,7 @@ Function OutputSite
 	{
 		OutputServers $Servers
 	}
-	ElseIf($? -and $Servers -eq $Null)
+	ElseIf($? -and $Null -eq $Servers)
 	{
 		$txt = "There are no Servers"
 		OutputWarning $txt
@@ -6405,7 +6435,7 @@ Function OutputSite
 							$serverbootstraps +=  $serverbootstrap
 						}
 					}
-					ElseIf($? -and $serverbootstrap -eq $Null)
+					ElseIf($? -and $Null -eq $serverbootstrap)
 					{
 						$txt = "There are no Server bootstrap fields"
 						OutputWarning $txt
@@ -6432,7 +6462,7 @@ Function OutputSite
 					    }
 					    ElseIf($HTML)
 					    {
-						    WriteHTMLLine 0 0 "General"	
+						    WriteHTMLLine 4 0 "General"	
 					    }
 						If($MSWord -or $PDF)
 						{
@@ -6676,7 +6706,7 @@ Function OutputSite
 						}
 						ElseIf($HTML)
 						{
-							WriteHTMLLine 4 0 "Bootstrap file: " $ServerBootstrap.name
+							#WriteHTMLLine 4 0 "Bootstrap file: " $ServerBootstrap.name
 							$rowdata = @()
 							If($ServerBootstrap.bootserver1_Ip -ne "0.0.0.0")
 							{
@@ -6788,7 +6818,7 @@ Function OutputSite
 							'Subnet Mask',($htmlsilver -bor $htmlbold),
 							'Gateway',($htmlsilver -bor $htmlbold))
 							
-							$msg = ""
+							$msg = "Bootstrap file: $($ServerBootstrap.name)"
 							FormatHTMLTable $msg "auto" -rowArray $rowdata -columnArray $columnHeaders
 							WriteHTMLLine 0 0 " "
 						}
@@ -6866,7 +6896,7 @@ Function OutputSite
 						}
 						ElseIf($HTML)
 						{
-							WriteHTMLLine 0 0 "Options"
+							#WriteHTMLLine 0 0 "Options"
 							$rowdata = @()
 							$columnHeaders = @("Verbose mode",($htmlsilver -bor $htmlbold),$verboseMode,$htmlwhite)
 							$rowdata += @(,('Interrupt safe mode',($htmlsilver -bor $htmlbold),$interruptSafeMode,$htmlwhite))
@@ -6876,14 +6906,14 @@ Function OutputSite
 							$rowdata += @(,('     Login polling timeout',($htmlsilver -bor $htmlbold),"$($ServerBootstrap.pollingTimeout) (milliseconds)",$htmlwhite))
 							$rowdata += @(,('     Login general timeout',($htmlsilver -bor $htmlbold),"$($ServerBootstrap.generalTimeout) (milliseconds)",$htmlwhite))
 							
-							$msg = ""
+							$msg = "Options"
 							FormatHTMLTable $msg "auto" -rowArray $rowdata -columnArray $columnHeaders
 							WriteHTMLLine 0 0 " "
 						}
 					}
 				}
 			}
-			ElseIf($? -and $BootstrapNames -eq $Null)
+			ElseIf($? -and $Null -eq $BootstrapNames)
 			{
 				$txt = "There are no Bootstrap Names"
 				OutputWarning $txt
@@ -6969,7 +6999,7 @@ Function OutputSite
 			{
 				$Enabled = "No"
 			}
-			If($Script:PVSFullVersion -eq "7.12")
+			If($Script:PVSFullVersion -ge "7.12")
 			{
 				If($Disk.ClearCacheDisabled -eq 1)
 				{
@@ -7027,7 +7057,7 @@ Function OutputSite
 				$ScriptInformation += @{ Data = "Enable AD machine account password management"; Value = $adPasswordEnabled; }
 				$ScriptInformation += @{ Data = "Enable printer management"; Value = $printerManagementEnabled; }
 				$ScriptInformation += @{ Data = "Enable streaming of this vDisk"; Value = $Enabled; }
-				If($Script:PVSFullVersion -eq "7.12")
+				If($Script:PVSFullVersion -ge "7.12")
 				{
 					$ScriptInformation += @{ Data = "Cached secrets cleanup disabled"; Value = $CachedSecretsCleanup; }
 				}
@@ -7076,7 +7106,7 @@ Function OutputSite
 				Line 3 "Enable AD machine acct pwd mgmt`t: " $adPasswordEnabled
 				Line 3 "Enable printer management`t: " $printerManagementEnabled
 				Line 3 "Enable streaming of this vDisk`t: " $Enabled
-				If($Script:PVSFullVersion -eq "7.12")
+				If($Script:PVSFullVersion -ge "7.12")
 				{
 					Line 3 "Cached secrets cleanup disabled`t: " $CachedSecretsCleanup
 				}
@@ -7086,7 +7116,7 @@ Function OutputSite
 			{
 				WriteHTMLLine 3 0 $Disk.diskLocatorName
 				WriteHTMLLine 4 0 "vDisk Properties"
-				WriteHTMLLine 0 0 "General"
+				#WriteHTMLLine 0 0 "General"
 				$rowdata = @()
 				$columnHeaders = @("Site",($htmlsilver -bor $htmlbold),$Disk.siteName,$htmlwhite)
 				$rowdata += @(,('Store',($htmlsilver -bor $htmlbold),$Disk.storeName,$htmlwhite))
@@ -7113,12 +7143,12 @@ Function OutputSite
 				$rowdata += @(,('Enable AD machine account password management',($htmlsilver -bor $htmlbold),$adPasswordEnabled,$htmlwhite))
 				$rowdata += @(,('Enable printer management',($htmlsilver -bor $htmlbold),$printerManagementEnabled,$htmlwhite))
 				$rowdata += @(,('Enable streaming of this vDisk',($htmlsilver -bor $htmlbold),$Enabled,$htmlwhite))
-				If($Script:PVSFullVersion -eq "7.12")
+				If($Script:PVSFullVersion -ge "7.12")
 				{
 					$rowdata += @(,('Cached secrets cleanup disabled',($htmlsilver -bor $htmlbold),$CachedSecretsCleanup,$htmlwhite))
 				}
 				
-				$msg = ""
+				$msg = "General"
 				FormatHTMLTable $msg "auto" -rowArray $rowdata -columnArray $columnHeaders
 				WriteHTMLLine 0 0 " "
 			}
@@ -7228,7 +7258,7 @@ Function OutputSite
 			}
 			ElseIf($HTML)
 			{
-				WriteHTMLLine 0 0 "Identification"
+				#WriteHTMLLine 0 0 "Identification"
 				$rowdata = @()
 				$columnHeaders = @()
 				If(![String]::IsNullOrEmpty($Disk.description))
@@ -7320,7 +7350,7 @@ Function OutputSite
 					}
 				}
 				
-				$msg = ""
+				$msg = "Identification"
 				FormatHTMLTable $msg "auto" -rowArray $rowdata -columnArray $columnHeaders
 				WriteHTMLLine 0 0 " "
 			}
@@ -7354,11 +7384,11 @@ Function OutputSite
 			}
 			ElseIf($HTML)
 			{
-				WriteHTMLLine 0 0 "Microsoft Volume Licensing"
+				#WriteHTMLLine 0 0 "Microsoft Volume Licensing"
 				$rowdata = @()
 				$columnHeaders = @("Microsoft license type",($htmlsilver -bor $htmlbold),$licenseMode,$htmlwhite)
 				
-				$msg = ""
+				$msg = "Microsoft Volume Licensing"
 				FormatHTMLTable $msg "auto" -rowArray $rowdata -columnArray $columnHeaders
 				WriteHTMLLine 0 0 " "
 			}
@@ -7438,7 +7468,7 @@ Function OutputSite
 			}
 			ElseIf($HTML)
 			{
-				WriteHTMLLine 0 0 "Auto Update"
+				#WriteHTMLLine 0 0 "Auto Update"
 				$rowdata = @()
 				$columnHeaders = @("Enable automatic updates for the vDisk",($htmlsilver -bor $htmlbold),$autoUpdateEnabled,$htmlwhite)
 				If($Disk.autoUpdateEnabled)
@@ -7465,7 +7495,7 @@ Function OutputSite
 				$rowdata += @(,('Build #',($htmlsilver -bor $htmlbold),$Disk.build,$htmlwhite))
 				$rowdata += @(,('Serial #',($htmlsilver -bor $htmlbold),$Disk.serialNumber,$htmlwhite))
 				
-				$msg = ""
+				$msg = "Auto Update"
 				FormatHTMLTable $msg "auto" -rowArray $rowdata -columnArray $columnHeaders
 				WriteHTMLLine 0 0 " "
 			}
@@ -7838,7 +7868,7 @@ Function OutputSite
 			}
 		}
 	}
-	ElseIf($? -and $Disks -eq $Null)
+	ElseIf($? -and $Null -eq $Disks)
 	{
 		$txt = "There are no vDisks"
 		OutputWarning $txt
@@ -7867,7 +7897,7 @@ Function OutputSite
 	
 	If($? -and $Tasks -ne $Null)
 	{
-		If($MSWORD -or $PDF)
+		<#If($MSWORD -or $PDF)
 		{
 			WriteWordLine 0 1 "vDisks"
 		}
@@ -7878,7 +7908,7 @@ Function OutputSite
 		ElseIf($HTML)
 		{
 			WriteHTMLLine 0 1 "vDisks"
-		}
+		}#>
 		
 		#process all the Update Managed vDisks for this site
 		Write-Verbose "$(Get-Date): `t`t`tProcessing all Update Managed vDisks for this site"
@@ -7943,7 +7973,7 @@ Function OutputSite
 				ElseIf($HTML)
 				{
 					WriteHTMLLine 4 0 "$($ManagedvDisk.storeName)`\$($ManagedvDisk.disklocatorName)"
-					WriteHTMLLine 0 0 "General"
+					#WriteHTMLLine 0 0 "General"
 					$rowdata = @()
 					$columnHeaders = @("vDisk",($htmlsilver -bor $htmlbold),"$($ManagedvDisk.storeName)`\$($ManagedvDisk.disklocatorName)",$htmlwhite)
 					$rowdata += @(,('Virtual Host Connection',($htmlsilver -bor $htmlbold),$ManagedvDisk.virtualHostingPoolName,$htmlwhite))
@@ -7951,14 +7981,15 @@ Function OutputSite
 					$rowdata += @(,('VM MAC',($htmlsilver -bor $htmlbold),$ManagedvDisk.deviceMac,$htmlwhite))
 					$rowdata += @(,('VM Port',($htmlsilver -bor $htmlbold),$ManagedvDisk.port,$htmlwhite))
 
-					$msg = ""
+					$msg = "General"
 					FormatHTMLTable $msg "auto" -rowArray $rowdata -columnArray $columnHeaders
 					WriteHTMLLine 0 0 " "
 				}
 								
 				Write-Verbose "$(Get-Date): `t`t`t`t`tProcessing Personality Tab"
 				#process all personality strings for this device
-				$PersonalityStrings = Get-PvsDevicePersonality -deviceName $ManagedvDisk.deviceName -EA 0 4>$Null
+				#fix bug reported by Jim Moyle
+				$PersonalityStrings = Get-PvsDevicePersonality -object $ManagedvDisk -EA 0 4>$Null
 				If($? -and $PersonalityStrings -ne $Null)
 				{
 					If($MSWord -or $PDF)
@@ -8000,14 +8031,14 @@ Function OutputSite
 					}
 					ElseIf($HTML)
 					{
-						WriteHTMLLine 3 0 "Personality"
+						#WriteHTMLLine 3 0 "Personality"
 						ForEach($PersonalityString in $PersonalityStrings.DevicePersonality)
 						{
 							$rowdata = @()
 							$columnHeaders = @("Name",($htmlsilver -bor $htmlbold),$PersonalityString.Name,$htmlwhite)
 							$rowdata += @(,('String',($htmlsilver -bor $htmlbold),$PersonalityString.Value,$htmlwhite))
 
-							$msg = ""
+							$msg = "Personality"
 							FormatHTMLTable $msg "auto" -rowArray $rowdata -columnArray $columnHeaders
 							WriteHTMLLine 0 0 " "
 						}
@@ -8027,11 +8058,13 @@ Function OutputSite
 				{
 					WriteHTMLLine 3 0 "Status"
 				}
-				$Device = Get-PvsDeviceInfo -deviceId $ManagedvDisk.deviceId -EA 0 4>$Null
+				#$Device = Get-PvsDeviceInfo -deviceId $ManagedvDisk.deviceId -EA 0 4>$Null
+				#fix for bug reported by Jim Moyle
+				$Device = Get-PvsDiskUpdateDevice -deviceId $ManagedvDisk.deviceId -EA 0 4>$Null
 				DeviceStatus $Device
 			}
 		}
-		ElseIf($? -and $ManagedvDisks -eq $Null)
+		ElseIf($? -and $Null -eq $ManagedvDisks)
 		{
 			$txt = "There are no Managed vDisks"
 			OutputWarning $txt
@@ -8042,7 +8075,7 @@ Function OutputSite
 			OutputWarning $txt
 		}
 		
-		If($Tasks -ne $Null)
+		If($Null -ne $Tasks)
 		{
 			Write-Verbose "$(Get-Date): `t`t`tProcessing all Update Managed Tasks for this site"
 			ForEach($Task in $Tasks)
@@ -8142,8 +8175,8 @@ Function OutputSite
 
 				If($MSWord -or $PDF)
 				{
-					WriteWordLine 0 1 "Tasks"
-					WriteWordLine 0 2 "General"
+					WriteWordLine 3 0 "Tasks"
+					WriteWordLine 4 0 "General"
 					[System.Collections.Hashtable[]] $ScriptInformation = @()
 					$ScriptInformation += @{ Data = "Name"; Value = $Task.updateTaskName; }
 					$ScriptInformation += @{ Data = "Description"; Value = $Task.description; }
@@ -8176,14 +8209,14 @@ Function OutputSite
 				}
 				ElseIf($HTML)
 				{
-					WriteHTMLLine 0 1 "Tasks"
-					WriteHTMLLine 0 2 "General"
+					WriteHTMLLine 3 0 "Tasks"
+					#WriteHTMLLine 0 2 "General"
 					$rowdata = @()
 					$columnHeaders = @("Name",($htmlsilver -bor $htmlbold),$Task.updateTaskName,$htmlwhite)
 					$rowdata += @(,('Description',($htmlsilver -bor $htmlbold),$Task.description,$htmlwhite))
 					$rowdata += @(,('Disable this task',($htmlsilver -bor $htmlbold),$xTaskEnabled,$htmlwhite))
 
-					$msg = ""
+					$msg = "General"
 					FormatHTMLTable $msg "auto" -rowArray $rowdata -columnArray $columnHeaders
 					WriteHTMLLine 0 0 " "
 				}
@@ -8191,7 +8224,7 @@ Function OutputSite
 				Write-Verbose "$(Get-Date): `t`t`t`t`tProcessing Schedule Tab"
 				If($MSWord -or $PDF)
 				{
-					WriteWordLine 0 2 "Schedule"
+					WriteWordLine 4 0 "Schedule"
 					[System.Collections.Hashtable[]] $ScriptInformation = @()
 					$ScriptInformation += @{ Data = "Recurrence"; Value = $xTaskRecurrence; }
 					If($Task.recurrence -ne 0)
@@ -8260,7 +8293,7 @@ Function OutputSite
 				}
 				ElseIf($HTML)
 				{
-					WriteHTMLLine 0 2 "Schedule"
+					WriteHTMLLine 4 0 "Schedule"
 					$rowdata = @()
 					$columnHeaders = @("Recurrence",($htmlsilver -bor $htmlbold),$xTaskRecurrence,$htmlwhite)
 					If($Task.recurrence -ne 0)
@@ -8306,7 +8339,7 @@ Function OutputSite
 				}
 				ElseIf($HTML)
 				{
-					WriteHTMLLine 0 2 "vDisks"
+					WriteHTMLLine 4 0 "vDisks"
 				}
 				
 				$vDisks = Get-PvsDiskUpdateDevice -deviceId $ManagedvDisk.deviceId -EA 0 4>$Null
@@ -8322,7 +8355,7 @@ Function OutputSite
 					}
 					ElseIf($HTML)
 					{
-						WriteHTMLLine 0 3 "vDisks to be updated by this task:"
+						#WriteHTMLLine 0 3 "vDisks to be updated by this task:"
 					}
 					ForEach($vDisk in $vDisks)
 					{
@@ -8363,13 +8396,13 @@ Function OutputSite
 							$rowdata += @(,('Host',($htmlsilver -bor $htmlbold),$vDisk.virtualHostingPoolName,$htmlwhite))
 							$rowdata += @(,('VM',($htmlsilver -bor $htmlbold),$vDisk.deviceName,$htmlwhite))
 
-							$msg = ""
+							$msg = "vDisks to be updated by this task"
 							FormatHTMLTable $msg "auto" -rowArray $rowdata -columnArray $columnHeaders
 							WriteHTMLLine 0 0 " "
 						}
 					}
 				}
-				ElseIf($? -and $vDisks -eq $Null)
+				ElseIf($? -and $Null -eq $vDisks)
 				{
 					$txt = "There are no Disk Update Devices"
 					OutputWarning $txt
@@ -8411,11 +8444,11 @@ Function OutputSite
 				}
 				ElseIf($HTML)
 				{
-					WriteHTMLLine 0 2 "ESD"
+					#WriteHTMLLine 0 2 "ESD"
 					$rowdata = @()
 					$columnHeaders = @("ESD client to use",($htmlsilver -bor $htmlbold),$xTaskesdType,$htmlwhite)
 
-					$msg = ""
+					$msg = "ESD"
 					FormatHTMLTable $msg "auto" -rowArray $rowdata -columnArray $columnHeaders
 					WriteHTMLLine 0 0 " "
 				}
@@ -8428,10 +8461,10 @@ Function OutputSite
 						WriteWordLine 0 2 "Scripts"
 						[System.Collections.Hashtable[]] $ScriptInformation = @()
 						$ScriptInformation += @{ Data = "Scripts that execute with the vDisk update processing"; Value = ""; }
-						$ScriptInformation += @{ Data = "Pre-update script"; Value = $Task.preUpdateScript; }
-						$ScriptInformation += @{ Data = "Pre-startup script"; Value = $Task.preVmScript; }
-						$ScriptInformation += @{ Data = "Post-shutdown script"; Value = $Task.postVmScript; }
-						$ScriptInformation += @{ Data = "Post-update script"; Value = $Task.postUpdateScript; }
+						$ScriptInformation += @{ Data = "     Pre-update script"; Value = $Task.preUpdateScript; }
+						$ScriptInformation += @{ Data = "     Pre-startup script"; Value = $Task.preVmScript; }
+						$ScriptInformation += @{ Data = "     Post-shutdown script"; Value = $Task.postVmScript; }
+						$ScriptInformation += @{ Data = "     Post-update script"; Value = $Task.postUpdateScript; }
 
 						$Table = AddWordTable -Hashtable $ScriptInformation `
 						-Columns Data,Value `
@@ -8454,23 +8487,23 @@ Function OutputSite
 					{
 						Line 2 "Scripts"
 						Line 3 "Scripts that execute with the vDisk update processing:"
-						Line 3 "Pre-update script`t: " $Task.preUpdateScript
-						Line 3 "Pre-startup script`t: " $Task.preVmScript
-						Line 3 "Post-shutdown script`t: " $Task.postVmScript
-						Line 3 "Post-update script`t: " $Task.postUpdateScript
+						Line 4 "Pre-update script`t: " $Task.preUpdateScript
+						Line 4 "Pre-startup script`t: " $Task.preVmScript
+						Line 4 "Post-shutdown script`t: " $Task.postVmScript
+						Line 4 "Post-update script`t: " $Task.postUpdateScript
 						Line 0 ""
 					}
 					ElseIf($HTML)
 					{
-						WriteHTMLLine 0 2 "Scripts"
+						#WriteHTMLLine 0 2 "Scripts"
 						$rowdata = @()
 						$columnHeaders = @("Scripts that execute with the vDisk update processing",($htmlsilver -bor $htmlbold),"",$htmlwhite)
-						$rowdata += @(,('Pre-update script',($htmlsilver -bor $htmlbold),$Task.preUpdateScript,$htmlwhite))
-						$rowdata += @(,('Pre-startup script',($htmlsilver -bor $htmlbold),$Task.preVmScript,$htmlwhite))
-						$rowdata += @(,('Post-shutdown script',($htmlsilver -bor $htmlbold),$Task.postVmScript,$htmlwhite))
-						$rowdata += @(,('Post-update script',($htmlsilver -bor $htmlbold),$Task.postUpdateScript,$htmlwhite))
+						$rowdata += @(,('     Pre-update script',($htmlsilver -bor $htmlbold),$Task.preUpdateScript,$htmlwhite))
+						$rowdata += @(,('     Pre-startup script',($htmlsilver -bor $htmlbold),$Task.preVmScript,$htmlwhite))
+						$rowdata += @(,('     Post-shutdown script',($htmlsilver -bor $htmlbold),$Task.postVmScript,$htmlwhite))
+						$rowdata += @(,('     Post-update script',($htmlsilver -bor $htmlbold),$Task.postUpdateScript,$htmlwhite))
 
-						$msg = ""
+						$msg = "Scripts"
 						FormatHTMLTable $msg "auto" -rowArray $rowdata -columnArray $columnHeaders
 						WriteHTMLLine 0 0 " "
 					}
@@ -8507,18 +8540,18 @@ Function OutputSite
 				}
 				ElseIf($HTML)
 				{
-					WriteHTMLLine 0 2 "Access"
+					#WriteHTMLLine 0 2 "Access"
 					$rowdata = @()
 					$columnHeaders = @("Upon successful completion, access assigned to the vDisk",($htmlsilver -bor $htmlbold),$xTaskpostUpdateApprove,$htmlwhite)
 
-					$msg = ""
+					$msg = "Access"
 					FormatHTMLTable $msg "auto" -rowArray $rowdata -columnArray $columnHeaders
 					WriteHTMLLine 0 0 " "
 				}
 			}
 		}
 	}
-	ElseIf($? -and $Tasks -eq $Null)
+	ElseIf($? -and $Null -eq $Tasks)
 	{
 		$txt = "There are no Update Tasks"
 		OutputWarning $txt
@@ -8584,12 +8617,12 @@ Function OutputSite
 			ElseIf($HTML)
 			{
 				WriteHTMLLine 3 0 $Collection.collectionName
-				WriteHTMLLine 0 0 "General"
+				#WriteHTMLLine 0 0 "General"
 				$rowdata = @()
 				$columnHeaders = @("Name",($htmlsilver -bor $htmlbold),$Collection.collectionName,$htmlwhite)
 				$rowdata += @(,('Description',($htmlsilver -bor $htmlbold),$Collection.description,$htmlwhite))
 				
-				$msg = ""
+				$msg = "General"
 				FormatHTMLTable $msg "auto" -rowArray $rowdata -columnArray $columnHeaders
 				WriteHTMLLine 0 0 " "
 			}
@@ -8635,7 +8668,7 @@ Function OutputSite
     						$tmpAuthGroups += $authGroup
                         }
 					}
-					ElseIf($? -and $AuthGroupUsages -eq $Null)
+					ElseIf($? -and $Null -eq $AuthGroupUsages)
 					{
 						$txt = "There are no Groups with 'Device Administrator' access"
 						OutputWarning $txt
@@ -8672,7 +8705,7 @@ Function OutputSite
     						$tmpAuthGroups += $authGroup
                         }
 					}
-					ElseIf($? -and $AuthGroupUsages -eq $Null)
+					ElseIf($? -and $Null -eq $AuthGroupUsages)
 					{
 						$txt = "There are no Groups with 'Device Operator' access"
 						OutputWarning $txt
@@ -8685,7 +8718,7 @@ Function OutputSite
 				}
 				OutputauthGroups $tmpAuthGroups
 			}
-			ElseIf($? -and $AuthGroups -eq $Null)
+			ElseIf($? -and $Null -eq $AuthGroups)
 			{
 				$txt = "No Authorized Groups for $($Collection.collectionName)"
 				OutputWarning $txt
@@ -8707,7 +8740,7 @@ Function OutputSite
 			}
 			ElseIf($HTML)
 			{
-				WriteHTMLLine 3 0 "Auto-Add"
+				#WriteHTMLLine 3 0 "Auto-Add"
 			}
 			If($Script:FarmAutoAddEnabled)
 			{
@@ -8773,7 +8806,7 @@ Function OutputSite
 					$rowdata += @(,('     Suffix',($htmlsilver -bor $htmlbold),$Collection.autoAddSuffix,$htmlwhite))
 					$rowdata += @(,('     Last incremental #',($htmlsilver -bor $htmlbold),$Collection.lastAutoAddDeviceNumber,$htmlwhite))
 					
-					$msg = ""
+					$msg = "Auto-Add"
 					FormatHTMLTable $msg "auto" -rowArray $rowdata -columnArray $columnHeaders
 					WriteHTMLLine 0 0 " "
 				}
@@ -8783,14 +8816,17 @@ Function OutputSite
 				If($MSWord -or $PDF)
 				{
 					WriteWordLine 0 3 "The auto-add feature is not enabled at the PVS Farm level"
+					WriteWordLine 0 0 ""
 				}
 				ElseIf($Text)
 				{
 					Line 3 "The auto-add feature is not enabled at the PVS Farm level"
+					Line 0 ""
 				}
 				ElseIf($HTML)
 				{
 					WriteHTMLLine 0 0 "The auto-add feature is not enabled at the PVS Farm level"
+					WriteHTMLLine 0 0 ""
 				}
 			}
 
@@ -8814,7 +8850,7 @@ Function OutputSite
 
 					If($MSWord -or $PDF)
 					{
-						WriteWordLine 0 0 $txt
+						WriteWordLine 2 0 $txt
 					}
 					ElseIf($Text)
 					{
@@ -8822,7 +8858,7 @@ Function OutputSite
 					}
 					ElseIf($HTML)
 					{
-						WriteHTMLLine 0 0 $txt
+						WriteHTMLLine 2 0 $txt
 						WriteHTMLLine 0 0 " "
 					}
 
@@ -8948,7 +8984,7 @@ Function OutputSite
 					}
 					ElseIf($HTML)
 					{
-						WriteHTMLLine 3 0 "General"
+						#WriteHTMLLine 3 0 "General"
 						$rowdata = @()
 						$columnHeaders = @("Name",($htmlsilver -bor $htmlbold),$Device.deviceName,$htmlwhite)
 						$rowdata += @(,('Description',($htmlsilver -bor $htmlbold),$Device.deviceName,$htmlwhite))
@@ -8978,7 +9014,7 @@ Function OutputSite
 							$rowdata += @(,('Configured for XenServer vDisk caching',($htmlsilver -bor $htmlbold),"",$htmlwhite))
 						}
 					
-						$msg = ""
+						$msg = "General"
 						FormatHTMLTable $msg "auto" -rowArray $rowdata -columnArray $columnHeaders
 						WriteHTMLLine 0 0 " "
 					}
@@ -8994,7 +9030,7 @@ Function OutputSite
 					}
 					ElseIf($HTML)
 					{
-						WriteHTMLLine 3 0 "vDisks"
+						#WriteHTMLLine 3 0 "vDisks"
 					}
 					#process all vdisks for this device
 					$vDisks = Get-PvsDiskInfo -deviceName $Device.deviceName -EA 0 4>$Null
@@ -9061,12 +9097,12 @@ Function OutputSite
 								}
 							}
 					
-							$msg = ""
+							$msg = "vDisks"
 							FormatHTMLTable $msg "auto" -rowArray $rowdata -columnArray $columnHeaders
 							WriteHTMLLine 0 0 " "
 						}
 					}
-					ElseIf($? -and $vDisks -eq $Null)
+					ElseIf($? -and $Null -eq $vDisks)
 					{
 						$txt = "There are no vDisks"
 						OutputWarning $txt
@@ -9153,8 +9189,7 @@ Function OutputSite
 					ElseIf($HTML)
 					{
 						$rowdata = @()
-						$columnHeaders = @("Options",($htmlsilver -bor $htmlbold),"",$htmlwhite)
-						$rowdata += @(,('List local hard drive in boot menu',($htmlsilver -bor $htmlbold),$DevicelocalDiskEnabled,$htmlwhite))
+						$columnHeaders = @("List local hard drive in boot menu",($htmlsilver -bor $htmlbold),$DevicelocalDiskEnabled,$htmlwhite)
 						#process all bootstrap files for this device
 						Write-Verbose "$(Get-Date): `t`t`t`t`tProcessing all bootstrap files for this device"
 						$Bootstraps = Get-PvsDeviceBootstrap -deviceName $Device.deviceName -EA 0 4>$Null
@@ -9180,7 +9215,7 @@ Function OutputSite
 							}
 						}
 					
-						$msg = ""
+						$msg = "Options"
 						FormatHTMLTable $msg "auto" -rowArray $rowdata -columnArray $columnHeaders
 						WriteHTMLLine 0 0 " "
 					}
@@ -9226,7 +9261,6 @@ Function OutputSite
 					}
 					ElseIf($HTML)
 					{
-						WriteHTMLLine 4 0 "Authentication"
 						$rowdata = @()
 						$columnHeaders = @("Type of authentication to use for this device",($htmlsilver -bor $htmlbold),$DeviceAuthentication,$htmlwhite)
 						If($DeviceAuthentication -eq "Username and password")
@@ -9234,7 +9268,7 @@ Function OutputSite
 							$rowdata += @(,('Username',($htmlsilver -bor $htmlbold),$Device.user,$htmlwhite))
 							$rowdata += @(,('Password',($htmlsilver -bor $htmlbold),$Device.password,$htmlwhite))
 						}
-						$msg = ""
+						$msg = "Authentication"
 						FormatHTMLTable $msg "auto" -rowArray $rowdata -columnArray $columnHeaders
 						WriteHTMLLine 0 0 " "
 					}
@@ -9283,14 +9317,13 @@ Function OutputSite
 						}
 						ElseIf($HTML)
 						{
-							WriteHTMLLine 3 0 "Personality"
 							ForEach($PersonalityString in $PersonalityStrings.DevicePersonality)
 							{
 								$rowdata = @()
 								$columnHeaders = @("Name",($htmlsilver -bor $htmlbold),$PersonalityString.Name,$htmlwhite)
 								$rowdata += @(,('String',($htmlsilver -bor $htmlbold),$PersonalityString.Value,$htmlwhite))
 
-								$msg = ""
+								$msg = "Personality"
 								FormatHTMLTable $msg "auto" -rowArray $rowdata -columnArray $columnHeaders
 								WriteHTMLLine 0 0 " "
 							}
@@ -9312,7 +9345,7 @@ Function OutputSite
 					DeviceStatus $Device
 				}
 			}
-			ElseIf($? -and $Devices -eq $Null)
+			ElseIf($? -and $Null -eq $Devices)
 			{
 				$txt = "There are no devices"
 				OutputWarning $txt
@@ -9325,7 +9358,7 @@ Function OutputSite
 
 		}
 	}
-	ElseIf($? -and $Collections -eq $Null)
+	ElseIf($? -and $Null -eq $Collections)
 	{
 		$txt = "There are no Device Collections"
 		OutputWarning $txt
@@ -9400,8 +9433,8 @@ Function OutputSite
 			ElseIf($HTML)
 			{
 				WriteHTMLLine 3 0 $SiteView.siteViewName
-				WriteHTMLLine 0 0 "View Properties"
-				WriteHTMLLine 0 0 "General"
+				WriteHTMLLine 4 0 "View Properties"
+				#WriteHTMLLine 0 0 "General"
 				$rowdata = @()
 				$columnHeaders = @("Name",($htmlsilver -bor $htmlbold),$SiteView.siteViewName,$htmlwhite)
 				If(![String]::IsNullOrEmpty($SiteView.description))
@@ -9409,7 +9442,7 @@ Function OutputSite
 					$rowdata += @(,('Description',($htmlsilver -bor $htmlbold),$SiteView.description,$htmlwhite))
 				}
 				
-				$msg = ""
+				$msg = "General"
 				FormatHTMLTable $msg "auto" -rowArray $rowdata -columnArray $columnHeaders
 				WriteHTMLLine 0 0 " "
 			}
@@ -9435,7 +9468,7 @@ Function OutputSite
 			{
 				OutputViewMembers $Members
 			}
-			ElseIf($? -and $Members -eq $Null)
+			ElseIf($? -and $Null -eq $Members)
 			{
 				$txt = "There are no Site Views members"
 				OutputWarning $txt
@@ -9447,7 +9480,7 @@ Function OutputSite
 			}
 		}
 	}
-	ElseIf($? -and $SiteViews -eq $Null)
+	ElseIf($? -and $Null -eq $SiteViews)
 	{
 		$txt = "There are no Site Views configured"
 		OutputWarning $txt
@@ -9532,7 +9565,7 @@ Function OutputSite
 				Write-Verbose "$(Get-Date): Processing vDisk Update Tab"
 				WriteWordLine 4 0 "vDisk Update"
 				[System.Collections.Hashtable[]] $ScriptInformation = @()
-				$ScriptInformation += @{ Data = "Update limit"; Value = $vHost.updateLimit; }
+				$ScriptInformation += @{ Data = "Update limit"; Value = $vHost.updateLimit.ToString(); }
 				$ScriptInformation += @{ Data = "Update timeout"; Value = "$($vHost.updateTimeout) minutes"; }
 				$ScriptInformation += @{ Data = "Shutdown timeout"; Value = "$($vHost.shutdownTimeout) minutes"; }
 				$Table = AddWordTable -Hashtable $ScriptInformation `
@@ -9576,7 +9609,7 @@ Function OutputSite
 				
 				Write-Verbose "$(Get-Date): `t`t`t`t`tProcessing vDisk Update Tab"
 				Line 2 "vDisk Update"
-				Line 3 "Update limit`t: " $vHost.updateLimit
+				Line 3 "Update limit`t: " $vHost.updateLimit.ToString()
 				Line 3 "Update timeout`t: $($vHost.updateTimeout) minutes"
 				Line 3 "Shutdown timeout: $($vHost.shutdownTimeout) minutes"
 				Line 0 ""
@@ -9584,7 +9617,7 @@ Function OutputSite
 			ElseIf($HTML)
 			{
 				WriteHTMLLine 3 0 $vHost.virtualHostingPoolName
-				WriteHTMLLine 4 0 "General"
+				#WriteHTMLLine 4 0 "General"
 				$rowdata = @()
 				$columnHeaders = @("Type",($htmlsilver -bor $htmlbold),$vHosttype,$htmlwhite)
 				$rowdata += @(,('Name',($htmlsilver -bor $htmlbold),$vHost.virtualHostingPoolName,$htmlwhite))
@@ -9607,23 +9640,24 @@ Function OutputSite
 					$rowdata += @(,('Datacenter',($htmlsilver -bor $htmlbold),$vHost.Datacenter,$htmlwhite))
 				}
 				
-				$msg = ""
+				$msg = "General"
 				FormatHTMLTable $msg "auto" -rowArray $rowdata -columnArray $columnHeaders
 				WriteHTMLLine 0 0 " "
 				
 				Write-Verbose "$(Get-Date): Processing vDisk Update Tab"
-				WriteHTMLLine 4 0 "vDisk Update"
-				$columnHeaders = @("Update limit",($htmlsilver -bor $htmlbold),$vHost.updateLimit,$htmlwhite)
+				#WriteHTMLLine 4 0 "vDisk Update"
+				$rowdata = @()
+				$columnHeaders = @("Update limit",($htmlsilver -bor $htmlbold),$vHost.updateLimit.ToString(),$htmlwhite)
 				$rowdata += @(,('Update timeout',($htmlsilver -bor $htmlbold),"$($vHost.updateTimeout) minutes",$htmlwhite))
 				$rowdata += @(,('Shutdown timeout',($htmlsilver -bor $htmlbold),"$($vHost.shutdownTimeout) minutes",$htmlwhite))
 				
-				$msg = ""
+				$msg = "vDisk Update"
 				FormatHTMLTable $msg "auto" -rowArray $rowdata -columnArray $columnHeaders
 				WriteHTMLLine 0 0 " "
 			}
 		}
 	}
-	ElseIf($? -and $vHosts -eq $Null)
+	ElseIf($? -and $Null -eq $vHosts)
 	{
 		$txt = "There are no Virtual Hosting Pools"
 		OutputWarning $txt
@@ -9642,7 +9676,7 @@ Function OutputSite
 	{
 		OutputAuditTrail $Audits "Site"
 	}
-	ElseIf($? -and $Audits -eq $Null)
+	ElseIf($? -and $Null -eq $Audits)
 	{
 		$txt = "There are no Site Audit Trail items"
 		OutputWarning $txt
@@ -9763,7 +9797,7 @@ Function OutputServers
 		{
 			WriteHTMLLine 3 0 $Server.serverName
 			WriteHTMLLine 4 0 "Server Properties"
-			WriteHTMLLine 0 0 "General"
+			#WriteHTMLLine 0 0 "General"
 			$rowdata = @()
 			$columnHeaders = @("Name",($htmlsilver -bor $htmlbold),$Server.serverName,$htmlwhite)
 			If(![String]::IsNullOrEmpty($Server.description))
@@ -9773,7 +9807,7 @@ Function OutputServers
 			$rowdata += @(,('Power Rating',($htmlsilver -bor $htmlbold),$Server.powerRating,$htmlwhite))
 			$rowdata += @(,("Log events to the server's Windows Event Log",($htmlsilver -bor $htmlbold),$xeventLoggingEnabled,$htmlwhite))
 			
-			$msg = ""
+			$msg = "General"
 			FormatHTMLTable $msg "auto" -rowArray $rowdata -columnArray $columnHeaders
 			WriteHTMLLine 0 0 " "
 		}
@@ -9832,7 +9866,7 @@ Function OutputServers
 		}
 		ElseIf($HTML)
 		{
-			WriteHTMLLine 0 0 "Network"
+			#WriteHTMLLine 0 0 "Network"
 			$rowdata = @()
 			$columnHeaders = @("Streaming IP addresses",($htmlsilver -bor $htmlbold),"$($StreamingIPs[0])",$htmlwhite)
 			$cnt = -1
@@ -9848,7 +9882,7 @@ Function OutputServers
 			$rowdata += @(,('     First port',($htmlsilver -bor $htmlbold),$Server.firstPort,$htmlwhite))
 			$rowdata += @(,('     Last port',($htmlsilver -bor $htmlbold),$Server.lastPort,$htmlwhite))
 			$rowdata += @(,('Management IP',($htmlsilver -bor $htmlbold),$Server.managementIp,$htmlwhite))
-			$msg = ""
+			$msg = "Network"
 			FormatHTMLTable $msg "auto" -rowArray $rowdata -columnArray $columnHeaders
 			WriteHTMLLine 0 0 " "
 		}
@@ -9873,7 +9907,7 @@ Function OutputServers
 			ElseIf($HTML)
 			{
 				WriteHTMLLine 3 0 "Stores"
-				WriteHTMLLine 0 0 "Stores that this server supports:"
+				#WriteHTMLLine 0 0 "Stores that this server supports:"
 			}
 			ForEach($store in $stores)
 			{
@@ -9961,13 +9995,13 @@ Function OutputServers
 						}
 					}
 
-					$msg = ""
+					$msg = "Stores that this server supports"
 					FormatHTMLTable $msg "auto" -rowArray $rowdata -columnArray $columnHeaders
 					WriteHTMLLine 0 0 " "
 				}
 			}
 		}
-		ElseIf($? -and $Stores -eq $Null)
+		ElseIf($? -and $Null -eq $Stores)
 		{
 			$txt = "There are no Stores"
 			OutputWarning $txt
@@ -10016,7 +10050,7 @@ Function OutputServers
 		}
 		ElseIf($HTML)
 		{
-			WriteHTMLLine 0 0 "Options"
+			#WriteHTMLLine 0 0 "Options"
 			$rowdata = @()
 			$columnHeaders = @("Active directory",($htmlsilver -bor $htmlbold),"",$htmlwhite)
 			$rowdata += @(,('     Automate computer account password updates',($htmlsilver -bor $htmlbold),$adMaxPasswordAgeEnabled,$htmlwhite))
@@ -10025,7 +10059,7 @@ Function OutputServers
 				$rowdata += @(,('     Days between password updates',($htmlsilver -bor $htmlbold),$Server.adMaxPasswordAge,$htmlwhite))
 			}
 
-			$msg = ""
+			$msg = "Options"
 			FormatHTMLTable $msg "auto" -rowArray $rowdata -columnArray $columnHeaders
 			WriteHTMLLine 0 0 " "
 		}
@@ -10034,15 +10068,31 @@ Function OutputServers
 		{
 			Write-Verbose "$(Get-Date): `t`t`t`tProcessing Problem Report Tab"
 			
+			#fix null bug reported by Jim Moyle
 			If($Server.LastBugReportStatus -eq "")
 			{
 				$CISDate = $Server.LastBugReportAttempt.ToString()
+				If($Server.LastBugReportAttempt)
+				{ 
+					$CISDate = $Server.LastBugReportAttempt.ToString()
+				}
+				Else
+				{
+					$CISDate = ""
+				}
 				$CISSummary = ""
 				$CISStatus = ""
 			}
 			Else
 			{
-				$CISDate = $Server.LastBugReportAttempt.ToString()
+				If($Server.LastBugReportAttempt)
+				{ 
+					$CISDate = $Server.LastBugReportAttempt.ToString()
+				}
+				Else
+				{
+					$CISDate = ""
+				}
 				$CISSummary = $Server.LastBugReportSummary
 				$CISStatus = "$($Server.LastBugReportStatus): $($Server.LastBugReportResult)"
 			}
@@ -10079,13 +10129,13 @@ Function OutputServers
 			}
 			ElseIf($HTML)
 			{
-				WriteHTMLLine 0 0 "Problem Report"
+				#WriteHTMLLine 0 0 "Problem Report"
 				$rowdata = @()
 				$columnHeaders = @("Most Recent Problem Report",($htmlsilver -bor $htmlbold),$CISDate,$htmlwhite)
 				$rowdata += @(,('Summary',($htmlsilver -bor $htmlbold),$CISSummary,$htmlwhite))
 				$rowdata += @(,('Status',($htmlsilver -bor $htmlbold),$CISStatus,$htmlwhite))
 
-				$msg = ""
+				$msg = "Problem Report"
 				FormatHTMLTable $msg "auto" -rowArray $rowdata -columnArray $columnHeaders
 				WriteHTMLLine 0 0 " "
 			}
@@ -10157,7 +10207,7 @@ Function OutputServers
 		ElseIf($HTML)
 		{
 			WriteHTMLLine 3 0 "Advanced"
-			WriteHTMLLine 0 0 "Server"
+			#WriteHTMLLine 0 0 "Server"
 			$rowdata = @()
 			$columnHeaders = @("Threads per port",($htmlsilver -bor $htmlbold),"$($Server.threadsPerPort)",$htmlwhite)
 			$rowdata += @(,('Buffers per thread',($htmlsilver -bor $htmlbold),$Server.buffersPerThread,$htmlwhite))
@@ -10165,7 +10215,7 @@ Function OutputServers
 			$rowdata += @(,('Local concurrent I/O limit',($htmlsilver -bor $htmlbold),"$($Server.localConcurrentIoLimit) (transactions)",$htmlwhite))
 			$rowdata += @(,('Remote concurrent I/O limit',($htmlsilver -bor $htmlbold),"$($Server.remoteConcurrentIoLimit) (transactions)",$htmlwhite))
 
-			$msg = ""
+			$msg = "Server"
 			FormatHTMLTable $msg "auto" -rowArray $rowdata -columnArray $columnHeaders
 			WriteHTMLLine 0 0 " "
 		}
@@ -10202,13 +10252,13 @@ Function OutputServers
 		}
 		ElseIf($HTML)
 		{
-			WriteHTMLLine 0 0 "Network"
+			#WriteHTMLLine 0 0 "Network"
 			$rowdata = @()
 			$columnHeaders = @("Ethernet MTU",($htmlsilver -bor $htmlbold),"$($Server.maxTransmissionUnits) (bytes)",$htmlwhite)
 			$rowdata += @(,('I/O burst size',($htmlsilver -bor $htmlbold),"$($Server.ioBurstSize) (KB)",$htmlwhite))
 			$rowdata += @(,('Enable non-blocking I/O for network communications',($htmlsilver -bor $htmlbold),$nonBlockingIoEnabled,$htmlwhite))
 
-			$msg = ""
+			$msg = "Network"
 			FormatHTMLTable $msg "auto" -rowArray $rowdata -columnArray $columnHeaders
 			WriteHTMLLine 0 0 " "
 		}
@@ -10247,14 +10297,14 @@ Function OutputServers
 		}
 		ElseIf($HTML)
 		{
-			WriteHTMLLine 0 0 "Pacing"
+			#WriteHTMLLine 0 0 "Pacing"
 			$rowdata = @()
 			$columnHeaders = @("Boot pause seconds",($htmlsilver -bor $htmlbold),"$($Server.bootPauseSeconds)",$htmlwhite)
 			$rowdata += @(,('Maximum boot time',($htmlsilver -bor $htmlbold),"$($MaxBootTime) (minutes:seconds)",$htmlwhite))
 			$rowdata += @(,('Maximum devices booting',($htmlsilver -bor $htmlbold),"$($Server.maxBootDevicesAllowed) devices",$htmlwhite))
 			$rowdata += @(,('vDisk Creation pacing',($htmlsilver -bor $htmlbold),"$($Server.vDiskCreatePacing) milliseconds",$htmlwhite))
 
-			$msg = ""
+			$msg = "Pacing"
 			FormatHTMLTable $msg "auto" -rowArray $rowdata -columnArray $columnHeaders
 			WriteHTMLLine 0 0 " "
 		}
@@ -10288,11 +10338,11 @@ Function OutputServers
 		}
 		ElseIf($HTML)
 		{
-			WriteHTMLLine 0 0 "Device"
+			#WriteHTMLLine 0 0 "Device"
 			$rowdata = @()
 			$columnHeaders = @("License timeout",($htmlsilver -bor $htmlbold),"$($LicenseTimeout) (minutes:seconds)",$htmlwhite)
 
-			$msg = ""
+			$msg = "Device"
 			FormatHTMLTable $msg "auto" -rowArray $rowdata -columnArray $columnHeaders
 			WriteHTMLLine 0 0 " "
 		}
@@ -10337,7 +10387,7 @@ Function ProcessFarmViews
 			OutputFarmView $FarmView
 		}
 	}
-	ElseIf($? -and $FarmViews -eq $Null)
+	ElseIf($? -and $Null -eq $FarmViews)
 	{
 		$txt = "There are no Farm Views"
 		OutputWarning $txt
@@ -10396,7 +10446,7 @@ Function OutputFarmView
 	{
 		WriteHTMLLine 2 0 $FarmView.farmViewName
 		WriteHTMLLine 3 0 "View Properties"
-		WriteHTMLLine 0 0 "General"
+		#WriteHTMLLine 0 0 "General"
 		$rowdata = @()
 		$columnHeaders = @("Name",($htmlsilver -bor $htmlbold),$FarmView.farmViewName,$htmlwhite)
 		If(![String]::IsNullOrEmpty($FarmView.description))
@@ -10404,7 +10454,7 @@ Function OutputFarmView
 			$rowdata += @(,('Description',($htmlsilver -bor $htmlbold),$FarmView.description,$htmlwhite))
 		}
 
-		$msg = ""
+		$msg = "General"
 		FormatHTMLTable $msg "auto" -rowArray $rowdata -columnArray $columnHeaders
 		WriteHTMLLine 0 0 " "
 	}
@@ -10428,7 +10478,7 @@ Function OutputFarmView
 	{
 		OutputViewMembers $Members
 	}
-	ElseIf($? -and $Members -eq $Null)
+	ElseIf($? -and $Null -eq $Members)
 	{
 		$txt = "There are no Farm View members"
 		OutputWarning $txt
@@ -10453,16 +10503,16 @@ Function ProcessStores
 		If($MSWord -or $PDF)
 		{
 			$selection.InsertNewPage()
-			WriteWordLine 1 0 "Stores Properties"
+			WriteWordLine 1 0 "Store Properties"
 		}
 		ElseIf($Text)
 		{
 			Line 0 ""
-			Line 0 "Stores Properties"
+			Line 0 "Store Properties"
 		}
 		ElseIf($HTML)
 		{
-			WriteHTMLLine 1 0 "Stores Properties"
+			WriteHTMLLine 1 0 "Store Properties"
 		}
 		
 		ForEach($Store in $Stores)
@@ -10470,7 +10520,7 @@ Function ProcessStores
 			OutputStore $Store
 		}
 	}
-	ElseIf($? -and $Stores -eq $Null)
+	ElseIf($? -and $Null -eq $Stores)
 	{
 		$txt = "There are no Stores"
 		OutputWarning $txt
@@ -10497,6 +10547,9 @@ Function OutputStore
 	{
 		$xStoreOwner = $Store.siteName
 	}
+	
+	#added get free space 27-Mar-2017 since Jim Moyle told me I forgot to add it
+	$StoreFreeSpace = GetStoreFreeSpace $Store
 
 	If($MSWord -or $PDF)
 	{
@@ -10508,7 +10561,27 @@ Function OutputStore
 		{
 			$ScriptInformation += @{ Data = "Description"; Value = $Store.description; }
 		}
-		$ScriptInformation += @{ Data = "Store owner"; Value = $xStoreOwner; }
+		$ScriptInformation += @{ Data = "Site that acts as the owner of this store"; Value = $xStoreOwner; }
+
+		If($Store.PathType -eq "LOCAL")
+		{
+			$ScriptInformation += @{ Data = "Store free space"; Value = "Server: $($StoreFreeSpace[0].ServerName) $($StoreFreeSpace[0].StoreFreeSpace) MB"; }
+			
+			$cnt = -1
+			ForEach($Item in $StoreFreeSpace)
+			{
+				$cnt++
+				If($cnt -gt 0)
+				{
+					$ScriptInformation += @{ Data = ""; Value = "Server: $($StoreFreeSpace[$cnt].ServerName) $($StoreFreeSpace[$cnt].StoreFreeSpace) MB"; }
+				}
+			}
+		}
+		Else
+		{
+			$ScriptInformation += @{ Data = "Store free space"; Value = "$($StoreFreeSpace[0].StoreFreeSpace) MB"; }
+		}
+		
 		$Table = AddWordTable -Hashtable $ScriptInformation `
 		-Columns Data,Value `
 		-List `
@@ -10534,21 +10607,58 @@ Function OutputStore
 			Line 2 "Description`t: " $Store.description
 		}
 		Line 2 "Store owner`t: " $xStoreOwner
+		If($Store.PathType -eq "LOCAL")
+		{
+			Line 2 "Store free space: " "Server: $($StoreFreeSpace[0].ServerName) $($StoreFreeSpace[0].StoreFreeSpace) MB"
+			
+			$cnt = -1
+			ForEach($Item in $StoreFreeSpace)
+			{
+				$cnt++
+				If($cnt -gt 0)
+				{
+					Line 4 "  " "Server: $($StoreFreeSpace[$cnt].ServerName) $($StoreFreeSpace[$cnt].StoreFreeSpace) MB"
+				}
+			}
+		}
+		Else
+		{
+			Line 2 "Store free space: " "$($StoreFreeSpace[0].StoreFreeSpace) MB"
+		}
 		Line 0 ""
 	}
 	ElseIf($HTML)
 	{
 		WriteHTMLLine 2 0 $Store.StoreName
-		WriteHTMLLine 0 0 "General"
+		#WriteHTMLLine 0 0 "General"
 		$rowdata = @()
 		$columnHeaders = @("Name",($htmlsilver -bor $htmlbold),$Store.StoreName,$htmlwhite)
 		If(![String]::IsNullOrEmpty($Store.description))
 		{
 			$rowdata += @(,('Description',($htmlsilver -bor $htmlbold),$Store.description,$htmlwhite))
 		}
-		$rowdata += @(,('Store owner',($htmlsilver -bor $htmlbold),$xStoreOwner,$htmlwhite))
+		$rowdata += @(,('Site that acts as the owner of this store',($htmlsilver -bor $htmlbold),$xStoreOwner,$htmlwhite))
+
+		If($Store.PathType -eq "LOCAL")
+		{
+			$rowdata += @(,("Store free space",($htmlsilver -bor $htmlbold),"Server: $($StoreFreeSpace[0].ServerName) $($StoreFreeSpace[0].StoreFreeSpace) MB",$htmlwhite))
+			
+			$cnt = -1
+			ForEach($Item in $StoreFreeSpace)
+			{
+				$cnt++
+				If($cnt -gt 0)
+				{
+					$rowdata += @(,("",($htmlsilver -bor $htmlbold),"Server: $($StoreFreeSpace[$cnt].ServerName) $($StoreFreeSpace[$cnt].StoreFreeSpace) MB",$htmlwhite))
+				}
+			}
+		}
+		Else
+		{
+			$rowdata += @(,("Store free space",($htmlsilver -bor $htmlbold),"$($StoreFreeSpace[0].StoreFreeSpace) MB",$htmlwhite))
+		}
 		
-		$msg = ""
+		$msg = "General"
 		FormatHTMLTable $msg "auto" -rowArray $rowdata -columnArray $columnHeaders
 		WriteHTMLLine 0 0 " "
 	}
@@ -10572,7 +10682,7 @@ Function OutputStore
 			}
 		}	
 	}
-	ElseIf($? -and $Servers -eq $Null)
+	ElseIf($? -and $Null -eq $Servers)
 	{
 		$txt = "There are no Servers"
 		OutputWarning $txt
@@ -10631,7 +10741,7 @@ Function OutputStore
 	}
 	ElseIf($HTML)
 	{
-		WriteHTMLLine 0 0 "Servers"
+		#WriteHTMLLine 0 0 "Servers"
 		$rowdata = @()
 		$columnHeaders = @("Site",($htmlsilver -bor $htmlbold),$StoreSite,$htmlwhite)
 		$rowdata += @(,('Servers that provide this store',($htmlsilver -bor $htmlbold),$StoreServers[0],$htmlwhite))
@@ -10645,7 +10755,7 @@ Function OutputStore
 			}
 		}
 		
-		$msg = ""
+		$msg = "Servers"
 		FormatHTMLTable $msg "auto" -rowArray $rowdata -columnArray $columnHeaders
 		WriteHTMLLine 0 0 " "
 	}
@@ -10672,7 +10782,7 @@ Function OutputStore
 		}
 		Else
 		{
-			$ScriptInformation += @{ Data = "Default store path"; Value = "<none>"; }
+			$ScriptInformation += @{ Data = "Default write-cache paths"; Value = "<none>"; }
 		}
 		$Table = AddWordTable -Hashtable $ScriptInformation `
 		-Columns Data,Value `
@@ -10709,7 +10819,7 @@ Function OutputStore
 	}
 	ElseIf($HTML)
 	{
-		WriteHTMLLine 0 0 "Paths"
+		#WriteHTMLLine 0 0 "Paths"
 		$rowdata = @()
 		$columnHeaders = @("Default store path",($htmlsilver -bor $htmlbold),$Store.path,$htmlwhite)
 		If(![String]::IsNullOrEmpty($Store.cachePath))
@@ -10731,10 +10841,77 @@ Function OutputStore
 			$rowdata += @(,('Default write-cache paths',($htmlsilver -bor $htmlbold),"none",$htmlwhite))
 		}
 		
-		$msg = ""
+		$msg = "Paths"
 		FormatHTMLTable $msg "auto" -rowArray $rowdata -columnArray $columnHeaders
 		WriteHTMLLine 0 0 " "
 	}
+}
+
+Function GetStoreFreeSpace 
+{
+	Param([object] $Store)
+	
+	$FreeSpaceArray = @()
+	
+	If($Store.SiteId -eq "00000000-0000-0000-0000-000000000000")
+	{
+		#Store has no owner
+		
+		If($Store.PathType -eq "LOCAL")
+		{
+			#process all PVS servers
+			$Servers = Get-PVSServer -EA 0 4>$Null
+			
+			If($? -and $Servers -ne $Null)
+			{
+				#find which server hosts 
+				ForEach($Server in $Servers)
+				{
+					$ServerStore = Get-PVSServerStore -ServerName $Server.serverName 4>$Null
+					If(($? -and $ServerStore -ne $Null) -and ($ServerStore.storeName -eq $Store.StoreName))
+					{
+						$Results = Get-PvSStoreFreeSpace -StoreName $Store.Name -ServerName $Server.serverName 4>$Null
+						
+						If($? -and $Null -ne $Results)
+						{
+							$obj1 = New-Object -TypeName PSObject
+							$obj1 | Add-Member -MemberType NoteProperty -Name ServerName		-Value $Server.serverName
+							$obj1 | Add-Member -MemberType NoteProperty -Name StoreFreeSpace	-Value $Results.ToString()
+							$FreeSpaceArray +=  $obj1
+						}
+					}
+				}	
+			}
+		}
+		Else
+		{
+			#use the $AdminAddress server to get the free space
+			$Results = Get-PvSStoreFreeSpace -StoreName $Store.Name -ServerName $AdminAddress 4>$Null
+			
+			If($? -and $Null -ne $Results)
+			{
+				$obj1 = New-Object -TypeName PSObject
+				$obj1 | Add-Member -MemberType NoteProperty -Name ServerName		-Value $AdminAddress
+				$obj1 | Add-Member -MemberType NoteProperty -Name StoreFreeSpace	-Value $Results.ToString()
+				$FreeSpaceArray +=  $obj1
+			}
+		}
+	}
+	Else
+	{
+		#Store has an Site owner
+		$Results = Get-PvSStoreFreeSpace -StoreName $Store.Name -SiteId $Store.SiteId 4>$Null
+		
+		If($? -and $Null -ne $Results)
+		{
+			$obj1 = New-Object -TypeName PSObject
+			$obj1 | Add-Member -MemberType NoteProperty -Name ServerName		-Value $AdminAddress
+			$obj1 | Add-Member -MemberType NoteProperty -Name StoreFreeSpace	-Value $Results.ToString()
+			$FreeSpaceArray +=  $obj1
+		}
+	}
+	
+	Return $FreeSpaceArray
 }
 #endregion
 
@@ -11071,8 +11248,6 @@ Function ProcessScriptEnd
 
 ProcessScriptSetup
 
-###REPLACE AFTER THIS SECTION WITH YOUR SCRIPT###
-
 Write-Verbose "$(Get-Date): Start writing report data"
 
 ProcessFarm
@@ -11087,14 +11262,12 @@ ProcessAppendixA
 
 ProcessAppendixB
 
-###REPLACE BEFORE THIS SECTION WITH YOUR SCRIPT###
 #endregion
 
 #region finish script
 Write-Verbose "$(Get-Date): Finishing up document"
 #end of document processing
 
-###Change the two lines below for your script###
 $AbstractTitle = "Citrix Provisioning Services Inventory"
 $SubjectTitle = "Citrix Provisioning Services Inventory"
 
