@@ -6,6 +6,9 @@
 #Thanks to Michael B. Smith, Joe Shonk and Stephane Thirion
 #for testing and fine-tuning tips 
 
+#Version 5.07 19-Oct-2016
+#	Fixed formatting issues with HTML headings output
+
 #Version 5.06 14-Sep-2016
 #	Add support for PVS 7.11
 #	Change version checking to support a four character version number
