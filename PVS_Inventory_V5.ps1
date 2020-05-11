@@ -363,9 +363,9 @@
 	No objects are output from this script.  This script creates a Word or PDF document.
 .NOTES
 	NAME: PVS_Inventory_V5.ps1
-	VERSION: 5.10
+	VERSION: 5.11
 	AUTHOR: Carl Webster, Sr. Solutions Architect at Choice Solutions
-	LASTEDIT: December 16, 2016
+	LASTEDIT: January 31, 2017
 #>
 
 #endregion
@@ -553,6 +553,10 @@ Param(
 #Version 5.10 16-Dec-2016
 #	Added support for PVS 7.12
 #	Added the new vDisk property "Cached secrets cleanup disabled"
+#
+#Version 5.11 31-Jan-2017
+#	Added support for "Configured for XenServer vDisk caching" to Target Devices and Hosts
+#	Added "Datacenter" for VMware Hosts
 #
 #endregion
 
@@ -8865,6 +8869,11 @@ Function OutputSite
 							$ScriptInformation += @{ Data = "Personal vDisk Drive"; Value = $Device.pvdDriveLetter; }
 						}
 
+						If($Device.XsPvsProxyUuid -ne "00000000-0000-0000-0000-000000000000")
+						{
+							$ScriptInformation += @{ Data = "Configured for XenServer vDisk caching"; Value = " "; }
+						}
+						
 						$Table = AddWordTable -Hashtable $ScriptInformation `
 						-Columns Data,Value `
 						-List `
@@ -8904,6 +8913,11 @@ Function OutputSite
 							Line 3 "vDisk`t`t`t: " $Device.diskLocatorName
 							Line 3 "Personal vDisk Drive`t: " $Device.pvdDriveLetter
 						}
+
+						If($Device.XsPvsProxyUuid -ne "00000000-0000-0000-0000-000000000000")
+						{
+							Line 3 "Configured for XenServer vDisk caching"
+						}
 					}
 					ElseIf($HTML)
 					{
@@ -8930,6 +8944,11 @@ Function OutputSite
 						{
 							$rowdata += @(,('vDisk',($htmlsilver -bor $htmlbold),$Device.diskLocatorName,$htmlwhite))
 							$rowdata += @(,('Personal vDisk Drive',($htmlsilver -bor $htmlbold),$Device.pvdDriveLetter,$htmlwhite))
+						}
+
+						If($Device.XsPvsProxyUuid -ne "00000000-0000-0000-0000-000000000000")
+						{
+							$rowdata += @(,('Configured for XenServer vDisk caching',($htmlsilver -bor $htmlbold),"",$htmlwhite))
 						}
 					
 						$msg = ""
@@ -9454,6 +9473,20 @@ Function OutputSite
 					$ScriptInformation += @{ Data = "Description"; Value = $vHost.description; }
 				}
 				$ScriptInformation += @{ Data = "Host"; Value = $vHost.server; }
+				
+				If($vHostType -eq "Citrix XenServer")
+				{
+					$ScriptInformation += @{ Data = "Port"; Value = $vHost.Port; }
+					If($vHost.XsPvsSiteUuid -ne "00000000-0000-0000-0000-000000000000")
+					{
+						$ScriptInformation += @{ Data = "Configured for XenServer vDisk caching"; Value = " "; }
+					}
+				}
+				ElseIf($vHostType -eq "VMWare vSphere/ESX")
+				{
+					$ScriptInformation += @{ Data = "Datacenter"; Value = $vHost.Datacenter; }
+				}
+				
 				$Table = AddWordTable -Hashtable $ScriptInformation `
 				-Columns Data,Value `
 				-List `
@@ -9501,6 +9534,18 @@ Function OutputSite
 					Line 3 "Description`t: " $vHost.description
 				}
 				Line 3 "Host`t`t: " $vHost.server
+				If($vHostType -eq "Citrix XenServer")
+				{
+					Line 3 "Port`t`t: " $vHost.Port
+					If($vHost.XsPvsSiteUuid -ne "00000000-0000-0000-0000-000000000000")
+					{
+						Line 3 "Configured for XenServer vDisk caching"
+					}
+				}
+				ElseIf($vHostType -eq "VMWare vSphere/ESX")
+				{
+					Line 3 "Datacenter`t: " $vHost.Datacenter
+				}
 				
 				Write-Verbose "$(Get-Date): `t`t`t`t`tProcessing vDisk Update Tab"
 				Line 2 "vDisk Update"
@@ -9521,6 +9566,19 @@ Function OutputSite
 					$rowdata += @(,('Description',($htmlsilver -bor $htmlbold),$vHost.description,$htmlwhite))
 				}
 				$rowdata += @(,('Host',($htmlsilver -bor $htmlbold),$vHost.server,$htmlwhite))
+
+				If($vHostType -eq "Citrix XenServer")
+				{
+					$rowdata += @(,('Port',($htmlsilver -bor $htmlbold),$vHost.Port,$htmlwhite))
+					If($vHost.XsPvsSiteUuid -ne "00000000-0000-0000-0000-000000000000")
+					{
+						$rowdata += @(,('Configured for XenServer vDisk caching',($htmlsilver -bor $htmlbold),"",$htmlwhite))
+					}
+				}
+				ElseIf($vHostType -eq "VMWare vSphere/ESX")
+				{
+					$rowdata += @(,('Datacenter',($htmlsilver -bor $htmlbold),$vHost.Datacenter,$htmlwhite))
+				}
 				
 				$msg = ""
 				FormatHTMLTable $msg "auto" -rowArray $rowdata -columnArray $columnHeaders
