@@ -197,8 +197,8 @@
 .PARAMETER AddDateTime
 	Adds a date time stamp to the end of the file name.
 	Time stamp is in the format of yyyy-MM-dd_HHmm.
-	June 1, 2017 at 6PM is 2017-06-01_1800.
-	Output filename will be ReportName_2017-06-01_1800.docx (or .pdf).
+	June 1, 2020 at 6PM is 2020-06-01_1800.
+	Output filename will be ReportName_2020-06-01_1800.docx (or .pdf).
 	This parameter is disabled by default.
 	This parameter has an alias of ADT.
 .PARAMETER Folder
@@ -353,7 +353,7 @@
 		Dr. Watson for the User Name.
 		SuperSleuth@SherlockHolmes.com for the Compnay Email.
 .EXAMPLE
-	PS C:\PSScript > .\PVS_Inventory_V5.ps1 -StartDate "01/01/2017" -EndDate "01/31/2017" 
+	PS C:\PSScript > .\PVS_Inventory_V5.ps1 -StartDate "01/01/2020" -EndDate "01/31/2020" 
 	
 	Will use all Default values.
 	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\Company="Carl Webster"
@@ -364,10 +364,10 @@
 	Sideline for the Cover Page format.
 	Administrator for the User Name.
 	LocalHost for AdminAddress.
-	Will return all Audit Trail entries from "01/01/2017" through "01/31/2017".
+	Will return all Audit Trail entries from "01/01/2020" through "01/31/2020".
 .EXAMPLE
-	PS C:\PSScript > .\PVS_Inventory_V5.ps1 -StartDate "01/01/2017 10:00:00" -EndDate 
-	"01/31/2017 14:00:00" 
+	PS C:\PSScript > .\PVS_Inventory_V5.ps1 -StartDate "01/01/2020 10:00:00" -EndDate 
+	"01/31/2020 14:00:00" 
 	
 	Will use all Default values.
 	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\Company="Carl Webster"
@@ -378,7 +378,7 @@
 	Sideline for the Cover Page format.
 	Administrator for the User Name.
 	LocalHost for AdminAddress.
-	Will return all Audit Trail entries from 01/01/2017 10:100AM through 01/31/2017 2:00PM.
+	Will return all Audit Trail entries from 01/01/2020 10:100AM through 01/31/2020 2:00PM.
 .EXAMPLE
 	PS C:\PSScript > .\PVS_Inventory_V5.ps1 -Folder \\FileServer\ShareName
 	
@@ -439,9 +439,9 @@
 	No objects are output from this script.  This script creates a Word or PDF document.
 .NOTES
 	NAME: PVS_Inventory_V5.ps1
-	VERSION: 5.18
+	VERSION: 5.19
 	AUTHOR: Carl Webster
-	LASTEDIT: September 9, 2019
+	LASTEDIT: December 17, 2019
 #>
 
 #endregion
@@ -582,6 +582,14 @@ Param(
 
 #HTML functions and sample text contributed by Ken Avram October 2014
 
+#Version 5.19 17-Dec-2019
+#	Fix Swedish Table of Contents (Thanks to Johan Kallio)
+#		From 
+#			'sv-'	{ 'Automatisk innehållsförteckning2'; Break }
+#		To
+#			'sv-'	{ 'Automatisk innehållsförteckn2'; Break }
+#	Updated help text
+#
 #Version 5.18 9-Sep-2019
 #	Fix incorrect LicenseSKU value for PVS version 7.19 and later
 #	Fix issue with Versions vDisk tables
@@ -2286,7 +2294,8 @@ Function SetWordHashTable
 			'nb-'	{ 'Automatisk tabell 2'; Break }
 			'nl-'	{ 'Automatische inhoudsopgave 2'; Break }
 			'pt-'	{ 'Sumário Automático 2'; Break }
-			'sv-'	{ 'Automatisk innehållsförteckning2'; Break }
+			# fix in 5.19 thanks to Johan Kallio 'sv-'	{ 'Automatisk innehållsförteckning2'; Break }
+			'sv-'	{ 'Automatisk innehållsförteckn2'; Break }
 			'zh-'	{ '自动目录 2'; Break }
 		}
 	)
@@ -11449,6 +11458,12 @@ Function ProcessScriptEnd
 	}
 
 	$ErrorActionPreference = $SaveEAPreference
+			
+	Write-Host "                                                                                    " -BackgroundColor Black -ForegroundColor White
+	Write-Host "               This FREE script was brought to you by Conversant Group              " -BackgroundColor Black -ForegroundColor White
+	Write-Host "We design, build, and manage infrastructure for a secure, dependable user experience" -BackgroundColor Black -ForegroundColor White
+	Write-Host "                       Visit our website conversantgroup.com                        " -BackgroundColor Black -ForegroundColor White
+	Write-Host "                                                                                    " -BackgroundColor Black -ForegroundColor White
 }
 #endregion
 

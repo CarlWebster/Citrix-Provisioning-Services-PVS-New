@@ -1,10 +1,17 @@
-#Carl Webster, CTP and Sr. Solutions Architect at Choice Solutions
+#Carl Webster, CTP Fellow
 #webster@carlwebster.com
 #@carlwebster on Twitter
 #http://www.CarlWebster.com
 #This script written for "Benji", March 19, 2012
-#Thanks to Michael B. Smith, Joe Shonk and Stephane Thirion
-#for testing and fine-tuning tips 
+#Thanks to Michael B. Smith, Joe Shonk and Stephane Thirion for testing and fine-tuning tips 
+
+#Version 5.19 17-Dec-2019
+#	Fix Swedish Table of Contents (Thanks to Johan Kallio)
+#		From 
+#			'sv-'	{ 'Automatisk innehållsförteckning2'; Break }
+#		To
+#			'sv-'	{ 'Automatisk innehållsförteckn2'; Break }
+#	Updated help text
 
 #Version 5.18 9-Sep-2019
 #	Fix incorrect LicenseSKU value for PVS version 7.19 and later
