@@ -17,6 +17,15 @@
 	
 	You can run this script remotely using the -AdminAddress (AA) parameter.
 	
+	The PVS Console must be installed and the snap-in registered on the computer running 
+	the script.
+	
+	For Windows 8.x, Server 2012 and Server 2012 R2, run:
+		For 32-bit:
+			%systemroot%\Microsoft.NET\Framework\v4.0.30319\installutil.exe "%ProgramFiles%\Citrix\Provisioning Services Console\Citrix.PVS.SnapIn.dll"
+		For 64-bit:
+			%systemroot%\Microsoft.NET\Framework64\v4.0.30319\installutil.exe "%ProgramFiles%\Citrix\Provisioning Services Console\Citrix.PVS.SnapIn.dll"
+	
 	Creates an output file named after the PVS farm.
 	
 	Word and PDF Document includes a Cover Page, Table of Contents and Footer.
@@ -337,9 +346,9 @@
 	No objects are output from this script.  This script creates a Word or PDF document.
 .NOTES
 	NAME: PVS_Inventory_V5.ps1
-	VERSION: 5.01
+	VERSION: 5.02
 	AUTHOR: Carl Webster
-	LASTEDIT: February 8, 2016
+	LASTEDIT: April 12, 2016
 #>
 
 #endregion
@@ -444,11 +453,18 @@ Param(
 
 #HTML functions and sample text contributed by Ken Avram October 2014
 
+#Version 5.00 released 28-Dec-2015
+#	Support for PVS 7.7 and its new real PowerShell implementation
+#	5.00 will NOT work on any previous version of PVS
+#
 #Version 5.01 8-Feb-2016
 #	Added specifying an optional output folder
 #	Added the option to email the output file
 #	Fixed several spacing and typo errors
 #	Corrected help text
+#
+#Version 5.02 12-Apr-2016
+#	Updated help text to show the console and snap-in installation
 #
 #endregion
 
