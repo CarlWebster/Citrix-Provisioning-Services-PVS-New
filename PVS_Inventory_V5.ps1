@@ -7,6 +7,7 @@
 .SYNOPSIS
 	Creates an inventory of a Citrix PVS 7.x Farm.
 .DESCRIPTION
+.DESCRIPTION
 	Creates an inventory of a Citrix PVS 7.x Farm using Microsoft PowerShell, Word,
 	plain text or HTML.
 
@@ -346,9 +347,9 @@
 	No objects are output from this script.  This script creates a Word or PDF document.
 .NOTES
 	NAME: PVS_Inventory_V5.ps1
-	VERSION: 5.02
+	VERSION: 5.03
 	AUTHOR: Carl Webster
-	LASTEDIT: April 12, 2016
+	LASTEDIT: August 17, 2016
 #>
 
 #endregion
@@ -453,10 +454,6 @@ Param(
 
 #HTML functions and sample text contributed by Ken Avram October 2014
 
-#Version 5.00 released 28-Dec-2015
-#	Support for PVS 7.7 and its new real PowerShell implementation
-#	5.00 will NOT work on any previous version of PVS
-#
 #Version 5.01 8-Feb-2016
 #	Added specifying an optional output folder
 #	Added the option to email the output file
@@ -466,6 +463,10 @@ Param(
 #Version 5.02 12-Apr-2016
 #	Updated help text to show the console and snap-in installation
 #
+#Version 5.03 17-Aug-2016
+#	Fixed a few Text and HTML output issues in the Hardware region
+#
+
 #endregion
 
 #region initial variable testing and setup
@@ -820,6 +821,7 @@ Function GetComputerWMIInfo
 	# @kbaggerman on Twitter
 	# http://blog.myvirtualvision.com
 	# modified 1-May-2014 to work in trusted AD Forests and using different domain admin credentials	
+	# modified 17-Aug-2016 to fix a few issues with Text and HTML output
 
 	#Get Computer info
 	Write-Verbose "$(Get-Date): `t`tProcessing WMI Computer information"
@@ -851,7 +853,7 @@ Function GetComputerWMIInfo
 		$Results = $Null
 	}
 	
-	If($? -and $Results -ne $Null)
+	If($? -and $Null -ne $Results)
 	{
 		$ComputerItems = $Results | Select Manufacturer, Model, Domain, `
 		@{N="TotalPhysicalRam"; E={[math]::round(($_.TotalPhysicalMemory / 1GB),0)}}, `
@@ -935,7 +937,7 @@ Function GetComputerWMIInfo
 		$Results = $Null
 	}
 
-	If($? -and $Results -ne $Null)
+	If($? -and $Null -ne $Results)
 	{
 		$drives = $Results | Select caption, @{N="drivesize"; E={[math]::round(($_.size / 1GB),0)}}, 
 		filesystem, @{N="drivefreespace"; E={[math]::round(($_.freespace / 1GB),0)}}, 
@@ -1006,6 +1008,7 @@ Function GetComputerWMIInfo
 	}
 	ElseIf($HTML)
 	{
+		WriteHTMLLine 2 0 "Processor(s)"
 	}
 
 	[bool]$GotProcessors = $True
@@ -1020,7 +1023,7 @@ Function GetComputerWMIInfo
 		$Results = $Null
 	}
 
-	If($? -and $Results -ne $Null)
+	If($? -and $Null -ne $Results)
 	{
 		$Processors = $Results | Select availability, name, description, maxclockspeed, 
 		l2cachesize, l3cachesize, numberofcores, numberoflogicalprocessors
@@ -1086,6 +1089,7 @@ Function GetComputerWMIInfo
 	}
 	ElseIf($HTML)
 	{
+		WriteHTMLLine 2 0 "Network Interface(s)"
 	}
 
 	[bool]$GotNics = $True
@@ -1097,12 +1101,12 @@ Function GetComputerWMIInfo
 	
 	Catch
 	{
-		$Results
+		$Results = $Null
 	}
 
-	If($? -and $Results -ne $Null)
+	If($? -and $Null -ne $Results)
 	{
-		$Nics = $Results | Where {$_.ipaddress -ne $Null}
+		$Nics = $Results | Where {$Null -ne $_.ipaddress}
 		$Results = $Null
 
 		If($Nics -eq $Null ) 
@@ -1128,7 +1132,7 @@ Function GetComputerWMIInfo
 					$ThisNic = $Null
 				}
 				
-				If($? -and $ThisNic -ne $Null)
+				If($? -and $Null -ne $ThisNic)
 				{
 					OutputNicItem $Nic $ThisNic
 				}
@@ -1280,12 +1284,12 @@ Function OutputComputerItem
 	}
 	ElseIf($Text)
 	{
-		Line 2 "Manufacturer`t: " $Item.manufacturer
-		Line 2 "Model`t`t: " $Item.model
-		Line 2 "Domain`t`t: " $Item.domain
-		Line 2 "Total Ram`t: $($Item.totalphysicalram) GB"
-		Line 2 "Physical Processors (sockets): " $Item.NumberOfProcessors
-		Line 2 "Logical Processors (cores w/HT): " $Item.NumberOfLogicalProcessors
+		Line 2 "Manufacturer`t`t`t: " $Item.manufacturer
+		Line 2 "Model`t`t`t`t: " $Item.model
+		Line 2 "Domain`t`t`t`t: " $Item.domain
+		Line 2 "Total Ram`t`t`t: $($Item.totalphysicalram) GB"
+		Line 2 "Physical Processors (sockets)`t: " $Item.NumberOfProcessors
+		Line 2 "Logical Processors (cores w/HT)`t: " $Item.NumberOfLogicalProcessors
 		Line 2 ""
 	}
 	ElseIf($HTML)
@@ -1312,14 +1316,14 @@ Function OutputDriveItem
 	$xDriveType = ""
 	Switch ($drive.drivetype)
 	{
-		0	{$xDriveType = "Unknown"}
-		1	{$xDriveType = "No Root Directory"}
-		2	{$xDriveType = "Removable Disk"}
-		3	{$xDriveType = "Local Disk"}
-		4	{$xDriveType = "Network Drive"}
-		5	{$xDriveType = "Compact Disc"}
-		6	{$xDriveType = "RAM Disk"}
-		Default {$xDriveType = "Unknown"}
+		0	{$xDriveType = "Unknown"; Break}
+		1	{$xDriveType = "No Root Directory"; Break}
+		2	{$xDriveType = "Removable Disk"; Break}
+		3	{$xDriveType = "Local Disk"; Break}
+		4	{$xDriveType = "Network Drive"; Break}
+		5	{$xDriveType = "Compact Disc"; Break}
+		6	{$xDriveType = "RAM Disk"; Break}
+		Default {$xDriveType = "Unknown"; Break}
 	}
 	
 	$xVolumeDirty = ""
@@ -1441,24 +1445,24 @@ Function OutputProcessorItem
 	$xAvailability = ""
 	Switch ($processor.availability)
 	{
-		1	{$xAvailability = "Other"}
-		2	{$xAvailability = "Unknown"}
-		3	{$xAvailability = "Running or Full Power"}
-		4	{$xAvailability = "Warning"}
-		5	{$xAvailability = "In Test"}
-		6	{$xAvailability = "Not Applicable"}
-		7	{$xAvailability = "Power Off"}
-		8	{$xAvailability = "Off Line"}
-		9	{$xAvailability = "Off Duty"}
-		10	{$xAvailability = "Degraded"}
-		11	{$xAvailability = "Not Installed"}
-		12	{$xAvailability = "Install Error"}
-		13	{$xAvailability = "Power Save - Unknown"}
-		14	{$xAvailability = "Power Save - Low Power Mode"}
-		15	{$xAvailability = "Power Save - Standby"}
-		16	{$xAvailability = "Power Cycle"}
-		17	{$xAvailability = "Power Save - Warning"}
-		Default	{$xAvailability = "Unknown"}
+		1	{$xAvailability = "Other"; Break}
+		2	{$xAvailability = "Unknown"; Break}
+		3	{$xAvailability = "Running or Full Power"; Break}
+		4	{$xAvailability = "Warning"; Break}
+		5	{$xAvailability = "In Test"; Break}
+		6	{$xAvailability = "Not Applicable"; Break}
+		7	{$xAvailability = "Power Off"; Break}
+		8	{$xAvailability = "Off Line"; Break}
+		9	{$xAvailability = "Off Duty"; Break}
+		10	{$xAvailability = "Degraded"; Break}
+		11	{$xAvailability = "Not Installed"; Break}
+		12	{$xAvailability = "Install Error"; Break}
+		13	{$xAvailability = "Power Save - Unknown"; Break}
+		14	{$xAvailability = "Power Save - Low Power Mode"; Break}
+		15	{$xAvailability = "Power Save - Standby"; Break}
+		16	{$xAvailability = "Power Cycle"; Break}
+		17	{$xAvailability = "Power Save - Warning"; Break}
+		Default	{$xAvailability = "Unknown"; Break}
 	}
 
 	If($MSWORD -or $PDF)
@@ -1504,26 +1508,26 @@ Function OutputProcessorItem
 	}
 	ElseIf($Text)
 	{
-		Line 2 "Name`t`t`t: " $processor.name
-		Line 2 "Description`t`t: " $processor.description
-		Line 2 "Max Clock Speed`t`t: $($processor.maxclockspeed) MHz"
+		Line 2 "Name`t`t`t`t: " $processor.name
+		Line 2 "Description`t`t`t: " $processor.description
+		Line 2 "Max Clock Speed`t`t`t: $($processor.maxclockspeed) MHz"
 		If($processor.l2cachesize -gt 0)
 		{
-			Line 2 "L2 Cache Size`t`t: $($processor.l2cachesize) KB"
+			Line 2 "L2 Cache Size`t`t`t: $($processor.l2cachesize) KB"
 		}
 		If($processor.l3cachesize -gt 0)
 		{
-			Line 2 "L3 Cache Size`t`t: $($processor.l3cachesize) KB"
+			Line 2 "L3 Cache Size`t`t`t: $($processor.l3cachesize) KB"
 		}
 		If($processor.numberofcores -gt 0)
 		{
-			Line 2 "# of Cores`t`t: " $processor.numberofcores
+			Line 2 "# of Cores`t`t`t: " $processor.numberofcores
 		}
 		If($processor.numberoflogicalprocessors -gt 0)
 		{
 			Line 2 "# of Logical Procs (cores w/HT)`t: " $processor.numberoflogicalprocessors
 		}
-		Line 2 "Availability`t`t: " $xAvailability
+		Line 2 "Availability`t`t`t: " $xAvailability
 		Line 2 ""
 	}
 	ElseIf($HTML)
@@ -1551,7 +1555,7 @@ Function OutputProcessorItem
 		}
 		$rowdata += @(,('Availability',($htmlsilver -bor $htmlbold),$xAvailability,$htmlwhite))
 
-		$msg = "Processor(s)"
+		$msg = ""
 		$columnWidths = @("150px","200px")
 		FormatHTMLTable $msg -rowarray $rowdata -columnArray $columnheaders -fixedWidth $columnWidths
 		WriteHTMLLine 0 0 ""
@@ -1565,24 +1569,24 @@ Function OutputNicItem
 	$xAvailability = ""
 	Switch ($processor.availability)
 	{
-		1	{$xAvailability = "Other"}
-		2	{$xAvailability = "Unknown"}
-		3	{$xAvailability = "Running or Full Power"}
-		4	{$xAvailability = "Warning"}
-		5	{$xAvailability = "In Test"}
-		6	{$xAvailability = "Not Applicable"}
-		7	{$xAvailability = "Power Off"}
-		8	{$xAvailability = "Off Line"}
-		9	{$xAvailability = "Off Duty"}
-		10	{$xAvailability = "Degraded"}
-		11	{$xAvailability = "Not Installed"}
-		12	{$xAvailability = "Install Error"}
-		13	{$xAvailability = "Power Save - Unknown"}
-		14	{$xAvailability = "Power Save - Low Power Mode"}
-		15	{$xAvailability = "Power Save - Standby"}
-		16	{$xAvailability = "Power Cycle"}
-		17	{$xAvailability = "Power Save - Warning"}
-		Default	{$xAvailability = "Unknown"}
+		1	{$xAvailability = "Other"; Break}
+		2	{$xAvailability = "Unknown"; Break}
+		3	{$xAvailability = "Running or Full Power"; Break}
+		4	{$xAvailability = "Warning"; Break}
+		5	{$xAvailability = "In Test"; Break}
+		6	{$xAvailability = "Not Applicable"; Break}
+		7	{$xAvailability = "Power Off"; Break}
+		8	{$xAvailability = "Off Line"; Break}
+		9	{$xAvailability = "Off Duty"; Break}
+		10	{$xAvailability = "Degraded"; Break}
+		11	{$xAvailability = "Not Installed"; Break}
+		12	{$xAvailability = "Install Error"; Break}
+		13	{$xAvailability = "Power Save - Unknown"; Break}
+		14	{$xAvailability = "Power Save - Low Power Mode"; Break}
+		15	{$xAvailability = "Power Save - Standby"; Break}
+		16	{$xAvailability = "Power Cycle"; Break}
+		17	{$xAvailability = "Power Save - Warning"; Break}
+		Default	{$xAvailability = "Unknown"; Break}
 	}
 
 	$xIPAddress = @()
@@ -1597,7 +1601,7 @@ Function OutputNicItem
 		$xIPSubnet += "$($IPSubnet)"
 	}
 
-	If($nic.dnsdomainsuffixsearchorder -ne $Null -and $nic.dnsdomainsuffixsearchorder.length -gt 0)
+	If($Null -ne $nic.dnsdomainsuffixsearchorder -and $nic.dnsdomainsuffixsearchorder.length -gt 0)
 	{
 		$nicdnsdomainsuffixsearchorder = $nic.dnsdomainsuffixsearchorder
 		$xnicdnsdomainsuffixsearchorder = @()
@@ -1607,7 +1611,7 @@ Function OutputNicItem
 		}
 	}
 	
-	If($nic.dnsserversearchorder -ne $Null -and $nic.dnsserversearchorder.length -gt 0)
+	If($Null -ne $nic.dnsserversearchorder -and $nic.dnsserversearchorder.length -gt 0)
 	{
 		$nicdnsserversearchorder = $nic.dnsserversearchorder
 		$xnicdnsserversearchorder = @()
@@ -1630,10 +1634,10 @@ Function OutputNicItem
 	$xTcpipNetbiosOptions = ""
 	Switch ($nic.TcpipNetbiosOptions)
 	{
-		0	{$xTcpipNetbiosOptions = "Use NetBIOS setting from DHCP Server"}
-		1	{$xTcpipNetbiosOptions = "Enable NetBIOS"}
-		2	{$xTcpipNetbiosOptions = "Disable NetBIOS"}
-		Default	{$xTcpipNetbiosOptions = "Unknown"}
+		0	{$xTcpipNetbiosOptions = "Use NetBIOS setting from DHCP Server"; Break}
+		1	{$xTcpipNetbiosOptions = "Enable NetBIOS"; Break}
+		2	{$xTcpipNetbiosOptions = "Disable NetBIOS"; Break}
+		Default	{$xTcpipNetbiosOptions = "Unknown"; Break}
 	}
 	
 	$xwinsenablelmhostslookup = ""
@@ -1655,7 +1659,10 @@ Function OutputNicItem
 			$NicInformation += @{ Data = "Description"; Value = $Nic.description; }
 		}
 		$NicInformation += @{ Data = "Connection ID"; Value = $ThisNic.NetConnectionID; }
-		$NicInformation += @{ Data = "Manufacturer"; Value = $Nic.manufacturer; }
+		If(validObject $Nic Manufacturer)
+		{
+			$NicInformation += @{ Data = "Manufacturer"; Value = $Nic.manufacturer; }
+		}
 		$NicInformation += @{ Data = "Availability"; Value = $xAvailability; }
 		$NicInformation += @{ Data = "Physical Address"; Value = $Nic.macaddress; }
 		If($xIPAddress.Count -gt 1)
@@ -1693,7 +1700,7 @@ Function OutputNicItem
 		{
 			$NicInformation += @{ Data = "DNS Domain"; Value = $Nic.dnsdomain; }
 		}
-		If($nic.dnsdomainsuffixsearchorder -ne $Null -and $nic.dnsdomainsuffixsearchorder.length -gt 0)
+		If($Null -ne $nic.dnsdomainsuffixsearchorder -and $nic.dnsdomainsuffixsearchorder.length -gt 0)
 		{
 			$NicInformation += @{ Data = "DNS Search Suffixes"; Value = $xnicdnsdomainsuffixsearchorder[0]; }
 			$cnt = -1
@@ -1707,7 +1714,7 @@ Function OutputNicItem
 			}
 		}
 		$NicInformation += @{ Data = "DNS WINS Enabled"; Value = $xdnsenabledforwinsresolution; }
-		If($nic.dnsserversearchorder -ne $Null -and $nic.dnsserversearchorder.length -gt 0)
+		If($Null -ne $nic.dnsserversearchorder -and $nic.dnsserversearchorder.length -gt 0)
 		{
 			$NicInformation += @{ Data = "DNS Servers"; Value = $xnicdnsserversearchorder[0]; }
 			$cnt = -1
@@ -1760,7 +1767,10 @@ Function OutputNicItem
 			Line 2 "Description`t`t: " $nic.description
 		}
 		Line 2 "Connection ID`t`t: " $ThisNic.NetConnectionID
-		Line 2 "Manufacturer`t`t: " $ThisNic.manufacturer
+		If(validObject $Nic Manufacturer)
+		{
+			Line 2 "Manufacturer`t`t: " $Nic.manufacturer
+		}
 		Line 2 "Availability`t`t: " $xAvailability
 		Line 2 "Physical Address`t: " $nic.macaddress
 		Line 2 "IP Address`t`t: " $xIPAddress[0]
@@ -1770,7 +1780,7 @@ Function OutputNicItem
 			$cnt++
 			If($cnt -gt 0)
 			{
-				Line 5 "" $tmp
+				Line 5 "  " $tmp
 			}
 		}
 		Line 2 "Default Gateway`t`t: " $Nic.Defaultipgateway
@@ -1781,7 +1791,7 @@ Function OutputNicItem
 			$cnt++
 			If($cnt -gt 0)
 			{
-				Line 5 "" $tmp
+				Line 5 "  " $tmp
 			}
 		}
 		If($nic.dhcpenabled)
@@ -1797,32 +1807,32 @@ Function OutputNicItem
 		{
 			Line 2 "DNS Domain`t`t: " $nic.dnsdomain
 		}
-		If($nic.dnsdomainsuffixsearchorder -ne $Null -and $nic.dnsdomainsuffixsearchorder.length -gt 0)
+		If($Null -ne $nic.dnsdomainsuffixsearchorder -and $nic.dnsdomainsuffixsearchorder.length -gt 0)
 		{
 			[int]$x = 1
-			Line 2 "DNS Search Suffixes`t:" $xnicdnsdomainsuffixsearchorder[0]
+			Line 2 "DNS Search Suffixes`t: " $xnicdnsdomainsuffixsearchorder[0]
 			$cnt = -1
 			ForEach($tmp in $xnicdnsdomainsuffixsearchorder)
 			{
 				$cnt++
 				If($cnt -gt 0)
 				{
-					$ScriptInformation += @{ Data = ""; Value = $tmp; }
+					Line 5 "  " $tmp
 				}
 			}
 		}
 		Line 2 "DNS WINS Enabled`t: " $xdnsenabledforwinsresolution
-		If($nic.dnsserversearchorder -ne $Null -and $nic.dnsserversearchorder.length -gt 0)
+		If($Null -ne $nic.dnsserversearchorder -and $nic.dnsserversearchorder.length -gt 0)
 		{
 			[int]$x = 1
-			Line 2 "DNS Servers`t`t:" $xnicdnsserversearchorder[0]
+			Line 2 "DNS Servers`t`t: " $xnicdnsserversearchorder[0]
 			$cnt = -1
 			ForEach($tmp in $xnicdnsserversearchorder)
 			{
 				$cnt++
 				If($cnt -gt 0)
 				{
-					$ScriptInformation += @{ Data = ""; Value = $tmp; }
+					Line 5 "  " $tmp
 				}
 			}
 		}
@@ -1835,7 +1845,7 @@ Function OutputNicItem
 		}
 		If(![String]::IsNullOrEmpty($nic.winsprimaryserver))
 		{
-			Line 3 "Primary Server`t`t: " $nic.winsprimaryserver
+			Line 3 "Primary Server`t: " $nic.winsprimaryserver
 		}
 		If(![String]::IsNullOrEmpty($nic.winssecondaryserver))
 		{
@@ -1855,7 +1865,10 @@ Function OutputNicItem
 			$rowdata += @(,('Description',($htmlsilver -bor $htmlbold),$Nic.description,$htmlwhite))
 		}
 		$rowdata += @(,('Connection ID',($htmlsilver -bor $htmlbold),$ThisNic.NetConnectionID,$htmlwhite))
-		$rowdata += @(,('Manufacturer',($htmlsilver -bor $htmlbold),$Nic.manufacturer,$htmlwhite))
+		If(validObject $Nic Manufacturer)
+		{
+			$rowdata += @(,('Manufacturer',($htmlsilver -bor $htmlbold),$Nic.manufacturer,$htmlwhite))
+		}
 		$rowdata += @(,('Availability',($htmlsilver -bor $htmlbold),$xAvailability,$htmlwhite))
 		$rowdata += @(,('Physical Address',($htmlsilver -bor $htmlbold),$Nic.macaddress,$htmlwhite))
 		$rowdata += @(,('IP Address',($htmlsilver -bor $htmlbold),$xIPAddress[0],$htmlwhite))
@@ -1868,7 +1881,7 @@ Function OutputNicItem
 				$rowdata += @(,('IP Address',($htmlsilver -bor $htmlbold),$tmp,$htmlwhite))
 			}
 		}
-		$rowdata += @(,('Default Gateway',($htmlsilver -bor $htmlbold),$Nic.Defaultipgateway,$htmlwhite))
+		$rowdata += @(,('Default Gateway',($htmlsilver -bor $htmlbold),$Nic.Defaultipgateway[0],$htmlwhite))
 		$rowdata += @(,('Subnet Mask',($htmlsilver -bor $htmlbold),$xIPSubnet[0],$htmlwhite))
 		$cnt = -1
 		ForEach($tmp in $xIPSubnet)
@@ -1892,7 +1905,7 @@ Function OutputNicItem
 		{
 			$rowdata += @(,('DNS Domain',($htmlsilver -bor $htmlbold),$Nic.dnsdomain,$htmlwhite))
 		}
-		If($nic.dnsdomainsuffixsearchorder -ne $Null -and $nic.dnsdomainsuffixsearchorder.length -gt 0)
+		If($Null -ne $nic.dnsdomainsuffixsearchorder -and $nic.dnsdomainsuffixsearchorder.length -gt 0)
 		{
 			$rowdata += @(,('DNS Search Suffixes',($htmlsilver -bor $htmlbold),$xnicdnsdomainsuffixsearchorder[0],$htmlwhite))
 			$cnt = -1
@@ -1906,7 +1919,7 @@ Function OutputNicItem
 			}
 		}
 		$rowdata += @(,('DNS WINS Enabled',($htmlsilver -bor $htmlbold),$xdnsenabledforwinsresolution,$htmlwhite))
-		If($nic.dnsserversearchorder -ne $Null -and $nic.dnsserversearchorder.length -gt 0)
+		If($Null -ne $nic.dnsserversearchorder -and $nic.dnsserversearchorder.length -gt 0)
 		{
 			$rowdata += @(,('DNS Servers',($htmlsilver -bor $htmlbold),$xnicdnsserversearchorder[0],$htmlwhite))
 			$cnt = -1
@@ -1938,7 +1951,7 @@ Function OutputNicItem
 			$rowdata += @(,('Scope ID',($htmlsilver -bor $htmlbold),$Nic.winsscopeid,$htmlwhite))
 		}
 
-		$msg = "Network Interface(s)"
+		$msg = ""
 		$columnWidths = @("150px","200px")
 		FormatHTMLTable $msg -rowarray $rowdata -columnArray $columnheaders -fixedWidth $columnWidths
 		WriteHTMLLine 0 0 ""
