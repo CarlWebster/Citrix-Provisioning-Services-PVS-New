@@ -5,6 +5,12 @@
 #This script written for "Benji", March 19, 2012
 #Thanks to Michael B. Smith, Joe Shonk and Stephane Thirion for testing and fine-tuning tips 
 
+#Version 5.20 20-Dec-2019
+#	Fixed an extra set of {} on a Default Switch statement
+#		Default {{$xType = "Undefined"; Break }}
+#		This caused "$xType = "Undefined"; Break" to show in the console
+#	Tested with PVS 1912
+
 #Version 5.19 17-Dec-2019
 #	Fix Swedish Table of Contents (Thanks to Johan Kallio)
 #		From 
