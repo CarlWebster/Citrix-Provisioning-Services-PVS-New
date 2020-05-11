@@ -6,6 +6,13 @@
 #Thanks to Michael B. Smith, Joe Shonk and Stephane Thirion
 #for testing and fine-tuning tips 
 
+#Version 5.05 12-Sep-2016
+#	Add ShowScriptOptions when using TEXT or HTML
+#	Add in support for the -Dev and -ScriptInfo parameters
+#	Fix several issues with HTML and Text output
+#	Some general code cleanup of unused variables
+#	Add missing function validObject
+
 #Version 5.04 12-Sep-2016
 #	If remoting is used (-AdminAddress), check if the script is being run elevated. If not,
 #		show the script needs elevation and end the script

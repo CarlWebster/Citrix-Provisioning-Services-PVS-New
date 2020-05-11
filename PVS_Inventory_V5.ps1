@@ -176,6 +176,20 @@
 .PARAMETER To
 	Specifies the username for the To email address.
 	If SmtpServer is used, this is a required parameter.
+.PARAMETER Dev
+	Clears errors at the beginning of the script.
+	Outputs all errors to a text file at the end of the script.
+	
+	This is used when the script developer requests more troubleshooting data.
+	Text file is placed in the same folder from where the script is run.
+	
+	This parameter is disabled by default.
+.PARAMETER ScriptInfo
+	Outputs information about the script to a text file.
+	Text file is placed in the same folder from where the script is run.
+	
+	This parameter is disabled by default.
+	This parameter has an alias of SI.
 .EXAMPLE
 	PS C:\PSScript > .\PVS_Inventory_V5.ps1
 	
@@ -348,7 +362,7 @@
 	No objects are output from this script.  This script creates a Word or PDF document.
 .NOTES
 	NAME: PVS_Inventory_V5.ps1
-	VERSION: 5.04
+	VERSION: 5.05
 	AUTHOR: Carl Webster, Sr. Solutions Architect at Choice Solutions
 	LASTEDIT: September 12, 2016
 #>
@@ -442,7 +456,14 @@ Param(
 	[string]$From="",
 
 	[parameter(ParameterSetName="SMTP",Mandatory=$True)] 
-	[string]$To=""
+	[string]$To="",
+
+	[parameter(Mandatory=$False)] 
+	[Switch]$Dev=$False,
+	
+	[parameter(Mandatory=$False)] 
+	[Alias("SI")]
+	[Switch]$ScriptInfo=$False
 	
 	)
 #endregion
@@ -468,11 +489,18 @@ Param(
 #Version 5.03 17-Aug-2016
 #	Fixed a few Text and HTML output issues in the Hardware region
 #
-#Version 5.04
+#Version 5.04 12-Sep-2016
 #	If remoting is used (-AdminAddress), check if the script is being run elevated. If not,
 #		show the script needs elevation and end the script
 #	Added Break statements to most of the Switch statements
 #	Added checking the NIC's "Allow the computer to turn off this device to save power" setting
+#
+#Version 5.05 12-Sep-2016
+#	Add ShowScriptOptions when using TEXT or HTML
+#	Add in support for the -Dev and -ScriptInfo parameters
+#	Fix several issues with HTML and Text output
+#	Some general code cleanup of unused variables
+#	Add missing function validObject
 #endregion
 
 #region initial variable testing and setup
@@ -543,6 +571,14 @@ If($To -eq $Null)
 {
 	$To = ""
 }
+If($Null -eq $Dev)
+{
+	$Dev = $False
+}
+If($Null -eq $ScriptInfo)
+{
+	$ScriptInfo = $False
+}
 
 If(!(Test-Path Variable:PDF))
 {
@@ -603,6 +639,20 @@ If(!(Test-Path Variable:From))
 If(!(Test-Path Variable:To))
 {
 	$To = ""
+}
+If(!(Test-Path Variable:Dev))
+{
+	$Dev = $False
+}
+If(!(Test-Path Variable:ScriptInfo))
+{
+	$ScriptInfo = $False
+}
+
+If($Dev)
+{
+	$Error.Clear()
+	$Script:DevErrorFile = "$($pwd.Path)\PVSInventoryScriptErrors_$(Get-Date -f yyyy-MM-dd_HHmm).txt"
 }
 
 If($MSWord -eq $Null)
@@ -3100,7 +3150,7 @@ Function WriteHTMLLine
 			$HTMLBody += "</b>"
 		} 
 	}
-	$HTMLBody += <br />
+	$HTMLBody += "<br />"
 
 	out-file -FilePath $Script:FileName1 -Append -InputObject $HTMLBody 4>$Null
 }
@@ -3965,6 +4015,7 @@ Function SendEmail
 {
 	Param([string]$Attachments)
 	Write-Verbose "$(Get-Date): Prepare to email"
+	
 	$emailAttachment = $Attachments
 	$emailSubject = $Script:Title
 	$emailBody = @"
@@ -3973,7 +4024,13 @@ Hello, <br />
 $Script:Title is attached.
 "@ 
 
+	If($Dev)
+	{
+		Out-File -FilePath $Script:DevErrorFile -InputObject $error 4>$Null
+	}
+
 	$error.Clear()
+
 	If($UseSSL)
 	{
 		Write-Verbose "$(Get-Date): Trying to send email using current user's credentials with SSL"
@@ -3995,9 +4052,15 @@ $Script:Title is attached.
 		#The server response was: 5.7.57 SMTP; Client was not authenticated to send anonymous mail during MAIL FROM
 		Write-Verbose "$(Get-Date): Current user's credentials failed. Ask for usable credentials."
 
-		$emailCredentials = Get-Credential -Message "Enter the email account and password to send email"
+		If($Dev)
+		{
+			Out-File -FilePath $Script:DevErrorFile -InputObject $error -Append 4>$Null
+		}
 
 		$error.Clear()
+
+		$emailCredentials = Get-Credential -Message "Enter the email account and password to send email"
+
 		If($UseSSL)
 		{
 			Send-MailMessage -Attachments $emailAttachment -Body $emailBody -BodyAsHtml -From $From `
@@ -4036,50 +4099,56 @@ Function ShowScriptOptions
 {
 	Write-Verbose "$(Get-Date): "
 	Write-Verbose "$(Get-Date): "
-	If($MSWord -or $PDF)
+	Write-Verbose "$(Get-Date): AddDateTime   : $($AddDateTime)"
+	Write-Verbose "$(Get-Date): AdminAddress  : $($AdminAddress)"
+	If($MSWORD -or $PDF)
 	{
-		Write-Verbose "$(Get-Date): Company Name  : $($CompanyName)"
+		Write-Verbose "$(Get-Date): Company Name  : $($Script:CoName)"
 		Write-Verbose "$(Get-Date): Cover Page    : $($CoverPage)"
+	}
+	Write-Verbose "$(Get-Date): Dev           : $($Dev)"
+	If($Dev)
+	{
+		Write-Verbose "$(Get-Date): DevErrorFile  : $($Script:DevErrorFile)"
+	}
+	Write-Verbose "$(Get-Date): Domain        : $($Domain)"
+	Write-Verbose "$(Get-Date): End Date      : $($EndDate)"
+	Write-Verbose "$(Get-Date): Filename1     : $($Script:filename1)"
+	If($PDF)
+	{
+		Write-Verbose "$(Get-Date): Filename2     : $($Script:filename2)"
+	}
+	Write-Verbose "$(Get-Date): Folder        : $($Folder)"
+	Write-Verbose "$(Get-Date): From          : $($From)"
+	Write-Verbose "$(Get-Date): HW Inventory  : $($Hardware)"
+	Write-Verbose "$(Get-Date): Save As HTML  : $($HTML)"
+	Write-Verbose "$(Get-Date): Save As PDF   : $($PDF)"
+	Write-Verbose "$(Get-Date): Save As TEXT  : $($TEXT)"
+	Write-Verbose "$(Get-Date): Save As WORD  : $($MSWORD)"
+	Write-Verbose "$(Get-Date): ScriptInfo    : $($ScriptInfo)"
+	Write-Verbose "$(Get-Date): Smtp Port     : $($SmtpPort)"
+	Write-Verbose "$(Get-Date): Smtp Server   : $($SmtpServer)"
+	Write-Verbose "$(Get-Date): Start Date    : $($StartDate)"
+	Write-Verbose "$(Get-Date): Title         : $($Script:Title)"
+	Write-Verbose "$(Get-Date): To            : $($To)"
+	Write-Verbose "$(Get-Date): Use SSL       : $($UseSSL)"
+	Write-Verbose "$(Get-Date): User          : $($User)"
+	If($MSWORD -or $PDF)
+	{
 		Write-Verbose "$(Get-Date): User Name     : $($UserName)"
-		Write-Verbose "$(Get-Date): Save As Word  : $($Word)"
-		Write-Verbose "$(Get-Date): Save As PDF   : $($PDF)"
-		Write-Verbose "$(Get-Date): Title         : $($Script:Title)"
-		Write-Verbose "$(Get-Date): HW Inventory  : $($Hardware)"
-		Write-Verbose "$(Get-Date): Filename1     : $($filename1)"
-		If($PDF)
-		{
-			Write-Verbose "$(Get-Date): Filename2     : $($filename2)"
-		}
-		Write-Verbose "$(Get-Date): Word version  : $($WordProduct)"
-		Write-Verbose "$(Get-Date): Word language : $($Script:WordLanguageValue)"
 	}
-	ElseIf($Text)
-	{
-		Write-Verbose "$(Get-Date): Save As Text  : $($Text)"
-		Write-Verbose "$(Get-Date): HW Inventory  : $($Hardware)"
-		Write-Verbose "$(Get-Date): Filename1     : $($Script:FileName1)"
-	}
-	ElseIf($HTML)
-	{
-		Write-Verbose "$(Get-Date): Save As HTML  : $($HTML)"
-		Write-Verbose "$(Get-Date): HW Inventory  : $($Hardware)"
-		Write-Verbose "$(Get-Date): Filename1     : $($Script:FileName1)"
-	}
-	If(![System.String]::IsNullOrEmpty( $SmtpServer ))
-	{
-		Write-Verbose "$(Get-Date): Smtp Server   : $($SmtpServer)"
-		Write-Verbose "$(Get-Date): Smtp Port     : $($SmtpPort)"
-		Write-Verbose "$(Get-Date): Use SSL       : $($UseSSL)"
-		Write-Verbose "$(Get-Date): From          : $($From)"
-		Write-Verbose "$(Get-Date): To            : $($To)"
-	}
-	Write-Verbose "$(Get-Date): Add DateTime : $($AddDateTime)"
-	Write-Verbose "$(Get-Date): OS Detected  : $($Script:RunningOS)"
-	Write-Verbose "$(Get-Date): PSUICulture  : $($PSUICulture)"
-	Write-Verbose "$(Get-Date): PSCulture    : $($PSCulture)"
-	Write-Verbose "$(Get-Date): PoSH version : $($Host.Version)"
 	Write-Verbose "$(Get-Date): "
-	Write-Verbose "$(Get-Date): Script start : $($Script:StartTime)"
+	Write-Verbose "$(Get-Date): OS Detected   : $($Script:RunningOS)"
+	Write-Verbose "$(Get-Date): PoSH version  : $($Host.Version)"
+	Write-Verbose "$(Get-Date): PSCulture     : $($PSCulture)"
+	Write-Verbose "$(Get-Date): PSUICulture   : $($PSUICulture)"
+	If($MSWORD -or $PDF)
+	{
+		Write-Verbose "$(Get-Date): Word language : $($Script:WordLanguageValue)"
+		Write-Verbose "$(Get-Date): Word version  : $($Script:WordProduct)"
+	}
+	Write-Verbose "$(Get-Date): "
+	Write-Verbose "$(Get-Date): Script start  : $($Script:StartTime)"
 	Write-Verbose "$(Get-Date): "
 	Write-Verbose "$(Get-Date): "
 }
@@ -4095,6 +4164,19 @@ Function validStateProp( [object] $object, [string] $topLevel, [string] $secondL
 			{
 				Return $True
 			}
+		}
+	}
+	Return $False
+}
+
+Function validObject( [object] $object, [string] $topLevel )
+{
+	#function created 8-jan-2014 by Michael B. Smith
+	If( $object )
+	{
+		If((gm -Name $topLevel -InputObject $object))
+		{
+			Return $True
 		}
 	}
 	Return $False
@@ -5623,7 +5705,7 @@ Function OutputFarm
 	{
 		Line 0 "Options"
 		Line 1 "Auto-Add"
-		Line 2 "Enable auto-add: " $autoAddEnabled
+		Line 2 "Enable auto-add: " $xautoAddEnabled
 		If($farm.autoAddEnabled)
 		{
 			Line 3 "Add new devices to this site: " $farm.DefaultSiteName
@@ -5817,10 +5899,10 @@ Function OutputSite
 	$Script:AdvancedItems1 = @()
 	$Script:AdvancedItems2 = @()
 
-	$selection.InsertNewPage()
 	#general tab
 	If($MSWord -or $PDF)
 	{
+		$selection.InsertNewPage()
 		WriteWordLine 1 0 "Site properties"
 		WriteWordLine 2 0 "General"
 		[System.Collections.Hashtable[]] $ScriptInformation = @()
@@ -6611,7 +6693,19 @@ Function OutputSite
 	Write-Verbose "$(Get-Date): `t`tProcessing all vDisks in site"
 	$Disks = Get-PVSDiskInfo -SiteName $PVSSite.SiteName -EA 0 4>$Null
 
-	WriteWordLine 2 0 "vDisk Pool"
+	If($MSWord -or $PDF)
+	{
+		WriteWordLine 2 0 "vDisk Pool"
+	}
+	ElseIf($Text)
+	{
+		Line 0 "vDisk Pool"
+	}
+	ElseIf($HTML)
+	{
+		WriteHTMLLine 2 0 "vDisk Pool"
+	}
+	
 	If($? -and $Disks -ne $Null)
 	{
 		ForEach($Disk in $Disks)
@@ -6727,7 +6821,7 @@ Function OutputSite
 			}
 			ElseIf($Text)
 			{
-				WriteWordLine 3 0 $Disk.diskLocatorName
+				Line 0 $Disk.diskLocatorName
 				Line 1 "vDisk Properties"
 				Line 2 "General"
 				Line 3 "Site`t`t: " $Disk.siteName
@@ -8049,7 +8143,7 @@ Function OutputSite
 				}
 				ElseIf($HTML)
 				{
-					WriteWordLine 0 2 "ESD"
+					WriteHTMLLine 0 2 "ESD"
 					$rowdata = @()
 					$columnHeaders = @("ESD client to use",($htmlsilver -bor $htmlbold),$xTaskesdType,$htmlwhite)
 
@@ -8100,7 +8194,7 @@ Function OutputSite
 					}
 					ElseIf($HTML)
 					{
-						WriteWordLine 0 2 "Scripts"
+						WriteHTMLLine 0 2 "Scripts"
 						$rowdata = @()
 						$columnHeaders = @("Scripts that execute with the vDisk update processing",($htmlsilver -bor $htmlbold),"",$htmlwhite)
 						$rowdata += @(,('Pre-update script',($htmlsilver -bor $htmlbold),$Task.preUpdateScript,$htmlwhite))
@@ -8145,7 +8239,7 @@ Function OutputSite
 				}
 				ElseIf($HTML)
 				{
-					WriteWordLine 0 2 "Access"
+					WriteHTMLLine 0 2 "Access"
 					$rowdata = @()
 					$columnHeaders = @("Upon successful completion, access assigned to the vDisk",($htmlsilver -bor $htmlbold),$xTaskpostUpdateApprove,$htmlwhite)
 
@@ -8242,7 +8336,7 @@ Function OutputSite
 			}
 			ElseIf($HTML)
 			{
-				WriteWordLine 3 0 "Security"
+				WriteHTMLLine 3 0 "Security"
 			}
 			$AuthGroups = Get-PvsAuthGroup -CollectionId $Collection.collectionId -EA 0 4>$Null
 
@@ -8575,7 +8669,7 @@ Function OutputSite
 					}
 					ElseIf($HTML)
 					{
-						#WriteWordLine 3 0 "General"
+						#WriteHTMLLine 3 0 "General"
 						$rowdata = @()
 						$columnHeaders = @("Name",($htmlsilver -bor $htmlbold),$Device.deviceName,$htmlwhite)
 						$rowdata += @(,('Description',($htmlsilver -bor $htmlbold),$Device.deviceName,$htmlwhite))
@@ -8616,7 +8710,7 @@ Function OutputSite
 					}
 					ElseIf($HTML)
 					{
-						#WriteWordLine 3 0 "vDisks"
+						#WriteHTMLLine 3 0 "vDisks"
 					}
 					#process all vdisks for this device
 					$vDisks = Get-PvsDiskInfo -deviceName $Device.deviceName -EA 0 4>$Null
@@ -9011,7 +9105,7 @@ Function OutputSite
 			ElseIf($HTML)
 			{
 				WriteHTMLLine 3 0 $SiteView.siteViewName
-				WriteWordLine 0 0 "View Properties"
+				WriteHTMLLine 0 0 "View Properties"
 				$rowdata = @()
 				$columnHeaders = @("Name",($htmlsilver -bor $htmlbold),$SiteView.siteViewName,$htmlwhite)
 				If(![String]::IsNullOrEmpty($SiteView.description))
@@ -9025,7 +9119,20 @@ Function OutputSite
 			}
 			
 			Write-Verbose "$(Get-Date): `t`t`t`tProcessing Members Tab"
-			WriteWordLine 4 0 "Members"
+			
+			If($MSWord -or $PDF)
+			{
+				WriteWordLine 4 0 "Members"
+			}
+			ElseIf($Text)
+			{
+				Line 0 "Members"
+			}
+			ElseIf($HTML)
+			{
+				WriteHTMLLine 4 0 "Members"
+			}
+			
 			#process each target device contained in the site view
 			$Members = Get-PVSDevice -SiteViewId $SiteView.siteViewId -EA 0 4>$Null
 			If($? -and $Members -ne $Null)
@@ -9800,9 +9907,21 @@ Function ProcessFarmViews
 {
 	#process the farm views now
 	Write-Verbose "$(Get-Date): Processing all PVS Farm Views"
-	$selection.InsertNewPage()
-	WriteWordLine 1 0 "Farm Views"
-	$Temp = $PVSSite.siteName
+	
+	If($MSWord -or $PDF)
+	{
+		$selection.InsertNewPage()
+		WriteWordLine 1 0 "Farm Views"
+	}
+	ElseIf($Text)
+	{
+		Line 0 "Farm Views"
+	}
+	ElseIf($HTML)
+	{
+		WriteHTMLLine 1 0 "Farm Views"
+	}
+	
 	$FarmViews = Get-PVSFarmView -EA 0 4>$Null
 	
 	If($? -and $FarmViews -ne $Null)
@@ -10445,6 +10564,97 @@ Function ClearPVSConnection
 }
 #endregion
 
+#region script end
+Function ProcessScriptEnd
+{
+	Write-Verbose "$(Get-Date): Script has completed"
+	Write-Verbose "$(Get-Date): "
+
+	#http://poshtips.com/measuring-elapsed-time-in-powershell/
+	Write-Verbose "$(Get-Date): Script started: $($Script:StartTime)"
+	Write-Verbose "$(Get-Date): Script ended: $(Get-Date)"
+	$runtime = $(Get-Date) - $Script:StartTime
+	$Str = [string]::format("{0} days, {1} hours, {2} minutes, {3}.{4} seconds",
+		$runtime.Days,
+		$runtime.Hours,
+		$runtime.Minutes,
+		$runtime.Seconds,
+		$runtime.Milliseconds)
+	Write-Verbose "$(Get-Date): Elapsed time: $($Str)"
+
+	If($Dev)
+	{
+		If($SmtpServer -eq "")
+		{
+			Out-File -FilePath $Script:DevErrorFile -InputObject $error 4>$Null
+		}
+		Else
+		{
+			Out-File -FilePath $Script:DevErrorFile -InputObject $error -Append 4>$Null
+		}
+	}
+
+	If($ScriptInfo)
+	{
+		$SIFile = "$($pwd.Path)\PVSInventoryScriptInfo_$(Get-Date -f yyyy-MM-dd_HHmm).txt"
+		Out-File -FilePath $SIFile -InputObject "" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "Add DateTime  : $($AddDateTime)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "AdminAddress  : $($AdminAddress)" 4>$Null
+		If($MSWORD -or $PDF)
+		{
+			Out-File -FilePath $SIFile -Append -InputObject "Company Name  : $($Script:CoName)" 4>$Null		
+			Out-File -FilePath $SIFile -Append -InputObject "Cover Page    : $($CoverPage)" 4>$Null
+		}
+		Out-File -FilePath $SIFile -Append -InputObject "Dev           : $($Dev)" 4>$Null
+		If($Dev)
+		{
+			Out-File -FilePath $SIFile -Append -InputObject "DevErrorFile  : $($Script:DevErrorFile)" 4>$Null
+		}
+		Out-File -FilePath $SIFile -Append -InputObject "Domain        : $($Domain)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "EndDate       : $($EndDate)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "Filename1     : $($Script:FileName1)" 4>$Null
+		If($PDF)
+		{
+			Out-File -FilePath $SIFile -Append -InputObject "Filename2     : $($Script:FileName2)" 4>$Null
+		}
+		Out-File -FilePath $SIFile -Append -InputObject "Folder        : $($Folder)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "From          : $($From)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "HW Inventory  : $($Hardware)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "Save As HTML  : $($HTML)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "Save As PDF   : $($PDF)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "Save As TEXT  : $($TEXT)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "Save As WORD  : $($MSWORD)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "Script Info   : $($ScriptInfo)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "Smtp Port     : $($SmtpPort)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "Smtp Server   : $($SmtpServer)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "Start Date    : $($StartDate)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "Title         : $($Script:Title)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "To            : $($To)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "Use SSL       : $($UseSSL)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "User          : $($User)" 4>$Null
+		If($MSWORD -or $PDF)
+		{
+			Out-File -FilePath $SIFile -Append -InputObject "User Name     : $($UserName)" 4>$Null
+		}
+		Out-File -FilePath $SIFile -Append -InputObject "" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "OS Detected   : $($Script:RunningOS)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "PoSH version  : $($Host.Version)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "PSCulture     : $($PSCulture)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "PSUICulture   : $($PSUICulture)" 4>$Null
+		If($MSWORD -or $PDF)
+		{
+			Out-File -FilePath $SIFile -Append -InputObject "Word language : $($Script:WordLanguageValue)" 4>$Null
+			Out-File -FilePath $SIFile -Append -InputObject "Word version  : $($Script:WordProduct)" 4>$Null
+		}
+		Out-File -FilePath $SIFile -Append -InputObject "" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "Script start  : $($Script:StartTime)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "Elapsed time  : $($Str)" 4>$Null
+	}
+
+	$ErrorActionPreference = $SaveEAPreference
+}
+#endregion
+
 #region script core
 #Script begins
 
@@ -10483,21 +10693,5 @@ ProcessDocumentOutput
 
 ClearPVSConnection
 
-Write-Verbose "$(Get-Date): Script has completed"
-Write-Verbose "$(Get-Date): "
-
-#http://poshtips.com/measuring-elapsed-time-in-powershell/
-Write-Verbose "$(Get-Date): Script started: $($Script:StartTime)"
-Write-Verbose "$(Get-Date): Script ended: $(Get-Date)"
-$runtime = $(Get-Date) - $Script:StartTime
-$Str = [string]::format("{0} days, {1} hours, {2} minutes, {3}.{4} seconds", `
-	$runtime.Days, `
-	$runtime.Hours, `
-	$runtime.Minutes, `
-	$runtime.Seconds,
-	$runtime.Milliseconds)
-Write-Verbose "$(Get-Date): Elapsed time: $($Str)"
-$runtime = $Null
-$Str = $Null
-$ErrorActionPreference = $SaveEAPreference
+ProcessScriptEnd
 #endregion
