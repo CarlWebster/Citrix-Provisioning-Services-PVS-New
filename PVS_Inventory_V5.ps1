@@ -1,4 +1,4 @@
-#Requires -Version 3.0
+﻿#Requires -Version 3.0
 #This File is in Unicode format.  Do not edit in an ASCII editor.
 
 #region help text
@@ -32,6 +32,7 @@
 	
 	Includes support for the following language versions of Microsoft Word:
 		Catalan
+		Chinese
 		Danish
 		Dutch
 		English
@@ -362,9 +363,9 @@
 	No objects are output from this script.  This script creates a Word or PDF document.
 .NOTES
 	NAME: PVS_Inventory_V5.ps1
-	VERSION: 5.08
+	VERSION: 5.09
 	AUTHOR: Carl Webster, Sr. Solutions Architect at Choice Solutions
-	LASTEDIT: October 22, 2016
+	LASTEDIT: November 7, 2016
 #>
 
 #endregion
@@ -2101,7 +2102,8 @@ Function SetWordHashTable
 	#nl - Dutch
 	#pt - Portuguese
 	#sv - Swedish
-
+	#zh - Chinese
+	
 	[string]$toc = $(
 		Switch ($CultureCode)
 		{
@@ -2116,6 +2118,7 @@ Function SetWordHashTable
 			'nl-'	{ 'Automatische inhoudsopgave 2'; Break }
 			'pt-'	{ 'Sumário Automático 2'; Break }
 			'sv-'	{ 'Automatisk innehållsförteckning2'; Break }
+			'zh-'	{ '自动目录 2'; Break }
 		}
 	)
 
@@ -2136,6 +2139,7 @@ Function GetCulture
 	#codes obtained from http://support.microsoft.com/kb/221435
 	#http://msdn.microsoft.com/en-us/library/bb213877(v=office.12).aspx
 	$CatalanArray = 1027
+	$ChineseArray = 2052,3076,5124,4100
 	$DanishArray = 1030
 	$DutchArray = 2067, 1043
 	$EnglishArray = 3081, 10249, 4105, 9225, 6153, 8201, 5129, 13321, 7177, 11273, 2057, 1033, 12297
@@ -2158,20 +2162,22 @@ Function GetCulture
 	#nl - Dutch
 	#pt - Portuguese
 	#sv - Swedish
+	#zh - Chinese
 
 	Switch ($WordValue)
 	{
-		{$CatalanArray -contains $_} {$CultureCode = "ca-"; Break}
-		{$DanishArray -contains $_} {$CultureCode = "da-"; Break}
-		{$DutchArray -contains $_} {$CultureCode = "nl-"; Break}
-		{$EnglishArray -contains $_} {$CultureCode = "en-"; Break}
-		{$FinnishArray -contains $_} {$CultureCode = "fi-"; Break}
-		{$FrenchArray -contains $_} {$CultureCode = "fr-"; Break}
-		{$GermanArray -contains $_} {$CultureCode = "de-"; Break}
-		{$NorwegianArray -contains $_} {$CultureCode = "nb-"; Break}
-		{$PortugueseArray -contains $_} {$CultureCode = "pt-"; Break}
-		{$SpanishArray -contains $_} {$CultureCode = "es-"; Break}
-		{$SwedishArray -contains $_} {$CultureCode = "sv-"; Break}
+		{$CatalanArray -contains $_} {$CultureCode = "ca-"}
+		{$ChineseArray -contains $_} {$CultureCode = "zh-"}
+		{$DanishArray -contains $_} {$CultureCode = "da-"}
+		{$DutchArray -contains $_} {$CultureCode = "nl-"}
+		{$EnglishArray -contains $_} {$CultureCode = "en-"}
+		{$FinnishArray -contains $_} {$CultureCode = "fi-"}
+		{$FrenchArray -contains $_} {$CultureCode = "fr-"}
+		{$GermanArray -contains $_} {$CultureCode = "de-"}
+		{$NorwegianArray -contains $_} {$CultureCode = "nb-"}
+		{$PortugueseArray -contains $_} {$CultureCode = "pt-"}
+		{$SpanishArray -contains $_} {$CultureCode = "es-"}
+		{$SwedishArray -contains $_} {$CultureCode = "sv-"}
 		Default {$CultureCode = "en-"}
 	}
 	
@@ -2410,6 +2416,16 @@ Function ValidateCoverPage
 				}
 			}
 
+		'zh-'	{
+				If($xWordVersion -eq $wdWord2010 -or $xWordVersion -eq $wdWord2013 -or $xWordVersion -eq $wdWord2016)
+				{
+					$xArray = ('奥斯汀', '边线型', '花丝', '怀旧', '积分',
+					'离子(浅色)', '离子(深色)', '母版型', '平面', '切片(浅色)',
+					'切片(深色)', '丝状', '网格', '镶边', '信号灯',
+					'运动型')
+				}
+			}
+
 		Default	{
 					If($xWordVersion -eq $wdWord2013 -or $xWordVersion -eq $wdWord2016)
 					{
@@ -2515,7 +2531,7 @@ Function SetupWord
 	Write-Verbose "$(Get-Date): Create Word comObject."
 	$Script:Word = New-Object -comobject "Word.Application" -EA 0 4>$Null
 	
-	If(!$? -or $Script:Word -eq $Null)
+	If(!$? -or $Null -eq $Script:Word)
 	{
 		Write-Warning "The Word object could not be created.  You may need to repair your Word installation."
 		$ErrorActionPreference = $SaveEAPreference
@@ -2683,6 +2699,14 @@ Function SetupWord
 						$CPChanged = $True
 					}
 				}
+
+			'zh-'	{
+					If($CoverPage -eq "Sideline")
+					{
+						$CoverPage = "边线型"
+						$CPChanged = $True
+					}
+				}
 		}
 
 		If($CPChanged)
@@ -2717,7 +2741,7 @@ Function SetupWord
 	[bool]$BuildingBlocksExist = $False
 
 	$Script:Word.Templates.LoadBuildingBlocks()
-	#word 2010/2013
+	#word 2010/2013/2016
 	$BuildingBlocksCollection = $Script:Word.Templates | Where {$_.name -eq "Built-In Building Blocks.dotx"}
 
 	Write-Verbose "$(Get-Date): Attempt to load cover page $($CoverPage)"
@@ -2731,7 +2755,7 @@ Function SetupWord
 		}
 	}        
 
-	If($BuildingBlocks -ne $Null)
+	If($Null -ne $BuildingBlocks)
 	{
 		$BuildingBlocksExist = $True
 
@@ -2745,7 +2769,7 @@ Function SetupWord
 			$part = $Null
 		}
 
-		If($part -ne $Null)
+		If($Null -ne $part)
 		{
 			$Script:CoverPagesExist = $True
 		}
@@ -2760,7 +2784,7 @@ Function SetupWord
 
 	Write-Verbose "$(Get-Date): Create empty word doc"
 	$Script:Doc = $Script:Word.Documents.Add()
-	If($Script:Doc -eq $Null)
+	If($Null -eq $Script:Doc)
 	{
 		Write-Verbose "$(Get-Date): "
 		$ErrorActionPreference = $SaveEAPreference
@@ -2769,7 +2793,7 @@ Function SetupWord
 	}
 
 	$Script:Selection = $Script:Word.Selection
-	If($Script:Selection -eq $Null)
+	If($Null -eq $Script:Selection)
 	{
 		Write-Verbose "$(Get-Date): "
 		$ErrorActionPreference = $SaveEAPreference
@@ -2783,7 +2807,7 @@ Function SetupWord
 
 	#Disable Spell and Grammar Check to resolve issue and improve performance (from Pat Coughlin)
 	Write-Verbose "$(Get-Date): Disable grammar and spell checking"
-	#bug reported 1-Apr-2015 by Tim Mangan
+	#bug reported 1-Apr-2014 by Tim Mangan
 	#save current options first before turning them off
 	$Script:CurrentGrammarOption = $Script:Word.Options.CheckGrammarAsYouType
 	$Script:CurrentSpellingOption = $Script:Word.Options.CheckSpellingAsYouType
@@ -2800,7 +2824,7 @@ Function SetupWord
 		#table of contents
 		Write-Verbose "$(Get-Date): Table of Contents - $($Script:MyHash.Word_TableOfContents)"
 		$toc = $BuildingBlocks.BuildingBlockEntries.Item($Script:MyHash.Word_TableOfContents)
-		If($toc -eq $Null)
+		If($Null -eq $toc)
 		{
 			Write-Verbose "$(Get-Date): "
 			Write-Verbose "$(Get-Date): Table of Content - $($Script:MyHash.Word_TableOfContents) could not be retrieved."
