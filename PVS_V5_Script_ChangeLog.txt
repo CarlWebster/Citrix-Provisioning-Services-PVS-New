@@ -5,6 +5,33 @@
 #This script written for "Benji", March 19, 2012
 #Thanks to Michael B. Smith, Joe Shonk and Stephane Thirion for testing and fine-tuning tips 
 
+#Version 5.21 8-May-2020
+#	Add checking for a Word version of 0, which indicates the Office installation needs repairing
+#	Add loading the PVS.Snapin DLL as a module
+#	Add Log parameter to create a transaction log file for troubleshooting
+#	Add Receive Side Scaling setting to Function OutputNICInfo
+#	Change color variables $wdColorGray15 and $wdColorGray05 from [long] to [int]
+#	Change location of the -Dev, -Log, and -ScriptInfo output files from the script folder to the -Folder location (Thanks to Guy Leech for the "suggestion")
+#	Change Text output to use [System.Text.StringBuilder]
+#		Update Function SaveandCloseTextDocument
+#	Fix Function OutputFarm to report "Not Configured" for the CIS Username when the name is blank
+#	Fix Function OutputServers to correct:
+#		the default Write Cache text not showing in the output
+#		Output "N/A" when there is no Problem Report data (For PVS 7.11 and later)
+#	In Function Output Site, add a Try/Catch around the retrieval of the Bootstrap file(s), and
+#		testing for an empty Bootstrap array (thanks to Guy Leech for finding this)
+#	Reformatted the terminating Write-Error messages to make them more visible and readable in the console
+#	Remove loading the old PVS Snapins
+#	Remove the SMTP parameterset and manually verify the parameters
+#	Reorder parameters
+#	Update Function ProcessScriptSetup with suggestions from Guy Leech from the PVS_HealthCheck script
+#	Update Function SendEmail to handle anonymous unauthenticated email
+#	Update Function SetupHTML and SaveAndCloseHTMLDocument ti fix an issue with using the -AddDateTIme parameter creating two HTML files
+#	Update Function SetWordCellFormat to change parameter $BackgroundColor to [int]
+#	Update Functions GetComputerWMIInfo and OutputNicInfo to fix two bugs in NIC Power Management settings
+#	Update Functions ShowScriptOptions and ProcessScriptEnd for Log parameter
+#	Update Help Text
+
 #Version 5.20 20-Dec-2019
 #	Fixed an extra set of {} on a Default Switch statement
 #		Default {{$xType = "Undefined"; Break }}
