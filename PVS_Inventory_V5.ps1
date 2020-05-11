@@ -7,7 +7,6 @@
 .SYNOPSIS
 	Creates an inventory of a Citrix PVS 7.x Farm.
 .DESCRIPTION
-.DESCRIPTION
 	Creates an inventory of a Citrix PVS 7.x Farm using Microsoft PowerShell, Word,
 	plain text or HTML.
 
@@ -125,6 +124,8 @@
 	This parameter has an alias of HW.
 .PARAMETER AdminAddress
 	Specifies the name of a PVS server that the PowerShell script will connect to. 
+	Using this parameter requires the script be run from an elevated PowerShell session.
+	Starting with V5.04 of the script, this requirement is now checked.
 	This parameter has an alias of AA.
 .PARAMETER User
 	Specifies the user used for the AdminAddress connection. 
@@ -347,9 +348,9 @@
 	No objects are output from this script.  This script creates a Word or PDF document.
 .NOTES
 	NAME: PVS_Inventory_V5.ps1
-	VERSION: 5.03
-	AUTHOR: Carl Webster
-	LASTEDIT: August 17, 2016
+	VERSION: 5.04
+	AUTHOR: Carl Webster, Sr. Solutions Architect at Choice Solutions
+	LASTEDIT: September 12, 2016
 #>
 
 #endregion
@@ -447,6 +448,7 @@ Param(
 #endregion
 
 #region script change log	
+#Carl Webster, CTP and Sr. Solutions Architect at Choice Solutions
 #webster@carlwebster.com
 #@carlwebster on Twitter
 #http://www.CarlWebster.com
@@ -466,7 +468,11 @@ Param(
 #Version 5.03 17-Aug-2016
 #	Fixed a few Text and HTML output issues in the Hardware region
 #
-
+#Version 5.04
+#	If remoting is used (-AdminAddress), check if the script is being run elevated. If not,
+#		show the script needs elevation and end the script
+#	Added Break statements to most of the Switch statements
+#	Added checking the NIC's "Allow the computer to turn off this device to save power" setting
 #endregion
 
 #region initial variable testing and setup
@@ -1566,6 +1572,24 @@ Function OutputNicItem
 {
 	Param([object]$Nic, [object]$ThisNic)
 	
+	$powerMgmt = Get-WmiObject MSPower_DeviceEnable -Namespace root\wmi | where {$_.InstanceName -match [regex]::Escape($ThisNic.PNPDeviceID)}
+
+	If($? -and $Null -ne $powerMgmt)
+	{
+		If($powerMgmt.Enable -eq $True)
+		{
+			$PowerSaving = "Enabled"
+		}
+		Else
+		{
+			$PowerSaving = "Disabled"
+		}
+	}
+	Else
+	{
+        $PowerSaving = "N/A"
+	}
+	
 	$xAvailability = ""
 	Switch ($processor.availability)
 	{
@@ -1664,6 +1688,7 @@ Function OutputNicItem
 			$NicInformation += @{ Data = "Manufacturer"; Value = $Nic.manufacturer; }
 		}
 		$NicInformation += @{ Data = "Availability"; Value = $xAvailability; }
+		$NicInformation += @{ Data = "Allow the computer to turn off this device to save power"; Value = $PowerSaving; }
 		$NicInformation += @{ Data = "Physical Address"; Value = $Nic.macaddress; }
 		If($xIPAddress.Count -gt 1)
 		{
@@ -1772,6 +1797,8 @@ Function OutputNicItem
 			Line 2 "Manufacturer`t`t: " $Nic.manufacturer
 		}
 		Line 2 "Availability`t`t: " $xAvailability
+		Line 2 "Allow computer to turn "
+		Line 2 "off device to save power: " $PowerSaving
 		Line 2 "Physical Address`t: " $nic.macaddress
 		Line 2 "IP Address`t`t: " $xIPAddress[0]
 		$cnt = -1
@@ -1870,6 +1897,7 @@ Function OutputNicItem
 			$rowdata += @(,('Manufacturer',($htmlsilver -bor $htmlbold),$Nic.manufacturer,$htmlwhite))
 		}
 		$rowdata += @(,('Availability',($htmlsilver -bor $htmlbold),$xAvailability,$htmlwhite))
+		$rowdata += @(,('Allow the computer to turn off this device to save power',($htmlsilver -bor $htmlbold),$PowerSaving,$htmlwhite))
 		$rowdata += @(,('Physical Address',($htmlsilver -bor $htmlbold),$Nic.macaddress,$htmlwhite))
 		$rowdata += @(,('IP Address',($htmlsilver -bor $htmlbold),$xIPAddress[0],$htmlwhite))
 		$cnt = -1
@@ -1990,27 +2018,17 @@ Function SetWordHashTable
 	[string]$toc = $(
 		Switch ($CultureCode)
 		{
-			'ca-'	{ 'Taula automática 2' }
-
-			'da-'	{ 'Automatisk tabel 2' }
-
-			'de-'	{ 'Automatische Tabelle 2' }
-
-			'en-'	{ 'Automatic Table 2' }
-
-			'es-'	{ 'Tabla automática 2' }
-
-			'fi-'	{ 'Automaattinen taulukko 2' }
-
-			'fr-'	{ 'Sommaire Automatique 2' }
-
-			'nb-'	{ 'Automatisk tabell 2' }
-
-			'nl-'	{ 'Automatische inhoudsopgave 2' }
-
-			'pt-'	{ 'Sumário Automático 2' }
-
-			'sv-'	{ 'Automatisk innehållsförteckning2' }
+			'ca-'	{ 'Taula automática 2'; Break }
+			'da-'	{ 'Automatisk tabel 2'; Break }
+			'de-'	{ 'Automatische Tabelle 2'; Break }
+			'en-'	{ 'Automatic Table 2'; Break }
+			'es-'	{ 'Tabla automática 2'; Break }
+			'fi-'	{ 'Automaattinen taulukko 2'; Break }
+			'fr-'	{ 'Sommaire Automatique 2'; Break }
+			'nb-'	{ 'Automatisk tabell 2'; Break }
+			'nl-'	{ 'Automatische inhoudsopgave 2'; Break }
+			'pt-'	{ 'Sumário Automático 2'; Break }
+			'sv-'	{ 'Automatisk innehållsförteckning2'; Break }
 		}
 	)
 
@@ -2056,17 +2074,17 @@ Function GetCulture
 
 	Switch ($WordValue)
 	{
-		{$CatalanArray -contains $_} {$CultureCode = "ca-"}
-		{$DanishArray -contains $_} {$CultureCode = "da-"}
-		{$DutchArray -contains $_} {$CultureCode = "nl-"}
-		{$EnglishArray -contains $_} {$CultureCode = "en-"}
-		{$FinnishArray -contains $_} {$CultureCode = "fi-"}
-		{$FrenchArray -contains $_} {$CultureCode = "fr-"}
-		{$GermanArray -contains $_} {$CultureCode = "de-"}
-		{$NorwegianArray -contains $_} {$CultureCode = "nb-"}
-		{$PortugueseArray -contains $_} {$CultureCode = "pt-"}
-		{$SpanishArray -contains $_} {$CultureCode = "es-"}
-		{$SwedishArray -contains $_} {$CultureCode = "sv-"}
+		{$CatalanArray -contains $_} {$CultureCode = "ca-"; Break}
+		{$DanishArray -contains $_} {$CultureCode = "da-"; Break}
+		{$DutchArray -contains $_} {$CultureCode = "nl-"; Break}
+		{$EnglishArray -contains $_} {$CultureCode = "en-"; Break}
+		{$FinnishArray -contains $_} {$CultureCode = "fi-"; Break}
+		{$FrenchArray -contains $_} {$CultureCode = "fr-"; Break}
+		{$GermanArray -contains $_} {$CultureCode = "de-"; Break}
+		{$NorwegianArray -contains $_} {$CultureCode = "nb-"; Break}
+		{$PortugueseArray -contains $_} {$CultureCode = "pt-"; Break}
+		{$SpanishArray -contains $_} {$CultureCode = "es-"; Break}
+		{$SwedishArray -contains $_} {$CultureCode = "sv-"; Break}
 		Default {$CultureCode = "en-"}
 	}
 	
@@ -2857,12 +2875,12 @@ Function WriteWordLine
 	[string]$output = ""
 	Switch ($style)
 	{
-		0 {$Script:Selection.Style = $Script:MyHash.Word_NoSpacing}
-		1 {$Script:Selection.Style = $Script:MyHash.Word_Heading1}
-		2 {$Script:Selection.Style = $Script:MyHash.Word_Heading2}
-		3 {$Script:Selection.Style = $Script:MyHash.Word_Heading3}
-		4 {$Script:Selection.Style = $Script:MyHash.Word_Heading4}
-		Default {$Script:Selection.Style = $Script:MyHash.Word_NoSpacing}
+		0 {$Script:Selection.Style = $Script:MyHash.Word_NoSpacing; Break}
+		1 {$Script:Selection.Style = $Script:MyHash.Word_Heading1; Break}
+		2 {$Script:Selection.Style = $Script:MyHash.Word_Heading2; Break}
+		3 {$Script:Selection.Style = $Script:MyHash.Word_Heading3; Break}
+		4 {$Script:Selection.Style = $Script:MyHash.Word_Heading4; Break}
+		Default {$Script:Selection.Style = $Script:MyHash.Word_NoSpacing; Break}
 	}
 	
 	#build # of tabs
@@ -3052,22 +3070,22 @@ Function WriteHTMLLine
 		
 		Switch ($style)
 		{
-			1 {$HTMLStyle = "<h1>"}
-			2 {$HTMLStyle = "<h2>"}
-			3 {$HTMLStyle = "<h3>"}
-			4 {$HTMLStyle = "<h4>"}
-			Default {$HTMLStyle = ""}
+			1 {$HTMLStyle = "<h1>"; Break}
+			2 {$HTMLStyle = "<h2>"; Break}
+			3 {$HTMLStyle = "<h3>"; Break}
+			4 {$HTMLStyle = "<h4>"; Break}
+			Default {$HTMLStyle = ""; Break}
 		}
 
 		$HTMLBody += $HTMLStyle + $output
 
 		Switch ($style)
 		{
-			1 {$HTMLStyle = "</h1>"}
-			2 {$HTMLStyle = "</h2>"}
-			3 {$HTMLStyle = "</h3>"}
-			4 {$HTMLStyle = "</h4>"}
-			Default {$HTMLStyle = ""}
+			1 {$HTMLStyle = "</h1>"; Break}
+			2 {$HTMLStyle = "</h2>"; Break}
+			3 {$HTMLStyle = "</h3>"; Break}
+			4 {$HTMLStyle = "</h4>"; Break}
+			Default {$HTMLStyle = ""; Break}
 		}
 
 		$HTMLBody += $HTMLStyle +  "</font>"
@@ -4280,6 +4298,7 @@ Function SetFileName1andFileName2
 		{
 			[string]$Script:FileName1 = "$($pwdpath)\$($OutputFileName).txt"
 		}
+		ShowScriptOptions
 	}
 	ElseIf($HTML)
 	{
@@ -4287,7 +4306,8 @@ Function SetFileName1andFileName2
 		{
 			[string]$Script:FileName1 = "$($pwdpath)\$($OutputFileName).html"
 		}
-       SetupHTML
+		SetupHTML
+		ShowScriptOptions
 	}
 }
 
@@ -4592,41 +4612,41 @@ Function DeviceStatus
 	{
 		Switch ($xDevice.diskVersionAccess)
 		{
-			0 {$xDevicediskVersionAccess = "Production"}
-			1 {$xDevicediskVersionAccess = "Test"}
-			2 {$xDevicediskVersionAccess = "Maintenance"}
-			3 {$xDevicediskVersionAccess = "Personal vDisk"}
-			Default {$xDevicediskVersionAccess = "vDisk access type could not be determined: $($xDevice.diskVersionAccess)"}
+			0 {$xDevicediskVersionAccess = "Production"; Break}
+			1 {$xDevicediskVersionAccess = "Test"; Break}
+			2 {$xDevicediskVersionAccess = "Maintenance"; Break}
+			3 {$xDevicediskVersionAccess = "Personal vDisk"; Break}
+			Default {$xDevicediskVersionAccess = "vDisk access type could not be determined: $($xDevice.diskVersionAccess)"; Break}
 		}
 
 		Switch($xDevice.bdmBoot)
 		{
-			0 {$xDevicebdmBoot = "PXE boot"}
-			1 {$xDevicebdmBoot = "BDM disk"}
-			Default {$xDevicebdmBoot = "Boot mode could not be determined: $($xDevice.bdmBoot)"}
+			0 {$xDevicebdmBoot = "PXE boot"; Break}
+			1 {$xDevicebdmBoot = "BDM disk"; Break}
+			Default {$xDevicebdmBoot = "Boot mode could not be determined: $($xDevice.bdmBoot)"; Break}
 		}
 
 		Switch($xDevice.licenseType)
 		{
-			0 {$xDevicelicenseType = "No License"}
-			1 {$xDevicelicenseType = "Desktop License"}
-			2 {$xDevicelicenseType = "Server License"}
-			5 {$xDevicelicenseType = "OEM SmartClient License"}
-			6 {$xDevicelicenseType = "XenApp License"}
-			7 {$xDevicelicenseType = "XenDesktop License"}
-			Default {$xDevicelicenseType = "Device license type could not be determined: $($xDevice.licenseType)"}
+			0 {$xDevicelicenseType = "No License"; Break}
+			1 {$xDevicelicenseType = "Desktop License"; Break}
+			2 {$xDevicelicenseType = "Server License"; Break}
+			5 {$xDevicelicenseType = "OEM SmartClient License"; Break}
+			6 {$xDevicelicenseType = "XenApp License"; Break}
+			7 {$xDevicelicenseType = "XenDesktop License"; Break}
+			Default {$xDevicelicenseType = "Device license type could not be determined: $($xDevice.licenseType)"; Break}
 		}
 
 		Switch ($xDevice.logLevel)
 		{
-			0   {$xDevicelogLevel = "Off"    }
-			1   {$xDevicelogLevel = "Fatal"  }
-			2   {$xDevicelogLevel = "Error"  }
-			3   {$xDevicelogLevel = "Warning"}
-			4   {$xDevicelogLevel = "Info"   }
-			5   {$xDevicelogLevel = "Debug"  }
-			6   {$xDevicelogLevel = "Trace"  }
-			Default {$xDevicelogLevel = "Logging level could not be determined: $($xDevice.logLevel)"}
+			0   {$xDevicelogLevel = "Off"; Break}
+			1   {$xDevicelogLevel = "Fatal"; Break}
+			2   {$xDevicelogLevel = "Error"; Break}
+			3   {$xDevicelogLevel = "Warning"; Break}
+			4   {$xDevicelogLevel = "Info"; Break}
+			5   {$xDevicelogLevel = "Debug"; Break}
+			6   {$xDevicelogLevel = "Trace"; Break}
+			Default {$xDevicelogLevel = "Logging level could not be determined: $($xDevice.logLevel)"; Break}
 		}
 
 		If($MSWord -or $PDF)
@@ -4732,6 +4752,24 @@ Function DeviceStatus
 #endregion
 
 #region script setup function
+Function ElevatedSession
+{
+	$currentPrincipal = New-Object Security.Principal.WindowsPrincipal( [Security.Principal.WindowsIdentity]::GetCurrent() )
+
+	If($currentPrincipal.IsInRole( [Security.Principal.WindowsBuiltInRole]::Administrator ))
+	{
+		Write-Verbose "$(Get-Date): This is an elevated PowerShell session"
+		Return $True
+	}
+	Else
+	{
+		Write-Host "" -Foreground White
+		Write-Host "$(Get-Date): This is NOT an elevated PowerShell session" -Foreground White
+		Write-Host "" -Foreground White
+		Return $False
+	}
+}
+
 Function ProcessScriptSetup
 {
 	$script:startTime = Get-Date
@@ -4752,6 +4790,25 @@ Function ProcessScriptSetup
 	[bool]$Script:Remoting = $False
 	If(![System.String]::IsNullOrEmpty($AdminAddress))
 	{
+		#since we are setting up remoting, the script must be run from an elevated PowerShell session
+		$Elevated = ElevatedSession
+
+		If( -not $Elevated )
+		{
+			Write-Host "Warning: " -Foreground White
+			Write-Host "Warning: Remoting to another PVS server was requested but this is not an elevated PowerShell session." -Foreground White
+			Write-Host "Warning: Using -AdminAddress requires the script be run from an elevated PowerShell session." -Foreground White
+			Write-Host "Warning: Please run the script from an elevated PowerShell session.  Script cannot continue" -Foreground White
+			Write-Host "Warning: " -Foreground White
+			Exit
+		}
+		Else
+		{
+			Write-Host "" -Foreground White
+			Write-Host "This is an elevated PowerShell session." -Foreground White
+			Write-Host "" -Foreground White
+		}
+		
 		Write-Verbose "$(Get-Date): Creating connection to PVS Server $($AdminAddress)"
 		If(![System.String]::IsNullOrEmpty($User))
 		{
@@ -4905,178 +4962,178 @@ Function OutputAuditTrail
 			$xAction = ""
 			Switch([int]$Audit.action)
 			{
-				1 { $xAction = "Add AuthGroup"}
-				2 { $xAction = "Add Collection"}
-				3 { $xAction = "Add Device"}
-				4 { $xAction = "Add DiskLocator"}
-				5 { $xAction = "Add FarmView"}
-				6 { $xAction = "Add Server"}
-				7 { $xAction = "Add Site"}
-				8 { $xAction = "Add SiteView"}
-				9 { $xAction = "Add Store"}
-				10 { $xAction = "Add UserGroup"}
-				11 { $xAction = "Add VirtualHostingPool"}
-				12 { $xAction = "Add UpdateTask"}
-				13 { $xAction = "Add DiskUpdateDevice"}
-				1001 { $xAction = "Delete AuthGroup"}
-				1002 { $xAction = "Delete Collection"}
-				1003 { $xAction = "Delete Device"}
-				1004 { $xAction = "Delete DeviceDiskCacheFile"}
-				1005 { $xAction = "Delete DiskLocator"}
-				1006 { $xAction = "Delete FarmView"}
-				1007 { $xAction = "Delete Server"}
-				1008 { $xAction = "Delete ServerStore"}
-				1009 { $xAction = "Delete Site"}
-				1010 { $xAction = "Delete SiteView"}
-				1011 { $xAction = "Delete Store"}
-				1012 { $xAction = "Delete UserGroup"}
-				1013 { $xAction = "Delete VirtualHostingPool"}
-				1014 { $xAction = "Delete UpdateTask"}
-				1015 { $xAction = "Delete DiskUpdateDevice"}
-				1016 { $xAction = "Delete DiskVersion"}
-				2001 { $xAction = "Run AddDeviceToDomain"}
-				2002 { $xAction = "Run ApplyAutoUpdate"}
-				2003 { $xAction = "Run ApplyIncrementalUpdate"}
-				2004 { $xAction = "Run ArchiveAuditTrail"}
-				2005 { $xAction = "Run AssignAuthGroup"}
-				2006 { $xAction = "Run AssignDevice"}
-				2007 { $xAction = "Run AssignDiskLocator"}
-				2008 { $xAction = "Run AssignServer"}
-				2009 { $xAction = "Run Boot"}
-				2010 { $xAction = "Run CopyPasteDevice"}
-				2011 { $xAction = "Run CopyPasteDisk"}
-				2012 { $xAction = "Run CopyPasteServer"}
-				2013 { $xAction = "Run CreateDirectory"}
-				2014 { $xAction = "Run CreateDiskCancel"}
-				2015 { $xAction = "Run DisableCollection"}
-				2016 { $xAction = "Run DisableDevice"}
-				2017 { $xAction = "Run DisableDeviceDiskLocator"}
-				2018 { $xAction = "Run DisableDiskLocator"}
-				2019 { $xAction = "Run DisableUserGroup"}
-				2020 { $xAction = "Run DisableUserGroupDiskLocator"}
-				2021 { $xAction = "Run DisplayMessage"}
-				2022 { $xAction = "Run EnableCollection"}
-				2023 { $xAction = "Run EnableDevice"}
-				2024 { $xAction = "Run EnableDeviceDiskLocator"}
-				2025 { $xAction = "Run EnableDiskLocator"}
-				2026 { $xAction = "Run EnableUserGroup"}
-				2027 { $xAction = "Run EnableUserGroupDiskLocator"}
-				2028 { $xAction = "Run ExportOemLicenses"}
-				2029 { $xAction = "Run ImportDatabase"}
-				2030 { $xAction = "Run ImportDevices"}
-				2031 { $xAction = "Run ImportOemLicenses"}
-				2032 { $xAction = "Run MarkDown"}
-				2033 { $xAction = "Run Reboot"}
-				2034 { $xAction = "Run RemoveAuthGroup"}
-				2035 { $xAction = "Run RemoveDevice"}
-				2036 { $xAction = "Run RemoveDeviceFromDomain"}
-				2037 { $xAction = "Run RemoveDirectory"}
-				2038 { $xAction = "Run RemoveDiskLocator"}
-				2039 { $xAction = "Run ResetDeviceForDomain"}
-				2040 { $xAction = "Run ResetDatabaseConnection"}
-				2041 { $xAction = "Run Restart StreamingService"}
-				2042 { $xAction = "Run Shutdown"}
-				2043 { $xAction = "Run StartStreamingService"}
-				2044 { $xAction = "Run StopStreamingService"}
-				2045 { $xAction = "Run UnlockAllDisk"}
-				2046 { $xAction = "Run UnlockDisk"}
-				2047 { $xAction = "Run ServerStoreVolumeAccess"}
-				2048 { $xAction = "Run ServerStoreVolumeMode"}
-				2049 { $xAction = "Run MergeDisk"}
-				2050 { $xAction = "Run RevertDiskVersion"}
-				2051 { $xAction = "Run PromoteDiskVersion"}
-				2052 { $xAction = "Run CancelDiskMaintenance"}
-				2053 { $xAction = "Run ActivateDevice"}
-				2054 { $xAction = "Run AddDiskVersion"}
-				2055 { $xAction = "Run ExportDisk"}
-				2056 { $xAction = "Run AssignDisk"}
-				2057 { $xAction = "Run RemoveDisk"}
-				2057 { $xAction = "Run DiskUpdateStart"}
-				2057 { $xAction = "Run DiskUpdateCancel"}
-				2058 { $xAction = "Run SetOverrideVersion"}
-				2059 { $xAction = "Run CancelTask"}
-				2060 { $xAction = "Run ClearTask"}
-				3001 { $xAction = "Run WithReturnCreateDisk"}
-				3002 { $xAction = "Run WithReturnCreateDiskStatus"}
-				3003 { $xAction = "Run WithReturnMapDisk"}
-				3004 { $xAction = "Run WithReturnRebalanceDevices"}
-				3005 { $xAction = "Run WithReturnCreateMaintenanceVersion"}
-				3006 { $xAction = "Run WithReturnImportDisk"}
-				4001 { $xAction = "Run ByteArrayInputImportDevices"}
-				4002 { $xAction = "Run ByteArrayInputImportOemLicenses"}
-				5001 { $xAction = "Run ByteArrayOutputArchiveAuditTrail"}
-				5002 { $xAction = "Run ByteArrayOutputExportOemLicenses"}
-				6001 { $xAction = "Set AuthGroup"}
-				6002 { $xAction = "Set Collection"}
-				6003 { $xAction = "Set Device"}
-				6004 { $xAction = "Set Disk"}
-				6005 { $xAction = "Set DiskLocator"}
-				6006 { $xAction = "Set Farm"}
-				6007 { $xAction = "Set FarmView"}
-				6008 { $xAction = "Set Server"}
-				6009 { $xAction = "Set ServerBiosBootstrap"}
-				6010 { $xAction = "Set ServerBootstrap"}
-				6011 { $xAction = "Set ServerStore"}
-				6012 { $xAction = "Set Site"}
-				6013 { $xAction = "Set SiteView"}
-				6014 { $xAction = "Set Store"}
-				6015 { $xAction = "Set UserGroup"}
-				6016 { $xAction = "Set VirtualHostingPool"}
-				6017 { $xAction = "Set UpdateTask"}
-				6018 { $xAction = "Set DiskUpdateDevice"}
-				7001 { $xAction = "Set ListDeviceBootstraps"}
-				7002 { $xAction = "Set ListDeviceBootstraps Delete"}
-				7003 { $xAction = "Set ListDeviceBootstraps Add"}
-				7004 { $xAction = "Set ListDeviceCustomProperty"}
-				7005 { $xAction = "Set ListDeviceCustomPropertyDelete"}
-				7006 { $xAction = "Set ListDeviceCustomPropertyAdd"}
-				7007 { $xAction = "Set ListDeviceDiskPrinters"}
-				7008 { $xAction = "Set ListDeviceDiskPrintersDelete"}
-				7009 { $xAction = "Set ListDeviceDiskPrintersAdd"}
-				7010 { $xAction = "Set ListDevicePersonality"}
-				7011 { $xAction = "Set ListDevicePersonalityDelete"}
-				7012 { $xAction = "Set ListDevicePersonalityAdd"}
-				7013 { $xAction = "Set ListDevicePortBlockerCategories"}
-				7014 { $xAction = "Set ListDevicePortBlockerCategoriesDelete"}
-				7015 { $xAction = "Set ListDevicePortBlockerCategoriesAdd"}
-				7016 { $xAction = "Set ListDevicePortBlockerOverrides"}
-				7017 { $xAction = "Set ListDevicePortBlockerOverridesDelete"}
-				7018 { $xAction = "Set ListDevicePortBlockerOverridesAdd"}
-				7019 { $xAction = "Set ListDiskLocatorCustomProperty"}
-				7020 { $xAction = "Set ListDiskLocatorCustomPropertyDelete"}
-				7021 { $xAction = "Set ListDiskLocatorCustomPropertyAdd"}
-				7022 { $xAction = "Set ListDiskLocatorPortBlockerCategories"}
-				7023 { $xAction = "Set ListDiskLocatorPortBlockerCategoriesDelete"}
-				7024 { $xAction = "Set ListDiskLocatorPortBlockerCategoriesAdd"}
-				7025 { $xAction = "Set ListDiskLocatorPortBlockerOverrides"}
-				7026 { $xAction = "Set ListDiskLocatorPortBlockerOverridesDelete"}
-				7027 { $xAction = "Set ListDiskLocatorPortBlockerOverridesAdd"}
-				7028 { $xAction = "Set ListServerCustomProperty"}
-				7029 { $xAction = "Set ListServerCustomPropertyDelete"}
-				7030 { $xAction = "Set ListServerCustomPropertyAdd"}
-				7031 { $xAction = "Set ListUserGroupCustomProperty"}
-				7032 { $xAction = "Set ListUserGroupCustomPropertyDelete"}
-				7033 { $xAction = "Set ListUserGroupCustomPropertyAdd"}				
-				Default {$xAction = "Unknown"}
+				1 { $xAction = "Add AuthGroup"; Break }
+				2 { $xAction = "Add Collection"; Break }
+				3 { $xAction = "Add Device"; Break }
+				4 { $xAction = "Add DiskLocator"; Break }
+				5 { $xAction = "Add FarmView"; Break }
+				6 { $xAction = "Add Server"; Break }
+				7 { $xAction = "Add Site"; Break }
+				8 { $xAction = "Add SiteView"; Break }
+				9 { $xAction = "Add Store"; Break }
+				10 { $xAction = "Add UserGroup"; Break }
+				11 { $xAction = "Add VirtualHostingPool"; Break }
+				12 { $xAction = "Add UpdateTask"; Break }
+				13 { $xAction = "Add DiskUpdateDevice"; Break }
+				1001 { $xAction = "Delete AuthGroup"; Break }
+				1002 { $xAction = "Delete Collection"; Break }
+				1003 { $xAction = "Delete Device"; Break }
+				1004 { $xAction = "Delete DeviceDiskCacheFile"; Break }
+				1005 { $xAction = "Delete DiskLocator"; Break }
+				1006 { $xAction = "Delete FarmView"; Break }
+				1007 { $xAction = "Delete Server"; Break }
+				1008 { $xAction = "Delete ServerStore"; Break }
+				1009 { $xAction = "Delete Site"; Break }
+				1010 { $xAction = "Delete SiteView"; Break }
+				1011 { $xAction = "Delete Store"; Break }
+				1012 { $xAction = "Delete UserGroup"; Break }
+				1013 { $xAction = "Delete VirtualHostingPool"; Break }
+				1014 { $xAction = "Delete UpdateTask"; Break }
+				1015 { $xAction = "Delete DiskUpdateDevice"; Break }
+				1016 { $xAction = "Delete DiskVersion"; Break }
+				2001 { $xAction = "Run AddDeviceToDomain"; Break }
+				2002 { $xAction = "Run ApplyAutoUpdate"; Break }
+				2003 { $xAction = "Run ApplyIncrementalUpdate"; Break }
+				2004 { $xAction = "Run ArchiveAuditTrail"; Break }
+				2005 { $xAction = "Run AssignAuthGroup"; Break }
+				2006 { $xAction = "Run AssignDevice"; Break }
+				2007 { $xAction = "Run AssignDiskLocator"; Break }
+				2008 { $xAction = "Run AssignServer"; Break }
+				2009 { $xAction = "Run Boot"; Break }
+				2010 { $xAction = "Run CopyPasteDevice"; Break }
+				2011 { $xAction = "Run CopyPasteDisk"; Break }
+				2012 { $xAction = "Run CopyPasteServer"; Break }
+				2013 { $xAction = "Run CreateDirectory"; Break }
+				2014 { $xAction = "Run CreateDiskCancel"; Break }
+				2015 { $xAction = "Run DisableCollection"; Break }
+				2016 { $xAction = "Run DisableDevice"; Break }
+				2017 { $xAction = "Run DisableDeviceDiskLocator"; Break }
+				2018 { $xAction = "Run DisableDiskLocator"; Break }
+				2019 { $xAction = "Run DisableUserGroup"; Break }
+				2020 { $xAction = "Run DisableUserGroupDiskLocator"; Break }
+				2021 { $xAction = "Run DisplayMessage"; Break }
+				2022 { $xAction = "Run EnableCollection"; Break }
+				2023 { $xAction = "Run EnableDevice"; Break }
+				2024 { $xAction = "Run EnableDeviceDiskLocator"; Break }
+				2025 { $xAction = "Run EnableDiskLocator"; Break }
+				2026 { $xAction = "Run EnableUserGroup"; Break }
+				2027 { $xAction = "Run EnableUserGroupDiskLocator"; Break }
+				2028 { $xAction = "Run ExportOemLicenses"; Break }
+				2029 { $xAction = "Run ImportDatabase"; Break }
+				2030 { $xAction = "Run ImportDevices"; Break }
+				2031 { $xAction = "Run ImportOemLicenses"; Break }
+				2032 { $xAction = "Run MarkDown"; Break }
+				2033 { $xAction = "Run Reboot"; Break }
+				2034 { $xAction = "Run RemoveAuthGroup"; Break }
+				2035 { $xAction = "Run RemoveDevice"; Break }
+				2036 { $xAction = "Run RemoveDeviceFromDomain"; Break }
+				2037 { $xAction = "Run RemoveDirectory"; Break }
+				2038 { $xAction = "Run RemoveDiskLocator"; Break }
+				2039 { $xAction = "Run ResetDeviceForDomain"; Break }
+				2040 { $xAction = "Run ResetDatabaseConnection"; Break }
+				2041 { $xAction = "Run Restart StreamingService"; Break }
+				2042 { $xAction = "Run Shutdown"; Break }
+				2043 { $xAction = "Run StartStreamingService"; Break }
+				2044 { $xAction = "Run StopStreamingService"; Break }
+				2045 { $xAction = "Run UnlockAllDisk"; Break }
+				2046 { $xAction = "Run UnlockDisk"; Break }
+				2047 { $xAction = "Run ServerStoreVolumeAccess"; Break }
+				2048 { $xAction = "Run ServerStoreVolumeMode"; Break }
+				2049 { $xAction = "Run MergeDisk"; Break }
+				2050 { $xAction = "Run RevertDiskVersion"; Break }
+				2051 { $xAction = "Run PromoteDiskVersion"; Break }
+				2052 { $xAction = "Run CancelDiskMaintenance"; Break }
+				2053 { $xAction = "Run ActivateDevice"; Break }
+				2054 { $xAction = "Run AddDiskVersion"; Break }
+				2055 { $xAction = "Run ExportDisk"; Break }
+				2056 { $xAction = "Run AssignDisk"; Break }
+				2057 { $xAction = "Run RemoveDisk"; Break }
+				2057 { $xAction = "Run DiskUpdateStart"; Break }
+				2057 { $xAction = "Run DiskUpdateCancel"; Break }
+				2058 { $xAction = "Run SetOverrideVersion"; Break }
+				2059 { $xAction = "Run CancelTask"; Break }
+				2060 { $xAction = "Run ClearTask"; Break }
+				3001 { $xAction = "Run WithReturnCreateDisk"; Break }
+				3002 { $xAction = "Run WithReturnCreateDiskStatus"; Break }
+				3003 { $xAction = "Run WithReturnMapDisk"; Break }
+				3004 { $xAction = "Run WithReturnRebalanceDevices"; Break }
+				3005 { $xAction = "Run WithReturnCreateMaintenanceVersion"; Break }
+				3006 { $xAction = "Run WithReturnImportDisk"; Break }
+				4001 { $xAction = "Run ByteArrayInputImportDevices"; Break }
+				4002 { $xAction = "Run ByteArrayInputImportOemLicenses"; Break }
+				5001 { $xAction = "Run ByteArrayOutputArchiveAuditTrail"; Break }
+				5002 { $xAction = "Run ByteArrayOutputExportOemLicenses"; Break }
+				6001 { $xAction = "Set AuthGroup"; Break }
+				6002 { $xAction = "Set Collection"; Break }
+				6003 { $xAction = "Set Device"; Break }
+				6004 { $xAction = "Set Disk"; Break }
+				6005 { $xAction = "Set DiskLocator"; Break }
+				6006 { $xAction = "Set Farm"; Break }
+				6007 { $xAction = "Set FarmView"; Break }
+				6008 { $xAction = "Set Server"; Break }
+				6009 { $xAction = "Set ServerBiosBootstrap"; Break }
+				6010 { $xAction = "Set ServerBootstrap"; Break }
+				6011 { $xAction = "Set ServerStore"; Break }
+				6012 { $xAction = "Set Site"; Break }
+				6013 { $xAction = "Set SiteView"; Break }
+				6014 { $xAction = "Set Store"; Break }
+				6015 { $xAction = "Set UserGroup"; Break }
+				6016 { $xAction = "Set VirtualHostingPool"; Break }
+				6017 { $xAction = "Set UpdateTask"; Break }
+				6018 { $xAction = "Set DiskUpdateDevice"; Break }
+				7001 { $xAction = "Set ListDeviceBootstraps"; Break }
+				7002 { $xAction = "Set ListDeviceBootstraps Delete"; Break }
+				7003 { $xAction = "Set ListDeviceBootstraps Add"; Break }
+				7004 { $xAction = "Set ListDeviceCustomProperty"; Break }
+				7005 { $xAction = "Set ListDeviceCustomPropertyDelete"; Break }
+				7006 { $xAction = "Set ListDeviceCustomPropertyAdd"; Break }
+				7007 { $xAction = "Set ListDeviceDiskPrinters"; Break }
+				7008 { $xAction = "Set ListDeviceDiskPrintersDelete"; Break }
+				7009 { $xAction = "Set ListDeviceDiskPrintersAdd"; Break }
+				7010 { $xAction = "Set ListDevicePersonality"; Break }
+				7011 { $xAction = "Set ListDevicePersonalityDelete"; Break }
+				7012 { $xAction = "Set ListDevicePersonalityAdd"; Break }
+				7013 { $xAction = "Set ListDevicePortBlockerCategories"; Break }
+				7014 { $xAction = "Set ListDevicePortBlockerCategoriesDelete"; Break }
+				7015 { $xAction = "Set ListDevicePortBlockerCategoriesAdd"; Break }
+				7016 { $xAction = "Set ListDevicePortBlockerOverrides"; Break }
+				7017 { $xAction = "Set ListDevicePortBlockerOverridesDelete"; Break }
+				7018 { $xAction = "Set ListDevicePortBlockerOverridesAdd"; Break }
+				7019 { $xAction = "Set ListDiskLocatorCustomProperty"; Break }
+				7020 { $xAction = "Set ListDiskLocatorCustomPropertyDelete"; Break }
+				7021 { $xAction = "Set ListDiskLocatorCustomPropertyAdd"; Break }
+				7022 { $xAction = "Set ListDiskLocatorPortBlockerCategories"; Break }
+				7023 { $xAction = "Set ListDiskLocatorPortBlockerCategoriesDelete"; Break }
+				7024 { $xAction = "Set ListDiskLocatorPortBlockerCategoriesAdd"; Break }
+				7025 { $xAction = "Set ListDiskLocatorPortBlockerOverrides"; Break }
+				7026 { $xAction = "Set ListDiskLocatorPortBlockerOverridesDelete"; Break }
+				7027 { $xAction = "Set ListDiskLocatorPortBlockerOverridesAdd"; Break }
+				7028 { $xAction = "Set ListServerCustomProperty"; Break }
+				7029 { $xAction = "Set ListServerCustomPropertyDelete"; Break }
+				7030 { $xAction = "Set ListServerCustomPropertyAdd"; Break }
+				7031 { $xAction = "Set ListUserGroupCustomProperty"; Break }
+				7032 { $xAction = "Set ListUserGroupCustomPropertyDelete"; Break }
+				7033 { $xAction = "Set ListUserGroupCustomPropertyAdd"; Break }				
+				Default {$xAction = "Unknown"; Break }
 			}
 			$xType = ""
 			Switch ($Audit.type)
 			{
-				0 {$xType = "Many"}
-				1 {$xType = "AuthGroup"}
-				2 {$xType = "Collection"}
-				3 {$xType = "Device"}
-				4 {$xType = "Disk"}
-				5 {$xType = "DiskLocator"}
-				6 {$xType = "Farm"}
-				7 {$xType = "FarmView"}
-				8 {$xType = "Server"}
-				9 {$xType = "Site"}
-				10 {$xType = "SiteView"}
-				11 {$xType = "Store"}
-				12 {$xType = "System"}
-				13 {$xType = "UserGroup"}
-				Default { {$xType = "Undefined"}}
+				0 {$xType = "Many"; Break }
+				1 {$xType = "AuthGroup"; Break }
+				2 {$xType = "Collection"; Break }
+				3 {$xType = "Device"; Break }
+				4 {$xType = "Disk"; Break }
+				5 {$xType = "DiskLocator"; Break }
+				6 {$xType = "Farm"; Break }
+				7 {$xType = "FarmView"; Break }
+				8 {$xType = "Server"; Break }
+				9 {$xType = "Site"; Break }
+				10 {$xType = "SiteView"; Break }
+				11 {$xType = "Store"; Break }
+				12 {$xType = "System"; Break }
+				13 {$xType = "UserGroup"; Break }
+				Default { {$xType = "Undefined"; Break }}
 			}
 			If($MSWord -or $PDF)
 			{
@@ -5357,10 +5414,10 @@ Function OutputFarm
 	$xmergeMode = ""
 	Switch ($Farm.mergeMode)
 	{
-		0   {$xmergeMode = "Production" }
-		1   {$xmergeMode = "Test"       }
-		2   {$xmergeMode = "Maintenance"}
-		Default {$xmergeMode = "Default access mode could not be determined: $($Farm.mergeMode)"}
+		0   {$xmergeMode = "Production"; Break}
+		1   {$xmergeMode = "Test"; Break}
+		2   {$xmergeMode = "Maintenance"; Break}
+		Default {$xmergeMode = "Default access mode could not be determined: $($Farm.mergeMode)"; Break}
 	}
 	$xadGroupsEnabled = ""
 	If($Farm.adGroupsEnabled)
@@ -6572,14 +6629,14 @@ Function OutputSite
 				$accessMode = "Standard Image (multi-device, read-only access)"
 				Switch ($Disk.writeCacheType)
 				{
-					0   {$writeCacheType = "Private Image"}
-					1   {$writeCacheType = "Cache on server"}
-					3   {$writeCacheType = "Cache in device RAM"}
-					4   {$writeCacheType = "Cache on device hard disk"}
-					7   {$writeCacheType = "Cache on server persisted"}
-					8   {$writeCacheType = "Cache on device hard drive persisted (NT 6.1 and later)"}
-					9   {$writeCacheType = "Cache in device RAM with overflow on hard disk"}
-					Default {$writeCacheType = "Cache type could not be determined: $($Disk.writeCacheType)"}
+					0   {$writeCacheType = "Private Image"; Break}
+					1   {$writeCacheType = "Cache on server"; Break}
+					3   {$writeCacheType = "Cache in device RAM"; Break}
+					4   {$writeCacheType = "Cache on device hard disk"; Break}
+					7   {$writeCacheType = "Cache on server persisted"; Break}
+					8   {$writeCacheType = "Cache on device hard drive persisted (NT 6.1 and later)"; Break}
+					9   {$writeCacheType = "Cache in device RAM with overflow on hard disk"; Break}
+					Default {$writeCacheType = "Cache type could not be determined: $($Disk.writeCacheType)"; Break}
 				}
 			}
 			If($Disk.adPasswordEnabled)
@@ -6608,10 +6665,10 @@ Function OutputSite
 			}
 			Switch ($Disk.licenseMode)
 			{
-				0 {$licenseMode = "None"                          }
-				1 {$licenseMode = "Multiple Activation Key (MAK)" }
-				2 {$licenseMode = "Key Management Service (KMS)"  }
-				Default {$licenseMode = "Volume License Mode could not be determined: $($Disk.licenseMode)"}
+				0 {$licenseMode = "None"; Break}
+				1 {$licenseMode = "Multiple Activation Key (MAK)"; Break}
+				2 {$licenseMode = "Key Management Service (KMS)"; Break}
+				Default {$licenseMode = "Volume License Mode could not be determined: $($Disk.licenseMode)"; Break}
 			}
 			If($Disk.autoUpdateEnabled)
 			{
@@ -7160,86 +7217,86 @@ Function OutputSite
 
 					Switch ($DiskVersion.access)
 					{
-						"0" {$access = "Production"}
-						"1" {$access = "Maintenance"}
-						"2" {$access = "Maintenance Highest Version"}
-						"3" {$access = "Override"}
-						"4" {$access = "Merge"}
-						"5" {$access = "Merge Maintenance"}
-						"6" {$access = "Merge Test"}
-						"7" {$access = "Test"}
-						Default {$access = "Access could not be determined: $($DiskVersion.access)"}
+						"0" {$access = "Production"; Break }
+						"1" {$access = "Maintenance"; Break }
+						"2" {$access = "Maintenance Highest Version"; Break }
+						"3" {$access = "Override"; Break }
+						"4" {$access = "Merge"; Break }
+						"5" {$access = "Merge Maintenance"; Break }
+						"6" {$access = "Merge Test"; Break }
+						"7" {$access = "Test"; Break }
+						Default {$access = "Access could not be determined: $($DiskVersion.access)"; Break }
 					}
 
 					Switch ($DiskVersion.type)
 					{
-						"0" {$DiskVersionType = "Base"}
-						"1" {$DiskVersionType = "Manual"}
-						"2" {$DiskVersionType = "Automatic"}
-						"3" {$DiskVersionType = "Merge"}
-						"4" {$DiskVersionType = "Merge Base"}
-						Default {$DiskVersionType = "Type could not be determined: $($DiskVersion.type)"}
+						"0" {$DiskVersionType = "Base"; Break }
+						"1" {$DiskVersionType = "Manual"; Break }
+						"2" {$DiskVersionType = "Automatic"; Break }
+						"3" {$DiskVersionType = "Merge"; Break }
+						"4" {$DiskVersionType = "Merge Base"; Break }
+						Default {$DiskVersionType = "Type could not be determined: $($DiskVersion.type)"; Break }
 					}
 
 					Switch ($DiskVersion.canDelete)
 					{
-						$False {$canDelete = "No"}
-						$True {$canDelete = "Yes"}
+						$False {$canDelete = "No"; Break }
+						$True {$canDelete = "Yes"; Break }
 					}
 
 					Switch ($DiskVersion.canMerge)
 					{
-						$False {$canMerge = "No"}
-						$True {$canMerge = "Yes"}
+						$False {$canMerge = "No"; Break }
+						$True {$canMerge = "Yes"; Break }
 					}
 
 					Switch ($DiskVersion.canMergeBase)
 					{
-						$False {$canMergeBase = "No"}
-						$True {$canMergeBase = "Yes"}
+						$False {$canMergeBase = "No"; Break }
+						$True {$canMergeBase = "Yes"; Break }
 					}
 
 					Switch ($DiskVersion.canPromote)
 					{
-						$False {$canPromote = "No"}
-						$True {$canPromote = "Yes"}
+						$False {$canPromote = "No"; Break }
+						$True {$canPromote = "Yes"; Break }
 					}
 
 					Switch ($DiskVersion.canRevertTest)
 					{
-						$False {$canRevertTest = "No"}
-						$true {$canRevertTest = "Yes"}
+						$False {$canRevertTest = "No"; Break }
+						$true {$canRevertTest = "Yes"; Break }
 					}
 
 					Switch ($DiskVersion.canRevertMaintenance)
 					{
-						$False {$canRevertMaintenance = "No"}
-						$True {$canRevertMaintenance = "Yes"}
+						$False {$canRevertMaintenance = "No"; Break }
+						$True {$canRevertMaintenance = "Yes"; Break }
 					}
 
 					Switch ($DiskVersion.canSetScheduledDate)
 					{
-						$False {$canSetScheduledDate = "No"}
-						$True {$canSetScheduledDate = "Yes"}
+						$False {$canSetScheduledDate = "No"; Break }
+						$True {$canSetScheduledDate = "Yes"; Break }
 					}
 
 					Switch ($DiskVersion.canOverride)
 					{
-						$False {$canOverride = "No"}
-						$True {$canOverride = "Yes"}
+						$False {$canOverride = "No"; Break }
+						$True {$canOverride = "Yes"; Break }
 					}
 
 					Switch ($DiskVersion.isPending)
 					{
-						$False {$isPending = "No, version Scheduled Date has occurred"}
-						$True {$isPending = "Yes, version Scheduled Date has not occurred"}
+						$False {$isPending = "No, version Scheduled Date has occurred"; Break }
+						$True {$isPending = "Yes, version Scheduled Date has not occurred"; Break }
 					}
 
 					Switch ($DiskVersion.goodInventoryStatus)
 					{
-						$False {$goodInventoryStatus = "Not available on all servers"}
-						$True {$goodInventoryStatus = "Available on all servers"}
-						Default {$goodInventoryStatus = "Replication status could not be determined: $($DiskVersion.goodInventoryStatus)"}
+						$False {$goodInventoryStatus = "Not available on all servers"; Break }
+						$True {$goodInventoryStatus = "Available on all servers"; Break }
+						Default {$goodInventoryStatus = "Replication status could not be determined: $($DiskVersion.goodInventoryStatus)"; Break }
 					}
 
 					If($MSWord -or $PDF)
@@ -7368,10 +7425,10 @@ Function OutputSite
 
 			Switch ($Disk.subnetAffinity)
 			{
-				0 {$subnetAffinity = "None"}
-				1 {$subnetAffinity = "Best Effort"}
-				2 {$subnetAffinity = "Fixed"}
-				Default {$subnetAffinity = "Subnet Affinity could not be determined: $($Disk.subnetAffinity)"}
+				0 {$subnetAffinity = "None"; Break}
+				1 {$subnetAffinity = "Best Effort"; Break}
+				2 {$subnetAffinity = "Fixed"; Break}
+				Default {$subnetAffinity = "Subnet Affinity could not be determined: $($Disk.subnetAffinity)"; Break}
 			}
 
 			If($MSWord -or $PDF)
@@ -7656,13 +7713,13 @@ Function OutputSite
 				
 				Switch ($Task.recurrence)
 				{
-					0 {$xTaskRecurrence = "None"}
-					1 {$xTaskRecurrence = "Daily Everyday"}
-					2 {$xTaskRecurrence = "Daily Weekdays only"}
-					3 {$xTaskRecurrence = "Weekly"}
-					4 {$xTaskRecurrence = "Monthly Date"}
-					5 {$xTaskRecurrence = "Monthly Type"}
-					Default {$xTaskRecurrence = "Recurrence type could not be determined: $($Task.recurrence)"}
+					0 {$xTaskRecurrence = "None"; Break}
+					1 {$xTaskRecurrence = "Daily Everyday"; Break}
+					2 {$xTaskRecurrence = "Daily Weekdays only"; Break}
+					3 {$xTaskRecurrence = "Weekly"; Break}
+					4 {$xTaskRecurrence = "Monthly Date"; Break}
+					5 {$xTaskRecurrence = "Monthly Type"; Break}
+					Default {$xTaskRecurrence = "Recurrence type could not be determined: $($Task.recurrence)"; Break}
 				}
 
 				If($Task.recurrence -ne 0)
@@ -7702,12 +7759,12 @@ Function OutputSite
 				{
 					Switch($Task.monthlyOffset)
 					{
-						1 {$xTaskmonthlyOffset = "First "}
-						2 {$xTaskmonthlyOffset = "Second "}
-						3 {$xTaskmonthlyOffset = "Third "}
-						4 {$xTaskmonthlyOffset = "Fourth "}
-						5 {$xTaskmonthlyOffset = "Last "}
-						Default {$xTaskmonthlyOffset = "Monthly Offset could not be determined: $($Task.monthlyOffset)"}
+						1 {$xTaskmonthlyOffset = "First "; Break }
+						2 {$xTaskmonthlyOffset = "Second "; Break }
+						3 {$xTaskmonthlyOffset = "Third "; Break }
+						4 {$xTaskmonthlyOffset = "Fourth "; Break }
+						5 {$xTaskmonthlyOffset = "Last "; Break }
+						Default {$xTaskmonthlyOffset = "Monthly Offset could not be determined: $($Task.monthlyOffset)"; Break }
 					}
 				}
 
@@ -7718,22 +7775,22 @@ Function OutputSite
 					8 = "Wednesday";
 					16 = "Thursday";
 					32 = "Friday";
-					64 = "Saturday"}
+					64 = "Saturday" }
 
 				Switch($Task.esdType)
 				{
-					""     {$xTaskesdType = "None (runs a custom script on the client)"}
-					"WSUS" {$xTaskesdType = "Microsoft Windows Update Service (WSUS)"}
-					"SCCM" {$xTaskesdType = "Microsoft System Center Configuration Manager (SCCM)"}
-					Default {$xTaskesdType = "ESD Client could not be determined: $($Task.esdType)"}
+					""     {$xTaskesdType = "None (runs a custom script on the client)"; Break }
+					"WSUS" {$xTaskesdType = "Microsoft Windows Update Service (WSUS)"; Break }
+					"SCCM" {$xTaskesdType = "Microsoft System Center Configuration Manager (SCCM)"; Break }
+					Default {$xTaskesdType = "ESD Client could not be determined: $($Task.esdType)"; Break }
 				}
 
 				Switch($Task.postUpdateApprove)
 				{
-					0 {$xTaskpostUpdateApprove = "Production"}
-					1 {$xTaskpostUpdateApprove = "Test"}
-					2 {$xTaskpostUpdateApprove = "Maintenance"}
-					Default {$xTaskpostUpdateApprove = "Access method for vDisk could not be determined: $($Task.postUpdateApprove)"}
+					0 {$xTaskpostUpdateApprove = "Production"; Break }
+					1 {$xTaskpostUpdateApprove = "Test"; Break }
+					2 {$xTaskpostUpdateApprove = "Maintenance"; Break }
+					Default {$xTaskpostUpdateApprove = "Access method for vDisk could not be determined: $($Task.postUpdateApprove)"; Break }
 				}
 
 				If($MSWord -or $PDF)
@@ -8410,18 +8467,18 @@ Function OutputSite
 					{
 						Switch ($Device.type)
 						{
-							0 {$DeviceType = "Production"}
-							1 {$DeviceType = "Test"}
-							2 {$DeviceType = "Maintenance"}
-							3 {$DeviceType = "Personal vDisk"}
-							Default {$DeviceType = "Device type could not be determined: $($Device.type)"}
+							0 {$DeviceType = "Production"; Break }
+							1 {$DeviceType = "Test"; Break }
+							2 {$DeviceType = "Maintenance"; Break }
+							3 {$DeviceType = "Personal vDisk"; Break }
+							Default {$DeviceType = "Device type could not be determined: $($Device.type)"; Break }
 						}
 						Switch ($Device.bootFrom)
 						{
-							1 {$DeviceBootFrom = "vDisk"}
-							2 {$DeviceBootFrom = "Hard Disk"}
-							3 {$DeviceBootFrom = "Floppy Disk"}
-							Default {$DeviceBootFrom = "Boot from could not be determined: $($Device.bootFrom)"}
+							1 {$DeviceBootFrom = "vDisk"; Break }
+							2 {$DeviceBootFrom = "Hard Disk"; Break }
+							3 {$DeviceBootFrom = "Floppy Disk"; Break }
+							Default {$DeviceBootFrom = "Boot from could not be determined: $($Device.bootFrom)"; Break }
 						}
 						If($Device.enabled)
 						{
@@ -8442,10 +8499,10 @@ Function OutputSite
 					}
 					Switch($Device.authentication)
 					{
-						0 {$DeviceAuthentication = "None"}
-						1 {$DeviceAuthentication = "Username and password"}
-						2 {$DeviceAuthentication = "External verification (User supplied method)"}
-						Default {$DeviceAuthentication = "Authentication type could not be determined: $($Device.authentication)"}
+						0 {$DeviceAuthentication = "None"; Break }
+						1 {$DeviceAuthentication = "Username and password"; Break }
+						2 {$DeviceAuthentication = "External verification (User supplied method)"; Break }
+						Default {$DeviceAuthentication = "Authentication type could not be determined: $($Device.authentication)"; Break }
 					}
 
 					Write-Verbose "$(Get-Date): `t`t`t`t`tProcessing General Tab"
@@ -9022,10 +9079,10 @@ Function OutputSite
 			Write-Verbose "$(Get-Date): `t`t`t`t`tProcessing General Tab"
 			Switch ($vHost.type)
 			{
-				0 {$vHostType = "Citrix XenServer"}
-				1 {$vHostType = "Microsoft SCVMM/Hyper-V"}
-				2 {$vHostType = "VMWare vSphere/ESX"}
-				Default {$vHostType = "Virtualization Host type could not be determined: $($vHost.type)"}
+				0 {$vHostType = "Citrix XenServer"; Break}
+				1 {$vHostType = "Microsoft SCVMM/Hyper-V"; Break}
+				2 {$vHostType = "VMWare vSphere/ESX"; Break}
+				Default {$vHostType = "Virtualization Host type could not be determined: $($vHost.type)"; Break}
 			}
 
 			If($MSWord -or $PDF)
