@@ -363,9 +363,9 @@
 	No objects are output from this script.  This script creates a Word or PDF document.
 .NOTES
 	NAME: PVS_Inventory_V5.ps1
-	VERSION: 5.11
+	VERSION: 5.12 
 	AUTHOR: Carl Webster, Sr. Solutions Architect at Choice Solutions
-	LASTEDIT: January 31, 2017
+	LASTEDIT: February 21, 2017
 #>
 
 #endregion
@@ -557,6 +557,11 @@ Param(
 #Version 5.11 31-Jan-2017
 #	Added support for "Configured for XenServer vDisk caching" to Target Devices and Hosts
 #	Added "Datacenter" for VMware Hosts
+#
+#Version 5.12 21-Feb-2017
+#	Added back "Use Datacenter licenses for desktops if no Desktop licenses are available" to Farm properties
+#		This was added back in PVS 7.13
+#	Fixed French wording for Table of Contents 2 (Thanks to David Rouquier)
 #
 #endregion
 
@@ -2124,7 +2129,7 @@ Function SetWordHashTable
 			'en-'	{ 'Automatic Table 2'; Break }
 			'es-'	{ 'Tabla automática 2'; Break }
 			'fi-'	{ 'Automaattinen taulukko 2'; Break }
-			'fr-'	{ 'Sommaire Automatique 2'; Break }
+			'fr-'	{ 'Table automatique 2'; Break } #changed 13-feb-2017 david roquier and samuel legrand
 			'nb-'	{ 'Automatisk tabell 2'; Break }
 			'nl-'	{ 'Automatische inhoudsopgave 2'; Break }
 			'pt-'	{ 'Sumário Automático 2'; Break }
@@ -5722,12 +5727,26 @@ Function OutputFarm
 
 	#licensing tab
 	Write-Verbose "$(Get-Date): `tProcessing Licensing Tab"
+	
+	If($farm.licenseTradeUp -eq "1")
+	{
+		$DatacenterLicense = "Yes"
+	}
+	Else
+	{
+		$DatacenterLicense = "No"
+	}
+	
 	If($MSword -or $PDF)
 	{
 		WriteWordLine 2 0 "Licensing"
 		[System.Collections.Hashtable[]] $ScriptInformation = @()
 		$ScriptInformation += @{ Data = "License server name"; Value = $farm.licenseServer; }
 		$ScriptInformation += @{ Data = "License server port"; Value = $farm.licenseServerPort; }
+		If($Script:PVSFullVersion -ge "7.13")
+		{
+			$ScriptInformation += @{ Data = "Use Datacenter licenses for desktops if no Desktop licenses are available"; Value = $DatacenterLicense; }
+		}
 		$Table = AddWordTable -Hashtable $ScriptInformation `
 		-Columns Data,Value `
 		-List `
@@ -5748,6 +5767,10 @@ Function OutputFarm
 		Line 0 "Licensing"
 		Line 1 "License server name`t: " $farm.licenseServer
 		Line 1 "License server port`t: " $farm.licenseServerPort
+		If($Script:PVSFullVersion -ge "7.13")
+		{
+			Line 1 "Use Datacenter licenses for desktops if no Desktop licenses are available: " $DatacenterLicense
+		}
 	}
 	ElseIf($HTML)
 	{
@@ -5755,6 +5778,10 @@ Function OutputFarm
 		$rowdata = @()
 		$columnHeaders = @("License server name",($htmlsilver -bor $htmlbold),$farm.licenseServer,$htmlwhite)
 		$rowdata += @(,('License server port',($htmlsilver -bor $htmlbold),$farm.licenseServerPort,$htmlwhite))
+		If($Script:PVSFullVersion -ge "7.13")
+		{
+			$rowdata += @(,('Use Datacenter licenses for desktops if no Desktop licenses are available',($htmlsilver -bor $htmlbold),$DatacenterLicense,$htmlwhite))
+		}
 		FormatHTMLTable "" "auto" -rowArray $rowdata -columnArray $columnHeaders
 		WriteHTMLLine 0 0 " "
 	}
@@ -8869,7 +8896,7 @@ Function OutputSite
 							$ScriptInformation += @{ Data = "Personal vDisk Drive"; Value = $Device.pvdDriveLetter; }
 						}
 
-						If($Device.XsPvsProxyUuid -ne "00000000-0000-0000-0000-000000000000")
+						If($Script:PVSFullVersion -ge "7.12" -and $Device.XsPvsProxyUuid -ne "00000000-0000-0000-0000-000000000000")
 						{
 							$ScriptInformation += @{ Data = "Configured for XenServer vDisk caching"; Value = " "; }
 						}
@@ -8914,7 +8941,7 @@ Function OutputSite
 							Line 3 "Personal vDisk Drive`t: " $Device.pvdDriveLetter
 						}
 
-						If($Device.XsPvsProxyUuid -ne "00000000-0000-0000-0000-000000000000")
+						If($Script:PVSFullVersion -ge "7.12" -and $Device.XsPvsProxyUuid -ne "00000000-0000-0000-0000-000000000000")
 						{
 							Line 3 "Configured for XenServer vDisk caching"
 						}
@@ -8946,7 +8973,7 @@ Function OutputSite
 							$rowdata += @(,('Personal vDisk Drive',($htmlsilver -bor $htmlbold),$Device.pvdDriveLetter,$htmlwhite))
 						}
 
-						If($Device.XsPvsProxyUuid -ne "00000000-0000-0000-0000-000000000000")
+						If($Script:PVSFullVersion -ge "7.12" -and $Device.XsPvsProxyUuid -ne "00000000-0000-0000-0000-000000000000")
 						{
 							$rowdata += @(,('Configured for XenServer vDisk caching',($htmlsilver -bor $htmlbold),"",$htmlwhite))
 						}
