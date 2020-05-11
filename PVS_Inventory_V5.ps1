@@ -439,9 +439,9 @@
 	No objects are output from this script.  This script creates a Word or PDF document.
 .NOTES
 	NAME: PVS_Inventory_V5.ps1
-	VERSION: 5.17
-	AUTHOR: Carl Webster, Sr. Solutions Architect at Choice Solutions
-	LASTEDIT: July 9, 2019
+	VERSION: 5.18
+	AUTHOR: Carl Webster
+	LASTEDIT: September 9, 2019
 #>
 
 #endregion
@@ -574,7 +574,7 @@ Param(
 #endregion
 
 #region script change log	
-#Carl Webster, CTP and Sr. Solutions Architect at Choice Solutions
+#Carl Webster, CTP Fellow
 #webster@carlwebster.com
 #@carlwebster on Twitter
 #http://www.CarlWebster.com
@@ -582,7 +582,11 @@ Param(
 
 #HTML functions and sample text contributed by Ken Avram October 2014
 
-#Version 5.17 8-July-2019
+#Version 5.18 9-Sep-2019
+#	Fix incorrect LicenseSKU value for PVS version 7.19 and later
+#	Fix issue with Versions vDisk tables
+#
+#Version 5.17 8-Jul-2019
 #	Added to Farm properties, Citrix Provisioning license type: On-Premises or Cloud (new to 1808)
 #	Added to vDisk properties, Accelerated Office Activation (new to 1906)
 #	Added to vDisk properties, updated Write Cache types (new to 1811)
@@ -5948,17 +5952,21 @@ Function OutputFarm
 		If($Script:PVSFullVersion -ge "7.19")
 		{
 			$ScriptInformation += @{ Data = "Citrix Provisioning license type"; Value = ""; }
-			If($farm.LicenseSKU -eq 2)
+			If($farm.LicenseSKU -eq 0) #fix in 5.18 uint LicenseSKU: LicenseSKU. 0 for on-premises, 1 for cloud. Min=0, Max=1, Default=0
 			{
 				$ScriptInformation += @{ Data = "     On-Premises"; Value = "Yes"; }
 				$ScriptInformation += @{ Data = "          Use Datacenter licenses for desktops if no Desktop licenses are available"; Value = $DatacenterLicense; }
 				$ScriptInformation += @{ Data = "     Cloud"; Value = "No"; }
 			}
-			Else
+			ElseIf($farm.LicenseSKU -eq 1)
 			{
 				$ScriptInformation += @{ Data = "     On-Premises"; Value = "No"; }
 				$ScriptInformation += @{ Data = "          Use Datacenter licenses for desktops if no Desktop licenses are available"; Value = $DatacenterLicense; }
 				$ScriptInformation += @{ Data = "     Cloud"; Value = "Yes"; }
+			}
+			Else
+			{
+				$ScriptInformation += @{ Data = "     On-Premises"; Value = "ERROR: Unable to determine the PVS License SKU Tpe"; }
 			}
 		}
 		ElseIf($Script:PVSFullVersion -ge "7.13")
@@ -5988,17 +5996,21 @@ Function OutputFarm
 		If($Script:PVSFullVersion -ge "7.19")
 		{
 			Line 1 "Citrix Provisioning license type" ""
-			If($farm.LicenseSKU -eq 2)
+			If($farm.LicenseSKU -eq 0) #fix in 5.18 uint LicenseSKU: LicenseSKU. 0 for on-premises, 1 for cloud. Min=0, Max=1, Default=0
 			{
 				Line 2 "On-Premises`t: " "Yes"
 				Line 3 "Use Datacenter licenses for desktops if no Desktop licenses are available: " $DatacenterLicense
 				Line 2 "Cloud`t`t: " "No"
 			}
-			Else
+			ElseIf($farm.LicenseSKU -eq 1)
 			{
 				Line 2 "On-Premises`t: " "No"
 				Line 3 "Use Datacenter licenses for desktops if no Desktop licenses are available: " $DatacenterLicense
 				Line 2 "Cloud`t`t: " "Yes"
+			}
+			Else
+			{
+				Line 2 "On-Premises`t: " "ERROR: Unable to determine the PVS License SKU Tpe"
 			}
 		}
 		ElseIf($Script:PVSFullVersion -ge "7.13")
@@ -6015,17 +6027,21 @@ Function OutputFarm
 		If($Script:PVSFullVersion -ge "7.19")
 		{
 			$rowdata += @(,("Citrix Provisioning license type",($htmlsilver -bor $htmlbold),"",$htmlwhite))
-			If($farm.LicenseSKU -eq 2)
+			If($farm.LicenseSKU -eq 0) #fix in 5.18 uint LicenseSKU: LicenseSKU. 0 for on-premises, 1 for cloud. Min=0, Max=1, Default=0
 			{
 				$rowdata += @(,("     On-Premises",($htmlsilver -bor $htmlbold),"Yes",$htmlwhite))
 				$rowdata += @(,("          Use Datacenter licenses for desktops if no Desktop licenses are available",($htmlsilver -bor $htmlbold),$DatacenterLicense,$htmlwhite))
 				$rowdata += @(,("     Cloud",($htmlsilver -bor $htmlbold),"No",$htmlwhite))
 			}
-			Else
+			ElseIf($farm.LicenseSKU -eq 1)
 			{
 				$rowdata += @(,("     On-Premises",($htmlsilver -bor $htmlbold),"No",$htmlwhite))
 				$rowdata += @(,("          Use Datacenter licenses for desktops if no Desktop licenses are available",($htmlsilver -bor $htmlbold),$DatacenterLicense,$htmlwhite))
 				$rowdata += @(,("     Cloud",($htmlsilver -bor $htmlbold),"Yes",$htmlwhite))
+			}
+			Else
+			{
+				$rowdata += @(,("     On-Premises",($htmlsilver -bor $htmlbold),"ERROR: Unable to determine the PVS License SKU Tpe",$htmlwhite))
 			}
 		}
 		ElseIf($Script:PVSFullVersion -ge "7.13")
@@ -7800,6 +7816,7 @@ Function OutputSite
 				{
 					[System.Collections.Hashtable[]] $ScriptInformation = @()
 					$ScriptInformation += @{ Data = "Boot production devices from version"; Value = $tmp; }
+					$First = $True
 				}
 				ElseIf($Text)
 				{
@@ -7808,6 +7825,8 @@ Function OutputSite
 				ElseIf($HTML)
 				{
 					$rowdata = @()
+					$columnHeaders = @("Boot production devices from version",($htmlsilver -bor $htmlbold),$tmp,$htmlwhite)
+					$First = $True
 				}
 				
 				ForEach($DiskVersion in $DiskVersions)
@@ -7819,7 +7838,7 @@ Function OutputSite
 					}
 					Else
 					{
-						$BootFromVersion = $DiskVersion.version
+						$BootFromVersion = $DiskVersion.version.ToString() #5.18 changed to string
 					}
 
 					Switch ($DiskVersion.access)
@@ -7908,6 +7927,10 @@ Function OutputSite
 
 					If($MSWord -or $PDF)
 					{
+						If(!$First)
+						{
+							[System.Collections.Hashtable[]] $ScriptInformation = @()
+						}
 						$ScriptInformation += @{ Data = "Version"; Value = $BootFromVersion; }
 						$ScriptInformation += @{ Data = "Created"; Value = $DiskVersion.createDate; }
 						If(![String]::IsNullOrEmpty($DiskVersion.scheduledDate))
@@ -7946,6 +7969,7 @@ Function OutputSite
 						FindWordDocumentEnd
 						$Table = $Null
 						WriteWordLine 0 0 ""
+						$First = $False
 					}
 					ElseIf($Text)
 					{
@@ -7977,7 +8001,15 @@ Function OutputSite
 					}
 					ElseIf($HTML)
 					{
-						$columnHeaders = @("Version",($htmlsilver -bor $htmlbold),$BootFromVersion,$htmlwhite)
+						If(!$First)
+						{
+							$rowdata = @()
+							$columnHeaders = @("Version",($htmlsilver -bor $htmlbold),$BootFromVersion,$htmlwhite)
+						}
+						Else
+						{
+							$rowdata += @(,('Version',($htmlsilver -bor $htmlbold),$BootFromVersion,$htmlwhite))
+						}
 						$rowdata += @(,('Created',($htmlsilver -bor $htmlbold),$DiskVersion.createDate,$htmlwhite))
 						If(![String]::IsNullOrEmpty($DiskVersion.scheduledDate))
 						{
@@ -8005,6 +8037,7 @@ Function OutputSite
 						$msg = "Boot production devices from version: $($tmp)"
 						FormatHTMLTable $msg "auto" -rowArray $rowdata -columnArray $columnHeaders
 						WriteHTMLLine 0 0 " "
+						$First = $False
 					}
 				}
 			}
