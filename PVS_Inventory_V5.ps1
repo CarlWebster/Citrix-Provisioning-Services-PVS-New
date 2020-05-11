@@ -363,9 +363,9 @@
 	No objects are output from this script.  This script creates a Word or PDF document.
 .NOTES
 	NAME: PVS_Inventory_V5.ps1
-	VERSION: 5.09
+	VERSION: 5.10
 	AUTHOR: Carl Webster, Sr. Solutions Architect at Choice Solutions
-	LASTEDIT: November 7, 2016
+	LASTEDIT: December 16, 2016
 #>
 
 #endregion
@@ -546,6 +546,13 @@ Param(
 #
 #Version 5.08 22-Oct-2016
 #	More refinement of HTML output
+#
+#Version 5.09 7-Nov-2016
+#	Added Chinese language support
+#
+#Version 5.10 16-Dec-2016
+#	Added support for PVS 7.12
+#	Added the new vDisk property "Cached secrets cleanup disabled"
 #
 #endregion
 
@@ -6931,6 +6938,17 @@ Function OutputSite
 			{
 				$Enabled = "No"
 			}
+			If($Script:PVSFullVersion -eq "7.12")
+			{
+				If($Disk.ClearCacheDisabled -eq 1)
+				{
+					$CachedSecretsCleanup = "Yes"
+				}
+				Else
+				{
+					$CachedSecretsCleanup = "No"
+				}
+			}
 			Switch ($Disk.licenseMode)
 			{
 				0 {$licenseMode = "None"; Break}
@@ -6978,6 +6996,10 @@ Function OutputSite
 				$ScriptInformation += @{ Data = "Enable AD machine account password management"; Value = $adPasswordEnabled; }
 				$ScriptInformation += @{ Data = "Enable printer management"; Value = $printerManagementEnabled; }
 				$ScriptInformation += @{ Data = "Enable streaming of this vDisk"; Value = $Enabled; }
+				If($Script:PVSFullVersion -eq "7.12")
+				{
+					$ScriptInformation += @{ Data = "Cached secrets cleanup disabled"; Value = $CachedSecretsCleanup; }
+				}
 				$Table = AddWordTable -Hashtable $ScriptInformation `
 				-Columns Data,Value `
 				-List `
@@ -7023,6 +7045,10 @@ Function OutputSite
 				Line 3 "Enable AD machine acct pwd mgmt`t: " $adPasswordEnabled
 				Line 3 "Enable printer management`t: " $printerManagementEnabled
 				Line 3 "Enable streaming of this vDisk`t: " $Enabled
+				If($Script:PVSFullVersion -eq "7.12")
+				{
+					Line 3 "Cached secrets cleanup disabled`t: " $CachedSecretsCleanup
+				}
 				Line 0 ""
 			}
 			ElseIf($HTML)
@@ -7056,6 +7082,10 @@ Function OutputSite
 				$rowdata += @(,('Enable AD machine account password management',($htmlsilver -bor $htmlbold),$adPasswordEnabled,$htmlwhite))
 				$rowdata += @(,('Enable printer management',($htmlsilver -bor $htmlbold),$printerManagementEnabled,$htmlwhite))
 				$rowdata += @(,('Enable streaming of this vDisk',($htmlsilver -bor $htmlbold),$Enabled,$htmlwhite))
+				If($Script:PVSFullVersion -eq "7.12")
+				{
+					$rowdata += @(,('Cached secrets cleanup disabled',($htmlsilver -bor $htmlbold),$CachedSecretsCleanup,$htmlwhite))
+				}
 				
 				$msg = ""
 				FormatHTMLTable $msg "auto" -rowArray $rowdata -columnArray $columnHeaders
