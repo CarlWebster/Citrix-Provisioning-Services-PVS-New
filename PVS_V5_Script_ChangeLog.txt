@@ -6,6 +6,9 @@
 #Thanks to Michael B. Smith, Joe Shonk and Stephane Thirion
 #for testing and fine-tuning tips 
 
+#Version 5.15 8-Dec-2017
+#	Updated Function WriteHTMLLine with fixes from the script template
+
 #Version 5.14 27-Jun-2017
 #	Added four new Cover Page properties
 #		Company Address
