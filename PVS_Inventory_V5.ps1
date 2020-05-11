@@ -362,9 +362,9 @@
 	No objects are output from this script.  This script creates a Word or PDF document.
 .NOTES
 	NAME: PVS_Inventory_V5.ps1
-	VERSION: 5.07
+	VERSION: 5.08
 	AUTHOR: Carl Webster, Sr. Solutions Architect at Choice Solutions
-	LASTEDIT: October 19, 2016
+	LASTEDIT: October 22, 2016
 #>
 
 #endregion
@@ -542,6 +542,10 @@ Param(
 #
 #Version 5.07 19-Oct-2016
 #	Fixed formatting issues with HTML headings output
+#
+#Version 5.08 22-Oct-2016
+#	More refinement of HTML output
+#
 #endregion
 
 #region initial variable testing and setup
@@ -1337,7 +1341,7 @@ Function GetComputerWMIInfo
 	}
 	ElseIf($HTML)
 	{
-		WriteHTMLLine 0 0 ""
+		WriteHTMLLine 0 0 " "
 	}
 }
 
@@ -1393,8 +1397,8 @@ Function OutputComputerItem
 
 		$msg = ""
 		$columnWidths = @("150px","200px")
-		FormatHTMLTable $msg -rowarray $rowdata -columnArray $columnheaders -fixedWidth $columnWidths
-		WriteHTMLLine 0 0 ""
+		FormatHTMLTable $msg -rowarray $rowdata -columnArray $columnheaders -fixedWidth $columnWidths -tablewidth "350"
+		WriteHTMLLine 0 0 " "
 	}
 }
 
@@ -1522,8 +1526,8 @@ Function OutputDriveItem
 
 		$msg = ""
 		$columnWidths = @("150px","200px")
-		FormatHTMLTable $msg -rowarray $rowdata -columnArray $columnheaders -fixedWidth $columnWidths
-		WriteHTMLLine 0 0 ""
+		FormatHTMLTable $msg -rowarray $rowdata -columnArray $columnheaders -fixedWidth $columnWidths -tablewidth "350"
+		WriteHTMLLine 0 0 " "
 	}
 }
 
@@ -1646,8 +1650,8 @@ Function OutputProcessorItem
 
 		$msg = ""
 		$columnWidths = @("150px","200px")
-		FormatHTMLTable $msg -rowarray $rowdata -columnArray $columnheaders -fixedWidth $columnWidths
-		WriteHTMLLine 0 0 ""
+		FormatHTMLTable $msg -rowarray $rowdata -columnArray $columnheaders -fixedWidth $columnWidths -tablewidth "350"
+		WriteHTMLLine 0 0 " "
 	}
 }
 
@@ -2064,8 +2068,8 @@ Function OutputNicItem
 
 		$msg = ""
 		$columnWidths = @("150px","200px")
-		FormatHTMLTable $msg -rowarray $rowdata -columnArray $columnheaders -fixedWidth $columnWidths
-		WriteHTMLLine 0 0 ""
+		FormatHTMLTable $msg -rowarray $rowdata -columnArray $columnheaders -fixedWidth $columnWidths -tablewidth "350"
+		WriteHTMLLine 0 0 " "
 	}
 }
 #endregion
@@ -3022,7 +3026,7 @@ Function WriteWordLine
 	0 for Font Size denotes using the default font size of 2 or 10 point
 
 .EXAMPLE
-	WriteHTMLLine 0 0 ""
+	WriteHTMLLine 0 0 " "
 
 	Writes a blank line with no style or tab stops, obviously none needed.
 
@@ -3111,16 +3115,19 @@ Function WriteHTMLLine
 	[string]$name = '', 
 	[string]$value = '', 
 	[string]$fontName="Calibri",
-	[int]$fontSize=1,
+	[int]$fontSize=2,
 	[int]$options=$htmlblack)
 
 
 	#Build output style
 	[string]$output = ""
-
+	[string]$HTMLStyle1 = ""
+	[string]$HTMLStyle2 = ""
+	
 	If([String]::IsNullOrEmpty($Name))	
 	{
-		$HTMLBody = "<p></p>"
+		#$HTMLBody = "<p></p>"
+		$HTMLBody = ""
 	}
 	Else
 	{
@@ -3150,9 +3157,27 @@ Function WriteHTMLLine
 		#output the rest of the parameters.
 		$output += $name + $value
 
+		Switch ($style)
+		{
+			1 {$HTMLStyle1 = "<h1>"; Break}
+			2 {$HTMLStyle1 = "<h2>"; Break}
+			3 {$HTMLStyle1 = "<h3>"; Break}
+			4 {$HTMLStyle1 = "<h4>"; Break}
+			Default {$HTMLStyle1 = ""; Break}
+		}
+
+		Switch ($style)
+		{
+			1 {$HTMLStyle2 = "</h1>"; Break}
+			2 {$HTMLStyle2 = "</h2>"; Break}
+			3 {$HTMLStyle2 = "</h3>"; Break}
+			4 {$HTMLStyle2 = "</h4>"; Break}
+			Default {$HTMLStyle2 = ""; Break}
+		}
+
 		#added by webster 12-oct-2016
 		#if a heading, don't add the <br>
-		If($HTMLStyle -eq "")
+		If($HTMLStyle1 -eq "")
 		{
 			$HTMLBody += "<br><font face='" + $HTMLFontName + "' " + "color='" + $color + "' size='"  + $fontsize + "'>"
 		}
@@ -3161,27 +3186,9 @@ Function WriteHTMLLine
 			$HTMLBody += "<font face='" + $HTMLFontName + "' " + "color='" + $color + "' size='"  + $fontsize + "'>"
 		}
 		
-		Switch ($style)
-		{
-			1 {$HTMLStyle = "<h1>"; Break}
-			2 {$HTMLStyle = "<h2>"; Break}
-			3 {$HTMLStyle = "<h3>"; Break}
-			4 {$HTMLStyle = "<h4>"; Break}
-			Default {$HTMLStyle = ""; Break}
-		}
+		$HTMLBody += $HTMLStyle1 + $output
 
-		$HTMLBody += $HTMLStyle + $output
-
-		Switch ($style)
-		{
-			1 {$HTMLStyle = "</h1>"; Break}
-			2 {$HTMLStyle = "</h2>"; Break}
-			3 {$HTMLStyle = "</h3>"; Break}
-			4 {$HTMLStyle = "</h4>"; Break}
-			Default {$HTMLStyle = ""; Break}
-		}
-
-		$HTMLBody += $HTMLStyle +  "</font>"
+		$HTMLBody += $HTMLStyle2 +  "</font>"
 
 		If($options -band $htmlitalics) 
 		{
@@ -3196,10 +3203,10 @@ Function WriteHTMLLine
 	
 	#added by webster 12-oct-2016
 	#if a heading, don't add the <br />
-	If($HTMLStyle -eq "")
-	{
-		$HTMLBody += "<br />"
-	}
+	#If($HTMLStyle1 -eq "")
+	#{
+	#	$HTMLBody += "<br />"
+	#}
 
 	out-file -FilePath $Script:FileName1 -Append -InputObject $HTMLBody 4>$Null
 }
@@ -4712,7 +4719,7 @@ Function OutputViewMembers
 		
 		$msg = ""
 		FormatHTMLTable $msg "auto" -rowArray $rowdata -columnArray $columnHeaders
-		WriteHTMLLine 0 0 ""
+		WriteHTMLLine 0 0 " "
 	}
 }
 
@@ -4865,7 +4872,7 @@ Function DeviceStatus
 
 			$msg = ""
 			FormatHTMLTable $msg "auto" -rowArray $rowdata -columnArray $columnHeaders
-			WriteHTMLLine 0 0 ""
+			WriteHTMLLine 0 0 " "
 			
 			WriteHTMLLine 4 0 "Logging"
 			$rowdata = @()
@@ -4873,7 +4880,7 @@ Function DeviceStatus
 
 			$msg = ""
 			FormatHTMLTable $msg "auto" -rowArray $rowdata -columnArray $columnHeaders
-			WriteHTMLLine 0 0 ""
+			WriteHTMLLine 0 0 " "
 		}
 	}
 }
@@ -5069,7 +5076,7 @@ Function OutputAuditTrail
 		{
 			WriteHTMLLine 2 0 "$($Level) Audit Trail"
 			WriteHTMLLine 4 0 "Audit Trail for dates $($StartDate) through $($EndDate)"
-			WriteHTMLLine 0 0 ""
+			WriteHTMLLine 0 0 " "
 		}
 
 		If($MSWord -or $PDF)
@@ -5337,7 +5344,7 @@ Function OutputAuditTrail
 			
 			$msg = ""
 			FormatHTMLTable $msg "auto" -rowArray $rowdata -columnArray $columnHeaders
-			WriteHTMLLine 0 0 ""
+			WriteHTMLLine 0 0 " "
 		}
 	}
 }
@@ -5403,7 +5410,7 @@ Function OutputauthGroups
 		
 		$msg = ""
 		FormatHTMLTable $msg "auto" -rowArray $rowdata -columnArray $columnHeaders
-		WriteHTMLLine 0 0 ""
+		WriteHTMLLine 0 0 " "
 	}
 }
 
@@ -5468,7 +5475,7 @@ Function OutputauthGroupUsages
 		
 		$msg = ""
 		FormatHTMLTable $msg "auto" -rowArray $rowdata -columnArray $columnHeaders
-		WriteHTMLLine 0 0 ""
+		WriteHTMLLine 0 0 " "
 	}
 }
 #endregion
@@ -5604,7 +5611,7 @@ Function OutputFarm
 		
 		$msg = ""
 		FormatHTMLTable $msg "auto" -rowArray $rowdata -columnArray $columnHeaders
-		WriteHTMLLine 0 0 ""
+		WriteHTMLLine 0 0 " "
 	}
 
 	#security tab
@@ -5714,7 +5721,7 @@ Function OutputFarm
 		$columnHeaders = @("License server name",($htmlsilver -bor $htmlbold),$farm.licenseServer,$htmlwhite)
 		$rowdata += @(,('License server port',($htmlsilver -bor $htmlbold),$farm.licenseServerPort,$htmlwhite))
 		FormatHTMLTable "" "auto" -rowArray $rowdata -columnArray $columnHeaders
-		WriteHTMLLine 0 0 ""
+		WriteHTMLLine 0 0 " "
 	}
 
 	#options tab
@@ -5798,7 +5805,7 @@ Function OutputFarm
 			$rowdata += @(,('Send anonymous statistics and usage information',($htmlsilver -bor $htmlbold),$CEIP,$htmlwhite))
 		}
 		FormatHTMLTable "" "auto" -rowArray $rowdata -columnArray $columnHeaders
-		WriteHTMLLine 0 0 ""
+		WriteHTMLLine 0 0 " "
 	}
 
 	#vDisk Version tab
@@ -5840,7 +5847,7 @@ Function OutputFarm
 		$rowdata += @(,('Merge after automated vDisk update, if over alert threshold',($htmlsilver -bor $htmlbold),$xautomaticMergeEnabled,$htmlwhite))
 		$rowdata += @(,('Default access mode for new merge versions',($htmlsilver -bor $htmlbold),$xmergeMode,$htmlwhite))
 		FormatHTMLTable "" "auto" -rowArray $rowdata -columnArray $columnHeaders
-		WriteHTMLLine 0 0 ""
+		WriteHTMLLine 0 0 " "
 	}
 
 	#status tab
@@ -5914,7 +5921,7 @@ Function OutputFarm
 		
 		$msg = ""
 		FormatHTMLTable $msg "auto" -rowArray $rowdata -columnArray $columnHeaders
-		WriteHTMLLine 0 0 ""
+		WriteHTMLLine 0 0 " "
 	}
 
 	#7.11 Problem Report tab
@@ -5969,7 +5976,7 @@ Function OutputFarm
 			
 			$msg = ""
 			FormatHTMLTable $msg "auto" -rowArray $rowdata -columnArray $columnHeaders
-			WriteHTMLLine 0 0 ""
+			WriteHTMLLine 0 0 " "
 		}
 	}
 	
@@ -6078,7 +6085,7 @@ Function OutputSite
 			$rowdata += @(,('Description',($htmlsilver -bor $htmlbold),$PVSSite.description,$htmlwhite))
 		}
 		FormatHTMLTable "" "auto" -rowArray $rowdata -columnArray $columnHeaders
-		WriteHTMLLine 0 0 ""
+		WriteHTMLLine 0 0 " "
 	}
 
 	#security tab
@@ -6172,7 +6179,7 @@ Function OutputSite
 		
 		$msg = ""
 		FormatHTMLTable $msg "auto" -rowArray $rowdata -columnArray $columnHeaders
-		WriteHTMLLine 0 0 ""
+		WriteHTMLLine 0 0 " "
 	}
 	
 	#vDisk Update
@@ -6213,7 +6220,7 @@ Function OutputSite
 			$columnHeaders = @("Enable automatic vDisk updates on this site",($htmlsilver -bor $htmlbold),"Yes",$htmlwhite)
 			$rowdata += @(,('Server to run vDisk updates for this site',($htmlsilver -bor $htmlbold),$PVSSite.diskUpdateServerName,$htmlwhite))
 			FormatHTMLTable "" "auto" -rowArray $rowdata -columnArray $columnHeaders
-			WriteHTMLLine 0 0 ""
+			WriteHTMLLine 0 0 " "
 		}
 	}
 	Else
@@ -6249,7 +6256,7 @@ Function OutputSite
 			$rowdata = @()
 			$columnHeaders = @("Enable automatic vDisk updates on this site",($htmlsilver -bor $htmlbold),"No",$htmlwhite)
 			FormatHTMLTable "" "auto" -rowArray $rowdata -columnArray $columnHeaders
-			WriteHTMLLine 0 0 ""
+			WriteHTMLLine 0 0 " "
 		}
 	}
 
@@ -6721,7 +6728,7 @@ Function OutputSite
 							
 							$msg = ""
 							FormatHTMLTable $msg "auto" -rowArray $rowdata -columnArray $columnHeaders
-							WriteHTMLLine 0 0 ""
+							WriteHTMLLine 0 0 " "
 						}
 						Write-Verbose "$(Get-Date): `t`t`t`t`t`tProcessing Options Tab"
 						
@@ -6809,7 +6816,7 @@ Function OutputSite
 							
 							$msg = ""
 							FormatHTMLTable $msg "auto" -rowArray $rowdata -columnArray $columnHeaders
-							WriteHTMLLine 0 0 ""
+							WriteHTMLLine 0 0 " "
 						}
 					}
 				}
@@ -7028,7 +7035,7 @@ Function OutputSite
 				
 				$msg = ""
 				FormatHTMLTable $msg "auto" -rowArray $rowdata -columnArray $columnHeaders
-				WriteHTMLLine 0 0 ""
+				WriteHTMLLine 0 0 " "
 			}
 			
 			Write-Verbose "$(Get-Date): `t`t`t`tProcessing Identification Tab"
@@ -7230,7 +7237,7 @@ Function OutputSite
 				
 				$msg = ""
 				FormatHTMLTable $msg "auto" -rowArray $rowdata -columnArray $columnHeaders
-				WriteHTMLLine 0 0 ""
+				WriteHTMLLine 0 0 " "
 			}
 
 			Write-Verbose "$(Get-Date): `t`t`t`tProcessing Volume Licensing Tab"
@@ -7268,7 +7275,7 @@ Function OutputSite
 				
 				$msg = ""
 				FormatHTMLTable $msg "auto" -rowArray $rowdata -columnArray $columnHeaders
-				WriteHTMLLine 0 0 ""
+				WriteHTMLLine 0 0 " "
 			}
 
 			Write-Verbose "$(Get-Date): `t`t`t`tProcessing Auto Update Tab"
@@ -7375,7 +7382,7 @@ Function OutputSite
 				
 				$msg = ""
 				FormatHTMLTable $msg "auto" -rowArray $rowdata -columnArray $columnHeaders
-				WriteHTMLLine 0 0 ""
+				WriteHTMLLine 0 0 " "
 			}
 			
 			#process Versions menu
@@ -7397,7 +7404,7 @@ Function OutputSite
 				ElseIf($HTML)
 				{
 					WriteHTMLLine 4 0 "vDisk Versions"
-					WriteHTMLLine 0 0 ""
+					WriteHTMLLine 0 0 " "
 				}
 				#get the current booting version
 				#by default, the $DiskVersions object is in version number order lowest to highest
@@ -7638,7 +7645,7 @@ Function OutputSite
 				
 						$msg = "Boot production devices from version: $($tmp)"
 						FormatHTMLTable $msg "auto" -rowArray $rowdata -columnArray $columnHeaders
-						WriteHTMLLine 0 0 ""
+						WriteHTMLLine 0 0 " "
 					}
 				}
 			}
@@ -7742,7 +7749,7 @@ Function OutputSite
 				
 				$msg = ""
 				FormatHTMLTable $msg "auto" -rowArray $rowdata -columnArray $columnHeaders
-				WriteHTMLLine 0 0 ""
+				WriteHTMLLine 0 0 " "
 			}
 		}
 	}
@@ -7861,7 +7868,7 @@ Function OutputSite
 
 					$msg = ""
 					FormatHTMLTable $msg "auto" -rowArray $rowdata -columnArray $columnHeaders
-					WriteHTMLLine 0 0 ""
+					WriteHTMLLine 0 0 " "
 				}
 								
 				Write-Verbose "$(Get-Date): `t`t`t`t`tProcessing Personality Tab"
@@ -7917,7 +7924,7 @@ Function OutputSite
 
 							$msg = ""
 							FormatHTMLTable $msg "auto" -rowArray $rowdata -columnArray $columnHeaders
-							WriteHTMLLine 0 0 ""
+							WriteHTMLLine 0 0 " "
 						}
 					}
 				}
@@ -8093,7 +8100,7 @@ Function OutputSite
 
 					$msg = ""
 					FormatHTMLTable $msg "auto" -rowArray $rowdata -columnArray $columnHeaders
-					WriteHTMLLine 0 0 ""
+					WriteHTMLLine 0 0 " "
 				}
 				
 				Write-Verbose "$(Get-Date): `t`t`t`t`tProcessing Schedule Tab"
@@ -8273,7 +8280,7 @@ Function OutputSite
 
 							$msg = ""
 							FormatHTMLTable $msg "auto" -rowArray $rowdata -columnArray $columnHeaders
-							WriteHTMLLine 0 0 ""
+							WriteHTMLLine 0 0 " "
 						}
 					}
 				}
@@ -8325,7 +8332,7 @@ Function OutputSite
 
 					$msg = ""
 					FormatHTMLTable $msg "auto" -rowArray $rowdata -columnArray $columnHeaders
-					WriteHTMLLine 0 0 ""
+					WriteHTMLLine 0 0 " "
 				}
 				
 				Write-Verbose "$(Get-Date): `t`t`t`t`tProcessing Scripts Tab"
@@ -8380,7 +8387,7 @@ Function OutputSite
 
 						$msg = ""
 						FormatHTMLTable $msg "auto" -rowArray $rowdata -columnArray $columnHeaders
-						WriteHTMLLine 0 0 ""
+						WriteHTMLLine 0 0 " "
 					}
 				}
 				
@@ -8421,7 +8428,7 @@ Function OutputSite
 
 					$msg = ""
 					FormatHTMLTable $msg "auto" -rowArray $rowdata -columnArray $columnHeaders
-					WriteHTMLLine 0 0 ""
+					WriteHTMLLine 0 0 " "
 				}
 			}
 		}
@@ -8499,7 +8506,7 @@ Function OutputSite
 				
 				$msg = ""
 				FormatHTMLTable $msg "auto" -rowArray $rowdata -columnArray $columnHeaders
-				WriteHTMLLine 0 0 ""
+				WriteHTMLLine 0 0 " "
 			}
 
 			Write-Verbose "$(Get-Date): `t`t`t`tProcessing Security Tab"
@@ -8683,7 +8690,7 @@ Function OutputSite
 					
 					$msg = ""
 					FormatHTMLTable $msg "auto" -rowArray $rowdata -columnArray $columnHeaders
-					WriteHTMLLine 0 0 ""
+					WriteHTMLLine 0 0 " "
 				}
 			}
 			Else
@@ -8731,7 +8738,7 @@ Function OutputSite
 					ElseIf($HTML)
 					{
 						WriteHTMLLine 0 0 $txt
-						WriteHTMLLine 0 0 ""
+						WriteHTMLLine 0 0 " "
 					}
 
 					If($Device.type -ne "3")
@@ -8873,7 +8880,7 @@ Function OutputSite
 					
 						$msg = ""
 						FormatHTMLTable $msg "auto" -rowArray $rowdata -columnArray $columnHeaders
-						WriteHTMLLine 0 0 ""
+						WriteHTMLLine 0 0 " "
 					}
 					
 					Write-Verbose "$(Get-Date): `t`t`t`t`tProcessing vDisks Tab"
@@ -8956,7 +8963,7 @@ Function OutputSite
 					
 							$msg = ""
 							FormatHTMLTable $msg "auto" -rowArray $rowdata -columnArray $columnHeaders
-							WriteHTMLLine 0 0 ""
+							WriteHTMLLine 0 0 " "
 						}
 					}
 					ElseIf($? -and $vDisks -eq $Null)
@@ -9075,7 +9082,7 @@ Function OutputSite
 					
 						$msg = ""
 						FormatHTMLTable $msg "auto" -rowArray $rowdata -columnArray $columnHeaders
-						WriteHTMLLine 0 0 ""
+						WriteHTMLLine 0 0 " "
 					}
 					
 					Write-Verbose "$(Get-Date): `t`t`t`t`tProcessing Authentication Tab"
@@ -9129,7 +9136,7 @@ Function OutputSite
 						}
 						$msg = ""
 						FormatHTMLTable $msg "auto" -rowArray $rowdata -columnArray $columnHeaders
-						WriteHTMLLine 0 0 ""
+						WriteHTMLLine 0 0 " "
 					}
 					
 					Write-Verbose "$(Get-Date): `t`t`t`t`tProcessing Personality Tab"
@@ -9185,7 +9192,7 @@ Function OutputSite
 
 								$msg = ""
 								FormatHTMLTable $msg "auto" -rowArray $rowdata -columnArray $columnHeaders
-								WriteHTMLLine 0 0 ""
+								WriteHTMLLine 0 0 " "
 							}
 						}
 					}
@@ -9304,7 +9311,7 @@ Function OutputSite
 				
 				$msg = ""
 				FormatHTMLTable $msg "auto" -rowArray $rowdata -columnArray $columnHeaders
-				WriteHTMLLIne 0 0 ""
+				WriteHTMLLine 0 0 " "
 			}
 			
 			Write-Verbose "$(Get-Date): `t`t`t`tProcessing Members Tab"
@@ -9463,7 +9470,7 @@ Function OutputSite
 				
 				$msg = ""
 				FormatHTMLTable $msg "auto" -rowArray $rowdata -columnArray $columnHeaders
-				WriteHTMLLine 0 0 ""
+				WriteHTMLLine 0 0 " "
 				
 				Write-Verbose "$(Get-Date): Processing vDisk Update Tab"
 				WriteHTMLLine 4 0 "vDisk Update"
@@ -9473,7 +9480,7 @@ Function OutputSite
 				
 				$msg = ""
 				FormatHTMLTable $msg "auto" -rowArray $rowdata -columnArray $columnHeaders
-				WriteHTMLLine 0 0 ""
+				WriteHTMLLine 0 0 " "
 			}
 		}
 	}
@@ -9629,7 +9636,7 @@ Function OutputServers
 			
 			$msg = ""
 			FormatHTMLTable $msg "auto" -rowArray $rowdata -columnArray $columnHeaders
-			WriteHTMLLine 0 0 ""
+			WriteHTMLLine 0 0 " "
 		}
 			
 		Write-Verbose "$(Get-Date): `t`t`t`tProcessing Network Tab"
@@ -9704,7 +9711,7 @@ Function OutputServers
 			$rowdata += @(,('Management IP',($htmlsilver -bor $htmlbold),$Server.managementIp,$htmlwhite))
 			$msg = ""
 			FormatHTMLTable $msg "auto" -rowArray $rowdata -columnArray $columnHeaders
-			WriteHTMLLine 0 0 ""
+			WriteHTMLLine 0 0 " "
 		}
 			
 		Write-Verbose "$(Get-Date): `t`t`t`tProcessing Stores Tab"
@@ -9817,7 +9824,7 @@ Function OutputServers
 
 					$msg = ""
 					FormatHTMLTable $msg "auto" -rowArray $rowdata -columnArray $columnHeaders
-					WriteHTMLLine 0 0 ""
+					WriteHTMLLine 0 0 " "
 				}
 			}
 		}
@@ -9881,7 +9888,7 @@ Function OutputServers
 
 			$msg = ""
 			FormatHTMLTable $msg "auto" -rowArray $rowdata -columnArray $columnHeaders
-			WriteHTMLLine 0 0 ""
+			WriteHTMLLine 0 0 " "
 		}
 		
 		If($Script:PVSFullVersion -ge "7.11")
@@ -9941,7 +9948,7 @@ Function OutputServers
 
 				$msg = ""
 				FormatHTMLTable $msg "auto" -rowArray $rowdata -columnArray $columnHeaders
-				WriteHTMLLine 0 0 ""
+				WriteHTMLLine 0 0 " "
 			}
 		}
 		#create array for appendix A
@@ -10021,7 +10028,7 @@ Function OutputServers
 
 			$msg = ""
 			FormatHTMLTable $msg "auto" -rowArray $rowdata -columnArray $columnHeaders
-			WriteHTMLLine 0 0 ""
+			WriteHTMLLine 0 0 " "
 		}
 
 		Write-Verbose "$(Get-Date): `t`t`t`t`tProcessing Network Tab"
@@ -10064,7 +10071,7 @@ Function OutputServers
 
 			$msg = ""
 			FormatHTMLTable $msg "auto" -rowArray $rowdata -columnArray $columnHeaders
-			WriteHTMLLine 0 0 ""
+			WriteHTMLLine 0 0 " "
 		}
 
 		Write-Verbose "$(Get-Date): `t`t`t`t`tProcessing Pacing Tab"
@@ -10110,7 +10117,7 @@ Function OutputServers
 
 			$msg = ""
 			FormatHTMLTable $msg "auto" -rowArray $rowdata -columnArray $columnHeaders
-			WriteHTMLLine 0 0 ""
+			WriteHTMLLine 0 0 " "
 		}
 
 		Write-Verbose "$(Get-Date): `t`t`t`t`tProcessing Device Tab"
@@ -10148,7 +10155,7 @@ Function OutputServers
 
 			$msg = ""
 			FormatHTMLTable $msg "auto" -rowArray $rowdata -columnArray $columnHeaders
-			WriteHTMLLine 0 0 ""
+			WriteHTMLLine 0 0 " "
 		}
 		
 		If($Hardware)
@@ -10260,7 +10267,7 @@ Function OutputFarmView
 
 		$msg = ""
 		FormatHTMLTable $msg "auto" -rowArray $rowdata -columnArray $columnHeaders
-		WriteHTMLLine 0 0 ""
+		WriteHTMLLine 0 0 " "
 	}
 	
 	Write-Verbose "$(Get-Date): `t`tProcessing Members Tab"
@@ -10404,7 +10411,7 @@ Function OutputStore
 		
 		$msg = ""
 		FormatHTMLTable $msg "auto" -rowArray $rowdata -columnArray $columnHeaders
-		WriteHTMLLine 0 0 ""
+		WriteHTMLLine 0 0 " "
 	}
 	
 	Write-Verbose "$(Get-Date): `t`tProcessing Servers Tab"
@@ -10501,7 +10508,7 @@ Function OutputStore
 		
 		$msg = ""
 		FormatHTMLTable $msg "auto" -rowArray $rowdata -columnArray $columnHeaders
-		WriteHTMLLine 0 0 ""
+		WriteHTMLLine 0 0 " "
 	}
 
 	Write-Verbose "$(Get-Date): `t`tProcessing Paths Tab"
@@ -10587,7 +10594,7 @@ Function OutputStore
 		
 		$msg = ""
 		FormatHTMLTable $msg "auto" -rowArray $rowdata -columnArray $columnHeaders
-		WriteHTMLLine 0 0 ""
+		WriteHTMLLine 0 0 " "
 	}
 }
 #endregion
@@ -10704,7 +10711,7 @@ Function OutputAppendixA
 		
 		$msg = ""
 		FormatHTMLTable $msg "auto" -rowArray $rowdata -columnArray $columnHeaders
-		WriteHTMLLine 0 0 ""
+		WriteHTMLLine 0 0 " "
 	}
 	
 	Write-Verbose "$(Get-Date): `tFinished Creating Appendix A - Advanced Server Items (Server/Network)"
@@ -10809,7 +10816,7 @@ Function OutputAppendixB
 		
 		$msg = ""
 		FormatHTMLTable $msg "auto" -rowArray $rowdata -columnArray $columnHeaders
-		WriteHTMLLine 0 0 ""
+		WriteHTMLLine 0 0 " "
 	}
 
 	Write-Verbose "$(Get-Date): `tFinished Creating Appendix B - Advanced Server Items (Pacing/Device)"
