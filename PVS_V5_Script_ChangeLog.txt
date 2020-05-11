@@ -6,6 +6,19 @@
 #Thanks to Michael B. Smith, Joe Shonk and Stephane Thirion
 #for testing and fine-tuning tips 
 
+#Version 5.13 30-Mar-2017 (aka The Jim Moyle Update)
+#	Added "Store free space" (reported by Jim Moyle)
+#	Changed checking for PVS version -eq 7.12 to -ge 7.12 to catch 7.13 and later versions (reported by Jim Moyle)
+#	Fixed numerous HTML output issues (found when fixing other bugs reported by Jim Moyle)
+#	Fixed PersonalityStrings for Managed vDisks (reported by Jim Moyle)
+#	Fixed the remaining $Var -eq $Null issues by changing them to $Null -eq $Var (found when fixing other bugs reported by Jim Moyle)
+#	Fixed the vDisk Update, Update limit property not showing in the output
+#	Fixed wording for Word output for "Default write-cache paths", was "Default store path"
+#	Fixed wrong cmdlet being used for getting vDiskUpdateDevice status (reported by Jim Moyle)
+#	For Store properties, for Word/PDF/HTML output, changed the text "Store owner" to 
+#		"Site that acts as the owner of this store" to match the PVS console
+#	Updated help text
+
 #Version 5.12 21-Feb-2017 
 #	Added back "Use Datacenter licenses for desktops if no Desktop licenses are available" to Farm properties
 #		This was added back in PVS 7.13
