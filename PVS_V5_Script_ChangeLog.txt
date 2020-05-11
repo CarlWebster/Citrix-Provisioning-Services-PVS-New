@@ -6,6 +6,10 @@
 #Thanks to Michael B. Smith, Joe Shonk and Stephane Thirion
 #for testing and fine-tuning tips 
 
+#Version 5.10 16-Dec-2016
+#	Added support for PVS 7.12
+#	Added the new vDisk property "Cached secrets cleanup disabled"
+
 #Version 5.09 7-Nov-2016
 #	Added Chinese language support
 
