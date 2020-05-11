@@ -6,6 +6,10 @@
 #Thanks to Michael B. Smith, Joe Shonk and Stephane Thirion
 #for testing and fine-tuning tips 
 
+#Version 5.16 6-Apr-2018
+#	Added Operating System information to Functions GetComputerWMIInfo and OutputComputerItem
+#	Code clean up from Visual Studio Code
+
 #Version 5.15 8-Dec-2017
 #	Updated Function WriteHTMLLine with fixes from the script template
 
