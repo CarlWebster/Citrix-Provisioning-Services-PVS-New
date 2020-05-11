@@ -6,6 +6,44 @@
 #Thanks to Michael B. Smith, Joe Shonk and Stephane Thirion
 #for testing and fine-tuning tips 
 
+#Version 5.06 14-Sep-2016
+#	Add support for PVS 7.11
+#	Change version checking to support a four character version number
+#	Add to Farm properties, Customer Experience Improvement Program
+#	Add to Farm properties, CIS Username
+#	Add to Site properties, Seconds between vDisk inventory scans
+#	Add to Server properties, Problem Report Date, Summary and Status
+#	Add, Fix, Remove or Update Audit Trail items:
+#		2009 Run WithReturnBoot
+#		2021 Run WithReturnDisplayMessage
+#		2033 Run WithReturnReboot
+#		2042 Run WithReturnShutdown
+#		2055 Run ExportDisk
+#		2056 Run AssignDisk
+#		2057 Run RemoveDisk
+#		2058 Run DiskUpdateStart
+#		2059 Run DiskUpdateCancel
+#		2060 Run SetOverrideVersion
+#		2061 Run CancelTask
+#		2062 Run ClearTask
+#		2063 Run ForceInventory
+#		2064 Run UpdateBDM
+#		2065 Run StartDeviceDiskTempVersionMode
+#		2066 Run StopDeviceDiskTempVersionMode
+#		Remove previous obsolete audit values 7013 through 7033
+#		Add the following new audit values 7013 through 7021
+#		7013 Set ListDiskLocatorCustomProperty
+#		7014 Set ListDiskLocatorCustomPropertyDelete
+#		7015 Set ListDiskLocatorCustomPropertyAdd
+#		7016 Set ListServerCustomProperty
+#		7017 Set ListServerCustomPropertyDelete
+#		7018 Set ListServerCustomPropertyAdd
+#		7019 Set ListUserGroupCustomProperty
+#		7020 Set ListUserGroupCustomPropertyDelete
+#		7021 Set ListUserGroupCustomPropertyAdd	
+#	Add write-cache type 6, Device RAM Disk, only because it is in the cmdlet's help text
+#	Fix issues with invalid variable names found by using the -Dev parameter
+
 #Version 5.05 12-Sep-2016
 #	Add ShowScriptOptions when using TEXT or HTML
 #	Add in support for the -Dev and -ScriptInfo parameters

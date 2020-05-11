@@ -362,9 +362,9 @@
 	No objects are output from this script.  This script creates a Word or PDF document.
 .NOTES
 	NAME: PVS_Inventory_V5.ps1
-	VERSION: 5.05
+	VERSION: 5.06
 	AUTHOR: Carl Webster, Sr. Solutions Architect at Choice Solutions
-	LASTEDIT: September 12, 2016
+	LASTEDIT: September 14, 2016
 #>
 
 #endregion
@@ -501,6 +501,45 @@ Param(
 #	Fix several issues with HTML and Text output
 #	Some general code cleanup of unused variables
 #	Add missing function validObject
+#
+#Version 5.06 14-Sep-2016
+#	Add support for PVS 7.11
+#	Change version checking to support a four character version number
+#	Add to Farm properties, Customer Experience Improvement Program
+#	Add to Farm properties, CIS Username
+#	Add to Site properties, Seconds between vDisk inventory scans
+#	Add to Server properties, Problem Report Date, Summary and Status
+#	Add, Fix, Remove or Update Audit Trail items:
+#		2009 Run WithReturnBoot
+#		2021 Run WithReturnDisplayMessage
+#		2033 Run WithReturnReboot
+#		2042 Run WithReturnShutdown
+#		2055 Run ExportDisk
+#		2056 Run AssignDisk
+#		2057 Run RemoveDisk
+#		2058 Run DiskUpdateStart
+#		2059 Run DiskUpdateCancel
+#		2060 Run SetOverrideVersion
+#		2061 Run CancelTask
+#		2062 Run ClearTask
+#		2063 Run ForceInventory
+#		2064 Run UpdateBDM
+#		2065 Run StartDeviceDiskTempVersionMode
+#		2066 Run StopDeviceDiskTempVersionMode
+#		Remove previous obsolete audit values 7013 through 7033
+#		Add the following new audit values 7013 through 7021
+#		7013 Set ListDiskLocatorCustomProperty
+#		7014 Set ListDiskLocatorCustomPropertyDelete
+#		7015 Set ListDiskLocatorCustomPropertyAdd
+#		7016 Set ListServerCustomProperty
+#		7017 Set ListServerCustomPropertyDelete
+#		7018 Set ListServerCustomPropertyAdd
+#		7019 Set ListUserGroupCustomProperty
+#		7020 Set ListUserGroupCustomPropertyDelete
+#		7021 Set ListUserGroupCustomPropertyAdd	
+#	Add write-cache type 6, Device RAM Disk, only because it is in the cmdlet's help text
+#	Fix issues with invalid variable names found by using the -Dev parameter
+
 #endregion
 
 #region initial variable testing and setup
@@ -510,75 +549,6 @@ Set-StrictMode -Version 2
 $PSDefaultParameterValues = @{"*:Verbose"=$True}
 $SaveEAPreference = $ErrorActionPreference
 $ErrorActionPreference = 'SilentlyContinue'
-
-If($PDF -eq $Null)
-{
-	$PDF = $False
-}
-If($Text -eq $Null)
-{
-	$Text = $False
-}
-If($MSWord -eq $Null)
-{
-	$MSWord = $False
-}
-If($HTML -eq $Null)
-{
-	$HTML = $False
-}
-If($StartDate -eq $Null)
-{
-	$StartDate = ((Get-Date -displayhint date).AddDays(-7))
-}
-If($EndDate -eq $Null)
-{
-	$EndDate = ((Get-Date -displayhint date))
-}
-If($AddDateTime -eq $Null)
-{
-	$AddDateTime = $False
-}
-If($Hardware -eq $Null)
-{
-	$Hardware = $False
-}
-If($ComputerName -eq $Null)
-{
-	$ComputerName = "LocalHost"
-}
-If($Folder -eq $Null)
-{
-	$Folder = ""
-}
-If($SmtpServer -eq $Null)
-{
-	$SmtpServer = ""
-}
-If($SmtpPort -eq $Null)
-{
-	$SmtpPort = 25
-}
-If($UseSSL -eq $Null)
-{
-	$UseSSL = $False
-}
-If($From -eq $Null)
-{
-	$From = ""
-}
-If($To -eq $Null)
-{
-	$To = ""
-}
-If($Null -eq $Dev)
-{
-	$Dev = $False
-}
-If($Null -eq $ScriptInfo)
-{
-	$ScriptInfo = $False
-}
 
 If(!(Test-Path Variable:PDF))
 {
@@ -645,6 +615,71 @@ If(!(Test-Path Variable:Dev))
 	$Dev = $False
 }
 If(!(Test-Path Variable:ScriptInfo))
+{
+	$ScriptInfo = $False
+}
+
+If($PDF -eq $Null)
+{
+	$PDF = $False
+}
+If($Text -eq $Null)
+{
+	$Text = $False
+}
+If($MSWord -eq $Null)
+{
+	$MSWord = $False
+}
+If($HTML -eq $Null)
+{
+	$HTML = $False
+}
+If($StartDate -eq $Null)
+{
+	$StartDate = ((Get-Date -displayhint date).AddDays(-7))
+}
+If($EndDate -eq $Null)
+{
+	$EndDate = ((Get-Date -displayhint date))
+}
+If($AddDateTime -eq $Null)
+{
+	$AddDateTime = $False
+}
+If($Hardware -eq $Null)
+{
+	$Hardware = $False
+}
+If($Folder -eq $Null)
+{
+	$Folder = ""
+}
+If($SmtpServer -eq $Null)
+{
+	$SmtpServer = ""
+}
+If($SmtpPort -eq $Null)
+{
+	$SmtpPort = 25
+}
+If($UseSSL -eq $Null)
+{
+	$UseSSL = $False
+}
+If($From -eq $Null)
+{
+	$From = ""
+}
+If($To -eq $Null)
+{
+	$To = ""
+}
+If($Null -eq $Dev)
+{
+	$Dev = $False
+}
+If($Null -eq $ScriptInfo)
 {
 	$ScriptInfo = $False
 }
@@ -748,10 +783,11 @@ If($Folder -ne "")
 	}
 }
 
-[string]$Script:RunningOS = (Get-WmiObject -class Win32_OperatingSystem -EA 0).Caption
 #endregion
 
 #region initialize variables for word html and text
+[string]$Script:RunningOS = (Get-WmiObject -class Win32_OperatingSystem -EA 0).Caption
+
 If($MSWord -or $PDF)
 {
 	#try and fix the issue with the $CompanyName variable
@@ -3420,7 +3456,6 @@ Function FormatHTMLTable
 				}
 				Else
 				{
-					$found = $false
 					For($i=0;$i -lt $columnArray[$columnIndex].length;$i+=2)
 					{
 						If($columnArray[$columnIndex][$i] -eq " ")
@@ -4184,7 +4219,7 @@ Function validObject( [object] $object, [string] $topLevel )
 
 Function SaveandCloseDocumentandShutdownWord
 {
-	#bug fix 1-Apr-2015
+	#bug fix 1-Apr-2014
 	#reset Grammar and Spelling options back to their original settings
 	$Script:Word.Options.CheckGrammarAsYouType = $Script:CurrentGrammarOption
 	$Script:Word.Options.CheckSpellingAsYouType = $Script:CurrentSpellingOption
@@ -4212,7 +4247,7 @@ Function SaveandCloseDocumentandShutdownWord
 				$Script:FileName2 += "_$(Get-Date -f yyyy-MM-dd_HHmm).pdf"
 			}
 		}
-		Write-Verbose "$(Get-Date): Running Word 2010 and detected operating system $($Script:RunningOS)"
+		Write-Verbose "$(Get-Date): Running $($Script:WordProduct) and detected operating system $($Script:RunningOS)"
 		$saveFormat = [Enum]::Parse([Microsoft.Office.Interop.Word.WdSaveFormat], "wdFormatDocumentDefault")
 		$Script:Doc.SaveAs([REF]$Script:FileName1, [ref]$SaveFormat)
 		If($PDF)
@@ -4240,7 +4275,7 @@ Function SaveandCloseDocumentandShutdownWord
 				$Script:FileName2 += "_$(Get-Date -f yyyy-MM-dd_HHmm).pdf"
 			}
 		}
-		Write-Verbose "$(Get-Date): Running Word 2013 and detected operating system $($Script:RunningOS)"
+		Write-Verbose "$(Get-Date): Running $($Script:WordProduct) and detected operating system $($Script:RunningOS)"
 		$Script:Doc.SaveAs2([REF]$Script:FileName1, [ref]$wdFormatDocumentDefault)
 		If($PDF)
 		{
@@ -4251,11 +4286,7 @@ Function SaveandCloseDocumentandShutdownWord
 
 	Write-Verbose "$(Get-Date): Closing Word"
 	$Script:Doc.Close()
-	Write-Verbose "$(Get-Date): Waiting 10 seconds to allow Word to save file"
-	Start-Sleep -Seconds 10
 	$Script:Word.Quit()
-	Write-Verbose "$(Get-Date): Waiting 10 seconds to allow Word to fully close"
-	Start-Sleep -Seconds 10
 	If($PDF)
 	{
 		[int]$cnt = 0
@@ -4303,8 +4334,9 @@ Function SaveandCloseDocumentandShutdownWord
 	$SessionID = (Get-Process -PID $PID).SessionId
 
 	#Find out if winword is running in our session
+	$wordprocess = $Null
 	$wordprocess = ((Get-Process 'WinWord' -ea 0)|?{$_.SessionId -eq $SessionID}).Id
-	If($wordprocess -gt 0)
+	If($null -ne $wordprocess -and $wordprocess -gt 0)
 	{
 		Write-Verbose "$(Get-Date): WinWord process is still running. Attempting to stop WinWord process # $($wordprocess)"
 		Stop-Process $wordprocess -EA 0
@@ -4985,7 +5017,8 @@ Function ProcessScriptSetup
 		#build PVS version values
 		$Script:version = $Results.MapiVersion 
 		$Script:PVSVersion = $Version.SubString(0,1)	
-		$Script:PVSFullVersion = $Version.SubString(0,3)	} 
+		$Script:PVSFullVersion = $Version.SubString(0,4)	
+	} 
 	Else 
 	{
 		$ErrorActionPreference = $SaveEAPreference
@@ -5081,7 +5114,7 @@ Function OutputAuditTrail
 				2006 { $xAction = "Run AssignDevice"; Break }
 				2007 { $xAction = "Run AssignDiskLocator"; Break }
 				2008 { $xAction = "Run AssignServer"; Break }
-				2009 { $xAction = "Run Boot"; Break }
+				2009 { $xAction = "Run WithReturnBoot"; Break }
 				2010 { $xAction = "Run CopyPasteDevice"; Break }
 				2011 { $xAction = "Run CopyPasteDisk"; Break }
 				2012 { $xAction = "Run CopyPasteServer"; Break }
@@ -5093,7 +5126,7 @@ Function OutputAuditTrail
 				2018 { $xAction = "Run DisableDiskLocator"; Break }
 				2019 { $xAction = "Run DisableUserGroup"; Break }
 				2020 { $xAction = "Run DisableUserGroupDiskLocator"; Break }
-				2021 { $xAction = "Run DisplayMessage"; Break }
+				2021 { $xAction = "Run WithReturnDisplayMessage"; Break }
 				2022 { $xAction = "Run EnableCollection"; Break }
 				2023 { $xAction = "Run EnableDevice"; Break }
 				2024 { $xAction = "Run EnableDeviceDiskLocator"; Break }
@@ -5105,7 +5138,7 @@ Function OutputAuditTrail
 				2030 { $xAction = "Run ImportDevices"; Break }
 				2031 { $xAction = "Run ImportOemLicenses"; Break }
 				2032 { $xAction = "Run MarkDown"; Break }
-				2033 { $xAction = "Run Reboot"; Break }
+				2033 { $xAction = "Run WithReturnReboot"; Break }
 				2034 { $xAction = "Run RemoveAuthGroup"; Break }
 				2035 { $xAction = "Run RemoveDevice"; Break }
 				2036 { $xAction = "Run RemoveDeviceFromDomain"; Break }
@@ -5114,7 +5147,7 @@ Function OutputAuditTrail
 				2039 { $xAction = "Run ResetDeviceForDomain"; Break }
 				2040 { $xAction = "Run ResetDatabaseConnection"; Break }
 				2041 { $xAction = "Run Restart StreamingService"; Break }
-				2042 { $xAction = "Run Shutdown"; Break }
+				2042 { $xAction = "Run WithReturnShutdown"; Break }
 				2043 { $xAction = "Run StartStreamingService"; Break }
 				2044 { $xAction = "Run StopStreamingService"; Break }
 				2045 { $xAction = "Run UnlockAllDisk"; Break }
@@ -5130,11 +5163,15 @@ Function OutputAuditTrail
 				2055 { $xAction = "Run ExportDisk"; Break }
 				2056 { $xAction = "Run AssignDisk"; Break }
 				2057 { $xAction = "Run RemoveDisk"; Break }
-				2057 { $xAction = "Run DiskUpdateStart"; Break }
-				2057 { $xAction = "Run DiskUpdateCancel"; Break }
-				2058 { $xAction = "Run SetOverrideVersion"; Break }
-				2059 { $xAction = "Run CancelTask"; Break }
-				2060 { $xAction = "Run ClearTask"; Break }
+				2058 { $xAction = "Run DiskUpdateStart"; Break }
+				2059 { $xAction = "Run DiskUpdateCancel"; Break }
+				2060 { $xAction = "Run SetOverrideVersion"; Break }
+				2061 { $xAction = "Run CancelTask"; Break }
+				2062 { $xAction = "Run ClearTask"; Break }
+				2063 { $xAction = "Run ForceInventory"; Break }
+				2064 { $xAction = "Run UpdateBDM"; Break }
+				2065 { $xAction = "Run StartDeviceDiskTempVersionMode"; Break }
+				2066 { $xAction = "Run StopDeviceDiskTempVersionMode"; Break }
 				3001 { $xAction = "Run WithReturnCreateDisk"; Break }
 				3002 { $xAction = "Run WithReturnCreateDiskStatus"; Break }
 				3003 { $xAction = "Run WithReturnMapDisk"; Break }
@@ -5175,27 +5212,15 @@ Function OutputAuditTrail
 				7010 { $xAction = "Set ListDevicePersonality"; Break }
 				7011 { $xAction = "Set ListDevicePersonalityDelete"; Break }
 				7012 { $xAction = "Set ListDevicePersonalityAdd"; Break }
-				7013 { $xAction = "Set ListDevicePortBlockerCategories"; Break }
-				7014 { $xAction = "Set ListDevicePortBlockerCategoriesDelete"; Break }
-				7015 { $xAction = "Set ListDevicePortBlockerCategoriesAdd"; Break }
-				7016 { $xAction = "Set ListDevicePortBlockerOverrides"; Break }
-				7017 { $xAction = "Set ListDevicePortBlockerOverridesDelete"; Break }
-				7018 { $xAction = "Set ListDevicePortBlockerOverridesAdd"; Break }
-				7019 { $xAction = "Set ListDiskLocatorCustomProperty"; Break }
-				7020 { $xAction = "Set ListDiskLocatorCustomPropertyDelete"; Break }
-				7021 { $xAction = "Set ListDiskLocatorCustomPropertyAdd"; Break }
-				7022 { $xAction = "Set ListDiskLocatorPortBlockerCategories"; Break }
-				7023 { $xAction = "Set ListDiskLocatorPortBlockerCategoriesDelete"; Break }
-				7024 { $xAction = "Set ListDiskLocatorPortBlockerCategoriesAdd"; Break }
-				7025 { $xAction = "Set ListDiskLocatorPortBlockerOverrides"; Break }
-				7026 { $xAction = "Set ListDiskLocatorPortBlockerOverridesDelete"; Break }
-				7027 { $xAction = "Set ListDiskLocatorPortBlockerOverridesAdd"; Break }
-				7028 { $xAction = "Set ListServerCustomProperty"; Break }
-				7029 { $xAction = "Set ListServerCustomPropertyDelete"; Break }
-				7030 { $xAction = "Set ListServerCustomPropertyAdd"; Break }
-				7031 { $xAction = "Set ListUserGroupCustomProperty"; Break }
-				7032 { $xAction = "Set ListUserGroupCustomPropertyDelete"; Break }
-				7033 { $xAction = "Set ListUserGroupCustomPropertyAdd"; Break }				
+				7013 { $xAction = "Set ListDiskLocatorCustomProperty"; Break }
+				7014 { $xAction = "Set ListDiskLocatorCustomPropertyDelete"; Break }
+				7015 { $xAction = "Set ListDiskLocatorCustomPropertyAdd"; Break }
+				7016 { $xAction = "Set ListServerCustomProperty"; Break }
+				7017 { $xAction = "Set ListServerCustomPropertyDelete"; Break }
+				7018 { $xAction = "Set ListServerCustomPropertyAdd"; Break }
+				7019 { $xAction = "Set ListUserGroupCustomProperty"; Break }
+				7020 { $xAction = "Set ListUserGroupCustomPropertyDelete"; Break }
+				7021 { $xAction = "Set ListUserGroupCustomPropertyAdd"; Break }				
 				Default {$xAction = "Unknown"; Break }
 			}
 			$xType = ""
@@ -5675,6 +5700,20 @@ Function OutputFarm
 
 	#options tab
 	Write-Verbose "$(Get-Date): `tProcessing Options Tab"
+	If($Script:PVSFullVersion -ge "7.11")
+	{
+		$Results = Get-PVSCeipData -EA 0 4>$Null
+		
+		If($? -and $Null -ne $Results)
+		{
+			$CEIP = "Yes"
+		}
+		Else
+		{
+			$CEIP = "No"
+		}
+	}
+
 	If($MSword -or $PDF)
 	{
 		WriteWordLine 2 0 "Options"
@@ -5686,6 +5725,10 @@ Function OutputFarm
 		}
 		$ScriptInformation += @{ Data = "Enable auditing"; Value = $xauditingEnabled; }
 		$ScriptInformation += @{ Data = "Enable offline database support"; Value = $xofflineDatabaseSupportEnabled; }
+		If($Script:PVSFullVersion -ge "7.11")
+		{
+			$ScriptInformation += @{ Data = "Send anonymous statistics and usage information"; Value = $CEIP; }
+		}
 		$Table = AddWordTable -Hashtable $ScriptInformation `
 		-Columns Data,Value `
 		-List `
@@ -5714,6 +5757,11 @@ Function OutputFarm
 		Line 2 "Enable auditing: " $xauditingEnabled
 		Line 1 "Offline database support"
 		Line 2 "Enable offline database support: " $xofflineDatabaseSupportEnabled
+		If($Script:PVSFullVersion -ge "7.11")
+		{
+			Line 1 "Customer Experience Improvement Program"
+			Line 2 "Send anonymous statistics and usage information: " $CEIP
+		}
 	}
 	ElseIf($HTML)
 	{
@@ -5726,6 +5774,10 @@ Function OutputFarm
 		}
 		$rowdata += @(,('Enable auditing',($htmlsilver -bor $htmlbold),$xauditingEnabled,$htmlwhite))
 		$rowdata += @(,('Enable offline database support',($htmlsilver -bor $htmlbold),$xofflineDatabaseSupportEnabled,$htmlwhite))
+		If($Script:PVSFullVersion -ge "7.11")
+		{
+			$rowdata += @(,('Send anonymous statistics and usage information',($htmlsilver -bor $htmlbold),$CEIP,$htmlwhite))
+		}
 		FormatHTMLTable "" "auto" -rowArray $rowdata -columnArray $columnHeaders
 	}
 
@@ -5735,7 +5787,7 @@ Function OutputFarm
 	{
 		WriteWordLine 2 0 "vDisk Version"
 		[System.Collections.Hashtable[]] $ScriptInformation = @()
-		$ScriptInformation += @{ Data = "Alert if number of versions from base image exceeds"; Value = $farm.maxVersions; }
+		$ScriptInformation += @{ Data = "Alert if number of versions from base image exceeds"; Value = $farm.maxVersions.ToString(); }
 		$ScriptInformation += @{ Data = "Merge after automated vDisk update, if over alert threshold"; Value = $xautomaticMergeEnabled; }
 		$ScriptInformation += @{ Data = "Default access mode for new merge versions"; Value = $xmergeMode; }
 		$Table = AddWordTable -Hashtable $ScriptInformation `
@@ -5756,7 +5808,7 @@ Function OutputFarm
 	ElseIf($Text)
 	{
 		Line 0 "vDisk Version"
-		Line 1 "Alert if number of versions from base image exceeds`t`t: " $farm.maxVersions
+		Line 1 "Alert if number of versions from base image exceeds`t`t: " $farm.maxVersions.ToString()
 		Line 1 "Merge after automated vDisk update, if over alert threshold`t: " $xautomaticMergeEnabled
 		Line 1 "Default access mode for new merge versions`t`t`t: " $xmergeMode
 	}
@@ -5764,7 +5816,7 @@ Function OutputFarm
 	{
 		WriteHTMLLine 2 0 "vDisk Version"
 		$rowdata = @()
-		$columnHeaders = @("Alert if number of versions from base image exceeds",($htmlsilver -bor $htmlbold),$farm.maxVersions,$htmlwhite)
+		$columnHeaders = @("Alert if number of versions from base image exceeds",($htmlsilver -bor $htmlbold),$farm.maxVersions.ToString(),$htmlwhite)
 		$rowdata += @(,('Merge after automated vDisk update, if over alert threshold',($htmlsilver -bor $htmlbold),$xautomaticMergeEnabled,$htmlwhite))
 		$rowdata += @(,('Default access mode for new merge versions',($htmlsilver -bor $htmlbold),$xmergeMode,$htmlwhite))
 		FormatHTMLTable "" "auto" -rowArray $rowdata -columnArray $columnHeaders
@@ -5840,6 +5892,61 @@ Function OutputFarm
 		
 		$msg = "Current status of the farm:"
 		FormatHTMLTable $msg "auto" -rowArray $rowdata -columnArray $columnHeaders
+	}
+
+	#7.11 Problem Report tab
+	If($Script:PVSFullVersion -ge "7.11")
+	{
+		Write-Verbose "$(Get-Date): `tProcessing Problem Report"
+		
+		$Results = Get-PVSCisData -EA 0 4>$Null
+		
+		If($? -and $Null -ne $Results)
+		{
+			$CISUserName = $Results.UserName
+		}
+		Else
+		{
+			$CISUserName = "Not configured"
+		}
+		
+		If($MSWord -or $PDF)
+		{
+			WriteWordLine 2 0 "Problem Report"
+			WriteWordLine 0 0 "Configure your My Citrix credentials in order to submit problem reports"
+			[System.Collections.Hashtable[]] $ScriptInformation = @()
+			$ScriptInformation += @{ Data = "My Citrix Username"; Value = $CISUserName; }
+			$Table = AddWordTable -Hashtable $ScriptInformation `
+			-Columns Data,Value `
+			-List `
+			-Format $wdTableGrid `
+			-AutoFit $wdAutoFitContent;
+
+			## IB - Set the header row format
+			SetWordCellFormat -Collection $Table.Columns.Item(1).Cells -Bold -BackgroundColor $wdColorGray15;
+
+			$Table.Rows.SetLeftIndent($Indent0TabStops,$wdAdjustProportional)
+
+			FindWordDocumentEnd
+			$Table = $Null
+			WriteWordLine 0 0 ""
+		}
+		ElseIf($Text)
+		{
+			Line 1 "Problem Report"
+			Line 2 "Configure your My Citrix credentials in order to submit problem reports"
+			Line 2 "My Citrix Username: " $CISUserName
+		}
+		ElseIf($HTML)
+		{
+			WriteHTMLLine 2 0 "Problem Report"
+			WriteHTMLLine 3 0 "Configure your My Citrix credentials in order to submit problem reports"
+			$rowdata = @()
+			$columnHeaders = @("My Citrix Username",($htmlsilver -bor $htmlbold),$CISUserName,$htmlwhite)
+			
+			$msg = ""
+			FormatHTMLTable $msg "auto" -rowArray $rowdata -columnArray $columnHeaders
+		}
 	}
 	
 	#add Audit Trail
@@ -6007,6 +6114,7 @@ Function OutputSite
 		WriteWordLine 0 0 "Auto-Add"
 		[System.Collections.Hashtable[]] $ScriptInformation = @()
 		$ScriptInformation += @{ Data = "Add new devices to this collection"; Value = $xAutoAdd; }
+		$ScriptInformation += @{ Data = "Seconds between vDisk inventory scans"; Value = $PVSSite.InventoryFilePollingInterval; }
 		$Table = AddWordTable -Hashtable $ScriptInformation `
 		-Columns Data,Value `
 		-List `
@@ -6026,13 +6134,15 @@ Function OutputSite
 	{
 		Line 0 "Options"
 		Line 1 "Auto-Add"
-		Line 2 "Add new devices to this collection: " $xAutoAdd
+		Line 2 "Add new devices to this collection`t: " $xAutoAdd
+		Line 2 "Seconds between vDisk inventory scans`t: " $PVSSite.InventoryFilePollingInterval
 	}
 	ElseIf($HTML)
 	{
 		WriteHTMLLine 2 0 "Options"
 		$rowdata = @()
 		$columnHeaders = @("Add new devices to this collection",($htmlsilver -bor $htmlbold),$xAutoAdd,$htmlwhite)
+		$rowdata += @(,('Seconds between vDisk inventory scans',($htmlsilver -bor $htmlbold),$PVSSite.InventoryFilePollingInterval,$htmlwhite))
 		
 		$msg = "Auto-Add"
 		FormatHTMLTable $msg "auto" -rowArray $rowdata -columnArray $columnHeaders
@@ -6727,6 +6837,7 @@ Function OutputSite
 					1   {$writeCacheType = "Cache on server"; Break}
 					3   {$writeCacheType = "Cache in device RAM"; Break}
 					4   {$writeCacheType = "Cache on device hard disk"; Break}
+					6   {$writeCacheType = "Device RAM Disk"; Break}
 					7   {$writeCacheType = "Cache on server persisted"; Break}
 					8   {$writeCacheType = "Cache on device hard drive persisted (NT 6.1 and later)"; Break}
 					9   {$writeCacheType = "Cache in device RAM with overflow on hard disk"; Break}
@@ -7401,7 +7512,7 @@ Function OutputSite
 						{
 							$ScriptInformation += @{ Data = "Released"; Value = $DiskVersion.scheduledDate; }
 						}
-						$ScriptInformation += @{ Data = "Devices"; Value = Devices; }
+						$ScriptInformation += @{ Data = "Devices"; Value = $DiskVersion.deviceCount; }
 						$ScriptInformation += @{ Data = "Access"; Value = $access; }
 						$ScriptInformation += @{ Data = "Type"; Value = $DiskVersionType; }
 						If(![String]::IsNullOrEmpty($DiskVersion.description))
@@ -8806,7 +8917,10 @@ Function OutputSite
 							$BootstrapsArray = @()
 							ForEach($Bootstrap in $Bootstraps)
 							{
-								$BootstrapsArray += "$($Bootstrap.devicebootstrap.Name) `($($Bootstrap.devicebootstrap.menuText)`)"
+                                If($Bootstrap.devicebootstrap.Count -gt 0)
+                                {
+									$BootstrapsArray += "$($Bootstrap.devicebootstrap.Name) `($($Bootstrap.devicebootstrap.menuText)`)"
+								}
 							}
 							$ScriptInformation += @{ Data = "Custom bootstrap file"; Value = $BootstrapsArray[0]; }
 							$cnt = -1
@@ -8846,7 +8960,10 @@ Function OutputSite
 							$BootstrapsArray = @()
 							ForEach($Bootstrap in $Bootstraps)
 							{
-								$BootstrapsArray += "$($Bootstrap.devicebootstrap.Name) `($($Bootstrap.devicebootstrap.menuText)`)"
+                                If($Bootstrap.devicebootstrap.Count -gt 0)
+                                {
+    								$BootstrapsArray += "$($Bootstrap.devicebootstrap.Name) `($($Bootstrap.devicebootstrap.menuText)`)"
+                                }
 							}
 							Line 4 "Custom bootstrap file: " $BootstrapsArray[0]
 							$cnt = -1
@@ -8873,7 +8990,10 @@ Function OutputSite
 							$BootstrapsArray = @()
 							ForEach($Bootstrap in $Bootstraps)
 							{
-								$BootstrapsArray += "$($Bootstrap.devicebootstrap.Name) `($($Bootstrap.devicebootstrap.menuText)`)"
+                                If($Bootstrap.devicebootstrap.Count -gt 0)
+                                {
+									$BootstrapsArray += "$($Bootstrap.devicebootstrap.Name) `($($Bootstrap.devicebootstrap.menuText)`)"
+								}
 							}
 							$rowdata += @(,('Custom bootstrap file',($htmlsilver -bor $htmlbold),$BootstrapsArray[0],$htmlwhite))
 							$cnt = -1
@@ -9688,6 +9808,65 @@ Function OutputServers
 			WriteHTMLLine 0 0 ""
 		}
 		
+		If($Script:PVSFullVersion -ge "7.11")
+		{
+			Write-Verbose "$(Get-Date): `t`t`t`tProcessing Problem Report Tab"
+			
+			If($Server.LastBugReportStatus -eq "")
+			{
+				$CISDate = $Server.LastBugReportAttempt.ToString()
+				$CISSummary = ""
+				$CISStatus = ""
+			}
+			Else
+			{
+				$CISDate = $Server.LastBugReportAttempt.ToString()
+				$CISSummary = $Server.LastBugReportSummary
+				$CISStatus = "$($Server.LastBugReportStatus): $($Server.LastBugReportResult)"
+			}
+			
+			If($MSWord -or $PDF)
+			{
+				WriteWordLine 0 0 "Problem Report"
+				[System.Collections.Hashtable[]] $ScriptInformation = @()
+				$ScriptInformation += @{ Data = "Most Recent Problem Report"; Value = $CISDate; }
+				$ScriptInformation += @{ Data = "Summary"; Value = $CISSummary; }
+				$ScriptInformation += @{ Data = "Status"; Value = $CISStatus; }
+				$Table = AddWordTable -Hashtable $ScriptInformation `
+				-Columns Data,Value `
+				-List `
+				-Format $wdTableGrid `
+				-AutoFit $wdAutoFitContent;
+
+				## IB - Set the header row format
+				SetWordCellFormat -Collection $Table.Columns.Item(1).Cells -Bold -BackgroundColor $wdColorGray15;
+
+				$Table.Rows.SetLeftIndent($Indent0TabStops,$wdAdjustProportional)
+
+				FindWordDocumentEnd
+				$Table = $Null
+				WriteWordLine 0 0 ""
+			}
+			ElseIf($Text)
+			{
+				Line 1 "Problem Report"
+				Line 2 "Most Recent Problem Report: " $CISDate
+				Line 2 "Summary`t: " $CISSummary
+				Line 2 "Status`t: " $CISStatus
+				Line 0 ""
+			}
+			ElseIf($HTML)
+			{
+				$rowdata = @()
+				$columnHeaders = @("Most Recent Problem Report",($htmlsilver -bor $htmlbold),$CISDate,$htmlwhite)
+				$rowdata += @(,('Summary',($htmlsilver -bor $htmlbold),$CISSummary,$htmlwhite))
+				$rowdata += @(,('Status',($htmlsilver -bor $htmlbold),$CISStatus,$htmlwhite))
+
+				$msg = "Problem Report"
+				FormatHTMLTable $msg "auto" -rowArray $rowdata -columnArray $columnHeaders
+				WriteHTMLLine 0 0 ""
+			}
+		}
 		#create array for appendix A
 		
 		Write-Verbose "$(Get-Date): `t`t`t`t`tGather Advanced server info for Appendix A and B"
@@ -10245,7 +10424,6 @@ Function OutputStore
 		WriteWordLine 0 0 "Paths"
 		[System.Collections.Hashtable[]] $ScriptInformation = @()
 		$ScriptInformation += @{ Data = "Default store path"; Value = $Store.path; }
-		$ScriptInformation += @{ Data = "Server to run vDisk updates for this site"; Value = $PVSSite.diskUpdateServerName; }
 		If(![String]::IsNullOrEmpty($Store.cachePath))
 		{
 			$WCPaths = $Store.cachePath
