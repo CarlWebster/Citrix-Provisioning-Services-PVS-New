@@ -20,11 +20,13 @@
 	The PVS Console must be installed and the snap-in registered on the computer running 
 	the script.
 	
-	For Windows 8.x, Server 2012 and Server 2012 R2, run:
-		For 32-bit:
-			%systemroot%\Microsoft.NET\Framework\v4.0.30319\installutil.exe "%ProgramFiles%\Citrix\Provisioning Services Console\Citrix.PVS.SnapIn.dll"
-		For 64-bit:
-			%systemroot%\Microsoft.NET\Framework64\v4.0.30319\installutil.exe "%ProgramFiles%\Citrix\Provisioning Services Console\Citrix.PVS.SnapIn.dll"
+	For Windows 8.x, Server 2012 and later, run:
+	
+	For 32-bit:
+	%systemroot%\Microsoft.NET\Framework\v4.0.30319\installutil.exe "%ProgramFiles%\Citrix\Provisioning Services Console\Citrix.PVS.SnapIn.dll"
+	
+	For 64-bit:
+	%systemroot%\Microsoft.NET\Framework64\v4.0.30319\installutil.exe "%ProgramFiles%\Citrix\Provisioning Services Console\Citrix.PVS.SnapIn.dll"
 	
 	Creates an output file named after the PVS farm.
 	
@@ -44,85 +46,6 @@
 		Spanish
 		Swedish
 
-.PARAMETER CompanyName
-	Company Name to use for the Cover Page.  
-	Default value is contained in HKCU:\Software\Microsoft\Office\Common\UserInfo\CompanyName or
-	HKCU:\Software\Microsoft\Office\Common\UserInfo\Company, whichever is populated on the 
-	computer running the script.
-	This parameter has an alias of CN.
-	If either registry key does not exist and this parameter is not specified, the report will
-	not contain a Company Name on the cover page.
-	This parameter is only valid with the MSWORD and PDF output parameters.
-.PARAMETER CoverPage
-	What Microsoft Word Cover Page to use.
-	Only Word 2010, 2013 and 2016 are supported.
-	(default cover pages in Word en-US)
-	
-	Valid input is:
-		Alphabet (Word 2010. Works)
-		Annual (Word 2010. Doesn't work well for this report)
-		Austere (Word 2010. Works)
-		Austin (Word 2010/2013/2016. Doesn't work in 2013 or 2016, mostly works in 2010 but 
-						Subtitle/Subject & Author fields need to be moved 
-						after title box is moved up)
-		Banded (Word 2013/2016. Works)
-		Conservative (Word 2010. Works)
-		Contrast (Word 2010. Works)
-		Cubicles (Word 2010. Works)
-		Exposure (Word 2010. Works if you like looking sideways)
-		Facet (Word 2013/2016. Works)
-		Filigree (Word 2013/2016. Works)
-		Grid (Word 2010/2013/2016. Works in 2010)
-		Integral (Word 2013/2016. Works)
-		Ion (Dark) (Word 2013/2016. Top date doesn't fit; box needs to be manually resized or font 
-						changed to 8 point)
-		Ion (Light) (Word 2013/2016. Top date doesn't fit; box needs to be manually resized or font 
-						changed to 8 point)
-		Mod (Word 2010. Works)
-		Motion (Word 2010/2013/2016. Works if top date is manually changed to 36 point)
-		Newsprint (Word 2010. Works but date is not populated)
-		Perspective (Word 2010. Works)
-		Pinstripes (Word 2010. Works)
-		Puzzle (Word 2010. Top date doesn't fit; box needs to be manually resized or font 
-					changed to 14 point)
-		Retrospect (Word 2013/2016. Works)
-		Semaphore (Word 2013/2016. Works)
-		Sideline (Word 2010/2013/2016. Doesn't work in 2013 or 2016, works in 2010)
-		Slice (Dark) (Word 2013/2016. Doesn't work)
-		Slice (Light) (Word 2013/2016. Doesn't work)
-		Stacks (Word 2010. Works)
-		Tiles (Word 2010. Date doesn't fit unless changed to 26 point)
-		Transcend (Word 2010. Works)
-		ViewMaster (Word 2013/2016. Works)
-		Whisp (Word 2013/2016. Works)
-		
-	Default value is Sideline.
-	This parameter has an alias of CP.
-	This parameter is only valid with the MSWORD and PDF output parameters.
-.PARAMETER UserName
-	User name to use for the Cover Page and Footer.
-	Default value is contained in $env:username
-	This parameter has an alias of UN.
-	This parameter is only valid with the MSWORD and PDF output parameters.
-.PARAMETER PDF
-	SaveAs PDF file instead of DOCX file.
-	This parameter is disabled by default.
-	The PDF file is roughly 5X to 10X larger than the DOCX file.
-	This parameter requires Microsoft Word to be installed.
-	This parameter uses the Word SaveAs PDF capability.
-.PARAMETER Text
-	Creates a formatted text file with a .txt extension.
-	This parameter is disabled by default.
-.PARAMETER MSWord
-	SaveAs DOCX file
-	This parameter is set True if no other output format is selected.
-.PARAMETER HTML
-	Creates an HTML file with an .html extension.
-	This parameter is disabled by default.
-.PARAMETER Hardware
-	Use WMI to gather hardware information on: Computer System, Disks, Processor and Network Interface Cards
-	This parameter is disabled by default.
-	This parameter has an alias of HW.
 .PARAMETER AdminAddress
 	Specifies the name of a PVS server that the PowerShell script will connect to. 
 	Using this parameter requires the script be run from an elevated PowerShell session.
@@ -134,6 +57,123 @@
 	Specifies the domain used for the AdminAddress connection. 
 .PARAMETER Password
 	Specifies the password used for the AdminAddress connection. 
+.PARAMETER CompanyAddress
+	Company Address to use for the Cover Page, if the Cover Page has the Address field.
+	
+	The following Cover Pages have an Address field:
+		Banded (Word 2013/2016)
+		Contrast (Word 2010)
+		Exposure (Word 2010)
+		Filigree (Word 2013/2016)
+		Ion (Dark) (Word 2013/2016)
+		Retrospect (Word 2013/2016)
+		Semaphore (Word 2013/2016)
+		Tiles (Word 2010)
+		ViewMaster (Word 2013/2016)
+		
+	This parameter is only valid with the MSWORD and PDF output parameters.
+	This parameter has an alias of CA.
+.PARAMETER CompanyEmail
+	Company Email to use for the Cover Page, if the Cover Page has the Email field.  
+	
+	The following Cover Pages have an Email field:
+		Facet (Word 2013/2016)
+	
+	This parameter is only valid with the MSWORD and PDF output parameters.
+	This parameter has an alias of CE.
+.PARAMETER CompanyFax
+	Company Fax to use for the Cover Page, if the Cover Page has the Fax field.  
+	
+	The following Cover Pages have a Fax field:
+		Contrast (Word 2010)
+		Exposure (Word 2010)
+	
+	This parameter is only valid with the MSWORD and PDF output parameters.
+	This parameter has an alias of CF.
+.PARAMETER CompanyName
+	Company Name to use for the Cover Page.  
+	The default value is contained in 
+	HKCU:\Software\Microsoft\Office\Common\UserInfo\CompanyName or
+	HKCU:\Software\Microsoft\Office\Common\UserInfo\Company, whichever is populated 
+	on the computer running the script.
+	This parameter has an alias of CN.
+.PARAMETER CompanyPhone
+	Company Phone to use for the Cover Page, if the Cover Page has the Phone field.  
+	
+	The following Cover Pages have a Phone field:
+		Contrast (Word 2010)
+		Exposure (Word 2010)
+	
+	This parameter is only valid with the MSWORD and PDF output parameters.
+	This parameter has an alias of CPh.
+.PARAMETER CoverPage
+	What Microsoft Word Cover Page to use.
+	Only Word 2010, 2013 and 2016 are supported.
+	(default cover pages in Word en-US)
+
+	Valid input is:
+		Alphabet (Word 2010. Works)
+		Annual (Word 2010. Doesn't work well for this report)
+		Austere (Word 2010. Works)
+		Austin (Word 2010/2013/2016. Doesn't work in 2013 or 2016, mostly 
+		works in 2010 but Subtitle/Subject & Author fields need to be moved 
+		after title box is moved up)
+		Banded (Word 2013/2016. Works)
+		Conservative (Word 2010. Works)
+		Contrast (Word 2010. Works)
+		Cubicles (Word 2010. Works)
+		Exposure (Word 2010. Works if you like looking sideways)
+		Facet (Word 2013/2016. Works)
+		Filigree (Word 2013/2016. Works)
+		Grid (Word 2010/2013/2016. Works in 2010)
+		Integral (Word 2013/2016. Works)
+		Ion (Dark) (Word 2013/2016. Top date doesn't fit; box needs to be 
+		manually resized or font changed to 8 point)
+		Ion (Light) (Word 2013/2016. Top date doesn't fit; box needs to be 
+		manually resized or font changed to 8 point)
+		Mod (Word 2010. Works)
+		Motion (Word 2010/2013/2016. Works if top date is manually changed to 
+		36 point)
+		Newsprint (Word 2010. Works but date is not populated)
+		Perspective (Word 2010. Works)
+		Pinstripes (Word 2010. Works)
+		Puzzle (Word 2010. Top date doesn't fit; box needs to be manually 
+		resized or font changed to 14 point)
+		Retrospect (Word 2013/2016. Works)
+		Semaphore (Word 2013/2016. Works)
+		Sideline (Word 2010/2013/2016. Doesn't work in 2013 or 2016, works in 
+		2010)
+		Slice (Dark) (Word 2013/2016. Doesn't work)
+		Slice (Light) (Word 2013/2016. Doesn't work)
+		Stacks (Word 2010. Works)
+		Tiles (Word 2010. Date doesn't fit unless changed to 26 point)
+		Transcend (Word 2010. Works)
+		ViewMaster (Word 2013/2016. Works)
+		Whisp (Word 2013/2016. Works)
+
+	The default value is Sideline.
+	This parameter has an alias of CP.
+	This parameter is only valid with the MSWORD and PDF output parameters.
+.PARAMETER UserName
+	User name to use for the Cover Page and Footer.
+	Default value is contained in $env:username
+	This parameter has an alias of UN.
+	This parameter is only valid with the MSWORD and PDF output parameters.
+.PARAMETER HTML
+	Creates an HTML file with an .html extension.
+	This parameter is disabled by default.
+.PARAMETER MSWord
+	SaveAs DOCX file
+	This parameter is set True if no other output format is selected.
+.PARAMETER PDF
+	SaveAs PDF file instead of DOCX file.
+	This parameter is disabled by default.
+	The PDF file is roughly 5X to 10X larger than the DOCX file.
+	This parameter requires Microsoft Word to be installed.
+	This parameter uses the Word SaveAs PDF capability.
+.PARAMETER Text
+	Creates a formatted text file with a .txt extension.
+	This parameter is disabled by default.
 .PARAMETER StartDate
 	Start date for the Audit Trail report.
 
@@ -163,6 +203,11 @@
 	This parameter has an alias of ADT.
 .PARAMETER Folder
 	Specifies the optional output folder to save the output report. 
+.PARAMETER Hardware
+	Use WMI to gather hardware information on: Computer System, Disks, Processor and 
+	Network Interface Cards
+	This parameter is disabled by default.
+	This parameter has an alias of HW.
 .PARAMETER SmtpServer
 	Specifies the optional email server to send the output report. 
 .PARAMETER SmtpPort
@@ -219,31 +264,21 @@
 	PS C:\PSScript > .\PVS_Inventory_V5.ps1 -TEXT
 
 	Will use all default values and save the document as a formatted text file.
-	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl Webster" or
-	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\Company="Carl Webster"
-	$env:username = Administrator
 
-	Carl Webster for the Company Name.
-	Sideline for the Cover Page format.
-	Administrator for the User Name.
 	LocalHost for AdminAddress.
 .EXAMPLE
 	PS C:\PSScript > .\PVS_Inventory_V5.ps1 -HTML
 
 	Will use all default values and save the document as an HTML file.
-	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl Webster" or
-	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\Company="Carl Webster"
-	$env:username = Administrator
 
-	Carl Webster for the Company Name.
-	Sideline for the Cover Page format.
-	Administrator for the User Name.
 	LocalHost for AdminAddress.
 .EXAMPLE
 	PS C:\PSScript > .\PVS_Inventory_V5.ps1 -Hardware 
 	
-	Will use all Default values and add additional information for each server about its hardware.
-	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl Webster" or
+	Will use all Default values and add additional information for each server about its 
+	hardware.
+	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl 
+	Webster" or
 	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\Company="Carl Webster"
 	$env:username = Administrator
 
@@ -251,14 +286,16 @@
 	Sideline for the Cover Page format.
 	Administrator for the User Name.
 .EXAMPLE
-	PS C:\PSScript .\PVS_Inventory_V5.ps1 -CompanyName "Carl Webster Consulting" -CoverPage "Mod" -UserName "Carl Webster"
+	PS C:\PSScript .\PVS_Inventory_V5.ps1 -CompanyName "Carl Webster Consulting" 
+	-CoverPage "Mod" -UserName "Carl Webster"
 
 	Will use:
 		Carl Webster Consulting for the Company Name.
 		Mod for the Cover Page format.
 		Carl Webster for the User Name.
 .EXAMPLE
-	PS C:\PSScript .\PVS_Inventory_V5.ps1 -CN "Carl Webster Consulting" -CP "Mod" -UN "Carl Webster" -AdminAddress PVS1
+	PS C:\PSScript .\PVS_Inventory_V5.ps1 -CN "Carl Webster Consulting" -CP "Mod" 
+	-UN "Carl Webster" -AdminAddress PVS1
 
 	Will use:
 		Carl Webster Consulting for the Company Name (alias CN).
@@ -266,7 +303,9 @@
 		Carl Webster for the User Name (alias UN).
 		PVS1 for AdminAddress.
 .EXAMPLE
-	PS C:\PSScript .\PVS_Inventory_V5.ps1 -CN "Carl Webster Consulting" -CP "Mod" -UN "Carl Webster" -AdminAddress PVS1 -User cwebster -Domain WebstersLab -Password Abc123!@#
+	PS C:\PSScript .\PVS_Inventory_V5.ps1 -CN "Carl Webster Consulting" -CP "Mod" 
+	-UN "Carl Webster" -AdminAddress PVS1 -User cwebster -Domain WebstersLab 
+	-Password Abc123!@#
 
 	Will use:
 		Carl Webster Consulting for the Company Name (alias CN).
@@ -277,7 +316,8 @@
 		WebstersLab for Domain.
 		Abc123!@# for Password.
 .EXAMPLE
-	PS C:\PSScript .\PVS_Inventory_V5.ps1 -CN "Carl Webster Consulting" -CP "Mod" -UN "Carl Webster" -AdminAddress PVS1 -User cwebster
+	PS C:\PSScript .\PVS_Inventory_V5.ps1 -CN "Carl Webster Consulting" -CP "Mod" 
+	-UN "Carl Webster" -AdminAddress PVS1 -User cwebster
 
 	Will use:
 		Carl Webster Consulting for the Company Name (alias CN).
@@ -286,6 +326,32 @@
 		PVS1 for AdminAddress.
 		cwebster for User.
 		Script will prompt for the Domain and Password
+.EXAMPLE
+	PS C:\PSScript .\PVS_Inventory_V5.ps1 -CompanyName "Sherlock Holmes Consulting" 
+	-CoverPage Exposure 
+	-UserName "Dr. Watson" 
+	-CompanyAddress "221B Baker Street, London, England" 
+	-CompanyFax "+44 1753 276600" 
+	-CompanyPhone "+44 1753 276200"
+	
+	Will use:
+		Sherlock Holmes Consulting for the Company Name.
+		Exposure for the Cover Page format.
+		Dr. Watson for the User Name.
+		221B Baker Street, London, England for the Company Address.
+		+44 1753 276600 for the Company Fax.
+		+44 1753 276200 for the Compnay Phone.
+.EXAMPLE
+	PS C:\PSScript .\PVS_Inventory_V5.ps1 -CompanyName "Sherlock Holmes Consulting" 
+	-CoverPage Facet 
+	-UserName "Dr. Watson" 
+	-CompanyEmail SuperSleuth@SherlockHolmes.com
+
+	Will use:
+		Sherlock Holmes Consulting for the Company Name.
+		Facet for the Cover Page format.
+		Dr. Watson for the User Name.
+		SuperSleuth@SherlockHolmes.com for the Compnay Email.
 .EXAMPLE
 	PS C:\PSScript > .\PVS_Inventory_V5.ps1 -StartDate "01/01/2017" -EndDate "01/31/2017" 
 	
@@ -300,7 +366,8 @@
 	LocalHost for AdminAddress.
 	Will return all Audit Trail entries from "01/01/2017" through "01/31/2017".
 .EXAMPLE
-	PS C:\PSScript > .\PVS_Inventory_V5.ps1 -StartDate "01/01/2017 10:00:00" -EndDate "01/31/2017 14:00:00" 
+	PS C:\PSScript > .\PVS_Inventory_V5.ps1 -StartDate "01/01/2017 10:00:00" -EndDate 
+	"01/31/2017 14:00:00" 
 	
 	Will use all Default values.
 	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\Company="Carl Webster"
@@ -316,7 +383,8 @@
 	PS C:\PSScript > .\PVS_Inventory_V5.ps1 -Folder \\FileServer\ShareName
 	
 	Will use all default values.
-	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl Webster" or
+	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl 
+	Webster" or
 	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\Company="Carl Webster"
 	$env:username = Administrator
 
@@ -326,10 +394,12 @@
 	
 	Output file will be saved in the path \\FileServer\ShareName
 .EXAMPLE
-	PS C:\PSScript > .\PVS_Inventory_V5.ps1 -SmtpServer mail.domain.tld -From XDAdmin@domain.tld -To ITGroup@domain.tld -ComputerName DHCPServer01
+	PS C:\PSScript > .\PVS_Inventory_V5.ps1 -SmtpServer mail.domain.tld -From 
+	XDAdmin@domain.tld -To ITGroup@domain.tld -ComputerName PVSServer01
 	
 	Will use all Default values.
-	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl Webster" or
+	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl 
+	Webster" or
 	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\Company="Carl Webster"
 	$env:username = Administrator
 
@@ -337,15 +407,19 @@
 	Sideline for the Cover Page format.
 	Administrator for the User Name.
 	
-	Script will be run remotely against DHCP server DHCPServer01.
+	Script will be run remotely against PVS server PVSServer01.
 	
-	Script will use the email server mail.domain.tld, sending from XDAdmin@domain.tld, sending to ITGroup@domain.tld.
-	If the current user's credentials are not valid to send email, the user will be prompted to enter valid credentials.
+	Script will use the email server mail.domain.tld, sending from XDAdmin@domain.tld, 
+	sending to ITGroup@domain.tld.
+	If the current user's credentials are not valid to send email, the user will be prompted 
+	to enter valid credentials.
 .EXAMPLE
-	PS C:\PSScript > .\PVS_Inventory_V5.ps1 -SmtpServer smtp.office365.com -SmtpPort 587 -UseSSL -From Webster@CarlWebster.com -To ITGroup@CarlWebster.com
+	PS C:\PSScript > .\PVS_Inventory_V5.ps1 -SmtpServer smtp.office365.com -SmtpPort 587 
+	-UseSSL -From Webster@CarlWebster.com -To ITGroup@CarlWebster.com
 	
 	Will use all Default values.
-	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl Webster" or
+	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl 
+	Webster" or
 	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\Company="Carl Webster"
 	$env:username = Administrator
 
@@ -355,17 +429,19 @@
 	
 	Script will be run remotely against DHCP server DHCPServer01.
 	
-	Script will use the email server smtp.office365.com on port 587 using SSL, sending from webster@carlwebster.com, sending to ITGroup@carlwebster.com.
-	If the current user's credentials are not valid to send email, the user will be prompted to enter valid credentials.
+	Script will use the email server smtp.office365.com on port 587 using SSL, sending from 
+	webster@carlwebster.com, sending to ITGroup@carlwebster.com.
+	If the current user's credentials are not valid to send email, the user will be prompted 
+	to enter valid credentials.
 .INPUTS
 	None.  You cannot pipe objects to this script.
 .OUTPUTS
 	No objects are output from this script.  This script creates a Word or PDF document.
 .NOTES
 	NAME: PVS_Inventory_V5.ps1
-	VERSION: 5.13 
+	VERSION: 5.14 
 	AUTHOR: Carl Webster, Sr. Solutions Architect at Choice Solutions
-	LASTEDIT: March 30, 2017
+	LASTEDIT: June 27, 2017
 #>
 
 #endregion
@@ -375,60 +451,53 @@
 [CmdletBinding(SupportsShouldProcess = $False, ConfirmImpact = "None", DefaultParameterSetName = "Word") ]
 
 Param(
-	[parameter(ParameterSetName="Word",Mandatory=$False)] 
-	[parameter(ParameterSetName="SMTP",Mandatory=$False)] 
-	[Switch]$MSWord=$False,
-
-	[parameter(ParameterSetName="PDF",Mandatory=$False)] 
-	[parameter(ParameterSetName="SMTP",Mandatory=$False)] 
-	[Switch]$PDF=$False,
-
-	[parameter(ParameterSetName="Text",Mandatory=$False)] 
-	[parameter(ParameterSetName="SMTP",Mandatory=$False)] 
-	[Switch]$Text=$False,
-
-	[parameter(ParameterSetName="HTML",Mandatory=$False)] 
-	[parameter(ParameterSetName="SMTP",Mandatory=$False)] 
-	[Switch]$HTML=$False,
-
-	[parameter(Mandatory=$False)] 
-	[Alias("HW")]
-	[Switch]$Hardware=$False, 
-
-	[parameter(Mandatory=$False)] 
-	[Alias("SD")]
-	[Datetime]$StartDate = ((Get-Date -displayhint date).AddDays(-7)),
-
-	[parameter(Mandatory=$False)] 
-	[Alias("ED")]
-	[Datetime]$EndDate = (Get-Date -displayhint date),
-	
-	[parameter(Mandatory=$False)] 
-	[Alias("ADT")]
-	[Switch]$AddDateTime=$False,
-	
 	[parameter(Mandatory=$False)] 
 	[Alias("AA")]
 	[string]$AdminAddress="",
 
 	[parameter(Mandatory=$False)] 
-	[string]$Domain="",
+	[string]$User="",
 
 	[parameter(Mandatory=$False)] 
-	[string]$User="",
+	[string]$Domain="",
 
 	[parameter(Mandatory=$False)] 
 	[string]$Password="",
 	
-	[parameter(Mandatory=$False)] 
-	[string]$Folder="",
-	
+	[parameter(ParameterSetName="Word",Mandatory=$False)] 
+	[parameter(ParameterSetName="PDF",Mandatory=$False)] 
+	[parameter(ParameterSetName="SMTP",Mandatory=$False)] 
+	[Alias("CA")]
+	[ValidateNotNullOrEmpty()]
+	[string]$CompanyAddress="",
+    
+	[parameter(ParameterSetName="Word",Mandatory=$False)] 
+	[parameter(ParameterSetName="PDF",Mandatory=$False)] 
+	[parameter(ParameterSetName="SMTP",Mandatory=$False)] 
+	[Alias("CE")]
+	[ValidateNotNullOrEmpty()]
+	[string]$CompanyEmail="",
+    
+	[parameter(ParameterSetName="Word",Mandatory=$False)] 
+	[parameter(ParameterSetName="PDF",Mandatory=$False)] 
+	[parameter(ParameterSetName="SMTP",Mandatory=$False)] 
+	[Alias("CF")]
+	[ValidateNotNullOrEmpty()]
+	[string]$CompanyFax="",
+    
 	[parameter(ParameterSetName="Word",Mandatory=$False)] 
 	[parameter(ParameterSetName="PDF",Mandatory=$False)] 
 	[parameter(ParameterSetName="SMTP",Mandatory=$False)] 
 	[Alias("CN")]
 	[ValidateNotNullOrEmpty()]
 	[string]$CompanyName="",
+    
+	[parameter(ParameterSetName="Word",Mandatory=$False)] 
+	[parameter(ParameterSetName="PDF",Mandatory=$False)] 
+	[parameter(ParameterSetName="SMTP",Mandatory=$False)] 
+	[Alias("CPh")]
+	[ValidateNotNullOrEmpty()]
+	[string]$CompanyPhone="",
     
 	[parameter(ParameterSetName="Word",Mandatory=$False)] 
 	[parameter(ParameterSetName="PDF",Mandatory=$False)] 
@@ -443,6 +512,41 @@ Param(
 	[Alias("UN")]
 	[ValidateNotNullOrEmpty()]
 	[string]$UserName=$env:username,
+
+	[parameter(ParameterSetName="HTML",Mandatory=$False)] 
+	[parameter(ParameterSetName="SMTP",Mandatory=$False)] 
+	[Switch]$HTML=$False,
+
+	[parameter(ParameterSetName="Word",Mandatory=$False)] 
+	[parameter(ParameterSetName="SMTP",Mandatory=$False)] 
+	[Switch]$MSWord=$False,
+
+	[parameter(ParameterSetName="PDF",Mandatory=$False)] 
+	[parameter(ParameterSetName="SMTP",Mandatory=$False)] 
+	[Switch]$PDF=$False,
+
+	[parameter(ParameterSetName="Text",Mandatory=$False)] 
+	[parameter(ParameterSetName="SMTP",Mandatory=$False)] 
+	[Switch]$Text=$False,
+
+	[parameter(Mandatory=$False)] 
+	[Alias("SD")]
+	[Datetime]$StartDate = ((Get-Date -displayhint date).AddDays(-7)),
+
+	[parameter(Mandatory=$False)] 
+	[Alias("ED")]
+	[Datetime]$EndDate = (Get-Date -displayhint date),
+	
+	[parameter(Mandatory=$False)] 
+	[Alias("ADT")]
+	[Switch]$AddDateTime=$False,
+	
+	[parameter(Mandatory=$False)] 
+	[string]$Folder="",
+	
+	[parameter(Mandatory=$False)] 
+	[Alias("HW")]
+	[Switch]$Hardware=$False, 
 
 	[parameter(ParameterSetName="SMTP",Mandatory=$True)] 
 	[string]$SmtpServer="",
@@ -575,6 +679,21 @@ Param(
 #	For Store properties, for Word/PDF/HTML output, changed the text "Store owner" to 
 #		"Site that acts as the owner of this store" to match the PVS console
 #	Updated help text
+#
+#Version 5.14 27-Jun-2017
+#	Added four new Cover Page properties
+#		Company Address
+#		Company Email
+#		Company Fax
+#		Company Phone
+#	Added support for version 7.14
+#	Removed code that made sure all Parameters were set to default values if for some reason they did exist or values were $Null
+#	Reordered the parameters in the help text and parameter list so they match and are grouped better
+#	Replaced _SetDocumentProperty function with Jim Moyle's Set-DocumentProperty function
+#	Updated Function ProcessScriptEnd for the new Cover Page properties and Parameters
+#	Updated Function ShowScriptOptions for the new Cover Page properties and Parameters
+#	Updated Function UpdateDocumentProperties for the new Cover Page properties and Parameters
+#	Updated help text
 #endregion
 
 #region initial variable testing and setup
@@ -584,144 +703,6 @@ Set-StrictMode -Version 2
 $PSDefaultParameterValues = @{"*:Verbose"=$True}
 $SaveEAPreference = $ErrorActionPreference
 $ErrorActionPreference = 'SilentlyContinue'
-
-If(!(Test-Path Variable:PDF))
-{
-	$PDF = $False
-}
-If(!(Test-Path Variable:Text))
-{
-	$Text = $False
-}
-If(!(Test-Path Variable:MSWord))
-{
-	$MSWord = $False
-}
-If(!(Test-Path Variable:HTML))
-{
-	$HTML = $False
-}
-If(!(Test-Path Variable:StartDate))
-{
-	$StartDate = ((Get-Date -displayhint date).AddDays(-7))
-}
-If(!(Test-Path Variable:EndDate))
-{
-	$EndDate = ((Get-Date -displayhint date))
-}
-If(!(Test-Path Variable:AddDateTime))
-{
-	$AddDateTime = $False
-}
-If(!(Test-Path Variable:Hardware))
-{
-	$Hardware = $False
-}
-If(!(Test-Path Variable:AdminAddress))
-{
-	$AdminAddress = ""
-}
-If(!(Test-Path Variable:Folder))
-{
-	$Folder = ""
-}
-If(!(Test-Path Variable:SmtpServer))
-{
-	$SmtpServer = ""
-}
-If(!(Test-Path Variable:SmtpPort))
-{
-	$SmtpPort = 25
-}
-If(!(Test-Path Variable:UseSSL))
-{
-	$UseSSL = $False
-}
-If(!(Test-Path Variable:From))
-{
-	$From = ""
-}
-If(!(Test-Path Variable:To))
-{
-	$To = ""
-}
-If(!(Test-Path Variable:Dev))
-{
-	$Dev = $False
-}
-If(!(Test-Path Variable:ScriptInfo))
-{
-	$ScriptInfo = $False
-}
-
-If($Null -eq $PDF)
-{
-	$PDF = $False
-}
-If($Null -eq $Text)
-{
-	$Text = $False
-}
-If($Null -eq $MSWord)
-{
-	$MSWord = $False
-}
-If($Null -eq $HTML)
-{
-	$HTML = $False
-}
-If($Null -eq $StartDate)
-{
-	$StartDate = ((Get-Date -displayhint date).AddDays(-7))
-}
-If($Null -eq $EndDate)
-{
-	$EndDate = ((Get-Date -displayhint date))
-}
-If($Null -eq $AddDateTime)
-{
-	$AddDateTime = $False
-}
-If($Null -eq $Hardware)
-{
-	$Hardware = $False
-}
-If($Null -eq $AdminAddress)
-{
-	$AdminAddress = ""
-}
-If($Null -eq $Folder)
-{
-	$Folder = ""
-}
-If($Null -eq $SmtpServer)
-{
-	$SmtpServer = ""
-}
-If($Null -eq $SmtpPort)
-{
-	$SmtpPort = 25
-}
-If($Null -eq $UseSSL)
-{
-	$UseSSL = $False
-}
-If($Null -eq $From)
-{
-	$From = ""
-}
-If($Null -eq $To)
-{
-	$To = ""
-}
-If($Null -eq $Dev)
-{
-	$Dev = $False
-}
-If($Null -eq $ScriptInfo)
-{
-	$ScriptInfo = $False
-}
 
 If($Dev)
 {
@@ -1442,14 +1423,14 @@ Function OutputDriveItem
 	$xDriveType = ""
 	Switch ($drive.drivetype)
 	{
-		0	{$xDriveType = "Unknown"; Break}
-		1	{$xDriveType = "No Root Directory"; Break}
-		2	{$xDriveType = "Removable Disk"; Break}
-		3	{$xDriveType = "Local Disk"; Break}
-		4	{$xDriveType = "Network Drive"; Break}
-		5	{$xDriveType = "Compact Disc"; Break}
-		6	{$xDriveType = "RAM Disk"; Break}
-		Default {$xDriveType = "Unknown"; Break}
+		0		{$xDriveType = "Unknown"; Break}
+		1		{$xDriveType = "No Root Directory"; Break}
+		2		{$xDriveType = "Removable Disk"; Break}
+		3		{$xDriveType = "Local Disk"; Break}
+		4		{$xDriveType = "Network Drive"; Break}
+		5		{$xDriveType = "Compact Disc"; Break}
+		6		{$xDriveType = "RAM Disk"; Break}
+		Default	{$xDriveType = "Unknown"; Break}
 	}
 	
 	$xVolumeDirty = ""
@@ -1571,23 +1552,23 @@ Function OutputProcessorItem
 	$xAvailability = ""
 	Switch ($processor.availability)
 	{
-		1	{$xAvailability = "Other"; Break}
-		2	{$xAvailability = "Unknown"; Break}
-		3	{$xAvailability = "Running or Full Power"; Break}
-		4	{$xAvailability = "Warning"; Break}
-		5	{$xAvailability = "In Test"; Break}
-		6	{$xAvailability = "Not Applicable"; Break}
-		7	{$xAvailability = "Power Off"; Break}
-		8	{$xAvailability = "Off Line"; Break}
-		9	{$xAvailability = "Off Duty"; Break}
-		10	{$xAvailability = "Degraded"; Break}
-		11	{$xAvailability = "Not Installed"; Break}
-		12	{$xAvailability = "Install Error"; Break}
-		13	{$xAvailability = "Power Save - Unknown"; Break}
-		14	{$xAvailability = "Power Save - Low Power Mode"; Break}
-		15	{$xAvailability = "Power Save - Standby"; Break}
-		16	{$xAvailability = "Power Cycle"; Break}
-		17	{$xAvailability = "Power Save - Warning"; Break}
+		1		{$xAvailability = "Other"; Break}
+		2		{$xAvailability = "Unknown"; Break}
+		3		{$xAvailability = "Running or Full Power"; Break}
+		4		{$xAvailability = "Warning"; Break}
+		5		{$xAvailability = "In Test"; Break}
+		6		{$xAvailability = "Not Applicable"; Break}
+		7		{$xAvailability = "Power Off"; Break}
+		8		{$xAvailability = "Off Line"; Break}
+		9		{$xAvailability = "Off Duty"; Break}
+		10		{$xAvailability = "Degraded"; Break}
+		11		{$xAvailability = "Not Installed"; Break}
+		12		{$xAvailability = "Install Error"; Break}
+		13		{$xAvailability = "Power Save - Unknown"; Break}
+		14		{$xAvailability = "Power Save - Low Power Mode"; Break}
+		15		{$xAvailability = "Power Save - Standby"; Break}
+		16		{$xAvailability = "Power Cycle"; Break}
+		17		{$xAvailability = "Power Save - Warning"; Break}
 		Default	{$xAvailability = "Unknown"; Break}
 	}
 
@@ -1713,23 +1694,23 @@ Function OutputNicItem
 	$xAvailability = ""
 	Switch ($processor.availability)
 	{
-		1	{$xAvailability = "Other"; Break}
-		2	{$xAvailability = "Unknown"; Break}
-		3	{$xAvailability = "Running or Full Power"; Break}
-		4	{$xAvailability = "Warning"; Break}
-		5	{$xAvailability = "In Test"; Break}
-		6	{$xAvailability = "Not Applicable"; Break}
-		7	{$xAvailability = "Power Off"; Break}
-		8	{$xAvailability = "Off Line"; Break}
-		9	{$xAvailability = "Off Duty"; Break}
-		10	{$xAvailability = "Degraded"; Break}
-		11	{$xAvailability = "Not Installed"; Break}
-		12	{$xAvailability = "Install Error"; Break}
-		13	{$xAvailability = "Power Save - Unknown"; Break}
-		14	{$xAvailability = "Power Save - Low Power Mode"; Break}
-		15	{$xAvailability = "Power Save - Standby"; Break}
-		16	{$xAvailability = "Power Cycle"; Break}
-		17	{$xAvailability = "Power Save - Warning"; Break}
+		1		{$xAvailability = "Other"; Break}
+		2		{$xAvailability = "Unknown"; Break}
+		3		{$xAvailability = "Running or Full Power"; Break}
+		4		{$xAvailability = "Warning"; Break}
+		5		{$xAvailability = "In Test"; Break}
+		6		{$xAvailability = "Not Applicable"; Break}
+		7		{$xAvailability = "Power Off"; Break}
+		8		{$xAvailability = "Off Line"; Break}
+		9		{$xAvailability = "Off Duty"; Break}
+		10		{$xAvailability = "Degraded"; Break}
+		11		{$xAvailability = "Not Installed"; Break}
+		12		{$xAvailability = "Install Error"; Break}
+		13		{$xAvailability = "Power Save - Unknown"; Break}
+		14		{$xAvailability = "Power Save - Low Power Mode"; Break}
+		15		{$xAvailability = "Power Save - Standby"; Break}
+		16		{$xAvailability = "Power Cycle"; Break}
+		17		{$xAvailability = "Power Save - Warning"; Break}
 		Default	{$xAvailability = "Unknown"; Break}
 	}
 
@@ -1778,9 +1759,9 @@ Function OutputNicItem
 	$xTcpipNetbiosOptions = ""
 	Switch ($nic.TcpipNetbiosOptions)
 	{
-		0	{$xTcpipNetbiosOptions = "Use NetBIOS setting from DHCP Server"; Break}
-		1	{$xTcpipNetbiosOptions = "Enable NetBIOS"; Break}
-		2	{$xTcpipNetbiosOptions = "Disable NetBIOS"; Break}
+		0		{$xTcpipNetbiosOptions = "Use NetBIOS setting from DHCP Server"; Break}
+		1		{$xTcpipNetbiosOptions = "Enable NetBIOS"; Break}
+		2		{$xTcpipNetbiosOptions = "Disable NetBIOS"; Break}
 		Default	{$xTcpipNetbiosOptions = "Unknown"; Break}
 	}
 	
@@ -2198,19 +2179,19 @@ Function GetCulture
 
 	Switch ($WordValue)
 	{
-		{$CatalanArray -contains $_} {$CultureCode = "ca-"}
-		{$ChineseArray -contains $_} {$CultureCode = "zh-"}
-		{$DanishArray -contains $_} {$CultureCode = "da-"}
-		{$DutchArray -contains $_} {$CultureCode = "nl-"}
-		{$EnglishArray -contains $_} {$CultureCode = "en-"}
-		{$FinnishArray -contains $_} {$CultureCode = "fi-"}
-		{$FrenchArray -contains $_} {$CultureCode = "fr-"}
-		{$GermanArray -contains $_} {$CultureCode = "de-"}
-		{$NorwegianArray -contains $_} {$CultureCode = "nb-"}
+		{$CatalanArray -contains $_}	{$CultureCode = "ca-"}
+		{$ChineseArray -contains $_} 	{$CultureCode = "zh-"}
+		{$DanishArray -contains $_} 	{$CultureCode = "da-"}
+		{$DutchArray -contains $_} 		{$CultureCode = "nl-"}
+		{$EnglishArray -contains $_} 	{$CultureCode = "en-"}
+		{$FinnishArray -contains $_} 	{$CultureCode = "fi-"}
+		{$FrenchArray -contains $_} 	{$CultureCode = "fr-"}
+		{$GermanArray -contains $_} 	{$CultureCode = "de-"}
+		{$NorwegianArray -contains $_} 	{$CultureCode = "nb-"}
 		{$PortugueseArray -contains $_} {$CultureCode = "pt-"}
-		{$SpanishArray -contains $_} {$CultureCode = "es-"}
-		{$SwedishArray -contains $_} {$CultureCode = "sv-"}
-		Default {$CultureCode = "en-"}
+		{$SpanishArray -contains $_} 	{$CultureCode = "es-"}
+		{$SwedishArray -contains $_} 	{$CultureCode = "sv-"}
+		Default 						{$CultureCode = "en-"}
 	}
 	
 	Return $CultureCode
@@ -2530,21 +2511,44 @@ Function ValidateCompanyName
 	}
 }
 
-Function _SetDocumentProperty 
-{
-	#jeff hicks
-	Param([object]$Properties,[string]$Name,[string]$Value)
-	#get the property object
-	$prop = $properties | ForEach { 
-		$propname=$_.GetType().InvokeMember("Name","GetProperty",$Null,$_,$Null)
-		If($propname -eq $Name) 
-		{
-			Return $_
-		}
-	} #ForEach
-
-	#set the value
-	$Prop.GetType().InvokeMember("Value","SetProperty",$Null,$prop,$Value)
+Function Set-DocumentProperty {
+    <#
+	.SYNOPSIS
+	Function to set the Title Page document properties in MS Word
+	.DESCRIPTION
+	Long description
+	.PARAMETER Document
+	Current Document Object
+	.PARAMETER DocProperty
+	Parameter description
+	.PARAMETER Value
+	Parameter description
+	.EXAMPLE
+	Set-DocumentProperty -Document $Script:Doc -DocProperty Title -Value 'MyTitle'
+	.EXAMPLE
+	Set-DocumentProperty -Document $Script:Doc -DocProperty Company -Value 'MyCompany'
+	.EXAMPLE
+	Set-DocumentProperty -Document $Script:Doc -DocProperty Author -Value 'Jim Moyle'
+	.EXAMPLE
+	Set-DocumentProperty -Document $Script:Doc -DocProperty Subject -Value 'MySubjectTitle'
+	.NOTES
+	Function Created by Jim Moyle June 2017
+	Twitter : @JimMoyle
+	#>
+    param (
+        [object]$Document,
+        [String]$DocProperty,
+        [string]$Value
+    )
+    try {
+        $binding = "System.Reflection.BindingFlags" -as [type]
+        $builtInProperties = $Document.BuiltInDocumentProperties
+        $property = [System.__ComObject].invokemember("item", $binding::GetProperty, $null, $BuiltinProperties, $DocProperty)
+        [System.__ComObject].invokemember("value", $binding::SetProperty, $null, $property, $Value)
+    }
+    catch {
+        Write-Warning "Failed to set $DocProperty to $Value"
+    }
 }
 
 Function FindWordDocumentEnd
@@ -2907,24 +2911,24 @@ Function SetupWord
 Function UpdateDocumentProperties
 {
 	Param([string]$AbstractTitle, [string]$SubjectTitle)
+	#updated 8-Jun-2017 with additional cover page fields
 	#Update document properties
 	If($MSWORD -or $PDF)
 	{
 		If($Script:CoverPagesExist)
 		{
 			Write-Verbose "$(Get-Date): Set Cover Page Properties"
-			_SetDocumentProperty $Script:Doc.BuiltInDocumentProperties "Company" $Script:CoName
-			_SetDocumentProperty $Script:Doc.BuiltInDocumentProperties "Title" $Script:title
-			_SetDocumentProperty $Script:Doc.BuiltInDocumentProperties "Author" $username
-
-			_SetDocumentProperty $Script:Doc.BuiltInDocumentProperties "Subject" $SubjectTitle
+			#8-Jun-2017 put these 4 items in alpha order
+            Set-DocumentProperty -Document $Script:Doc -DocProperty Author -Value $UserName
+            Set-DocumentProperty -Document $Script:Doc -DocProperty Company -Value $Script:CoName
+            Set-DocumentProperty -Document $Script:Doc -DocProperty Subject -Value $SubjectTitle
+            Set-DocumentProperty -Document $Script:Doc -DocProperty Title -Value $Script:title
 
 			#Get the Coverpage XML part
 			$cp = $Script:Doc.CustomXMLParts | Where {$_.NamespaceURI -match "coverPageProps$"}
 
 			#get the abstract XML part
 			$ab = $cp.documentelement.ChildNodes | Where {$_.basename -eq "Abstract"}
-
 			#set the text
 			If([String]::IsNullOrEmpty($Script:CoName))
 			{
@@ -2934,7 +2938,30 @@ Function UpdateDocumentProperties
 			{
 				[string]$abstract = "$($AbstractTitle) for $($Script:CoName)"
 			}
+			$ab.Text = $abstract
 
+			#added 8-Jun-2017
+			$ab = $cp.documentelement.ChildNodes | Where {$_.basename -eq "CompanyAddress"}
+			#set the text
+			[string]$abstract = $CompanyAddress
+			$ab.Text = $abstract
+
+			#added 8-Jun-2017
+			$ab = $cp.documentelement.ChildNodes | Where {$_.basename -eq "CompanyEmail"}
+			#set the text
+			[string]$abstract = $CompanyEmail
+			$ab.Text = $abstract
+
+			#added 8-Jun-2017
+			$ab = $cp.documentelement.ChildNodes | Where {$_.basename -eq "CompanyFax"}
+			#set the text
+			[string]$abstract = $CompanyFax
+			$ab.Text = $abstract
+
+			#added 8-Jun-2017
+			$ab = $cp.documentelement.ChildNodes | Where {$_.basename -eq "CompanyPhone"}
+			#set the text
+			[string]$abstract = $CompanyPhone
 			$ab.Text = $abstract
 
 			$ab = $cp.documentelement.ChildNodes | Where {$_.basename -eq "PublishDate"}
@@ -2950,8 +2977,7 @@ Function UpdateDocumentProperties
 			$abstract = $Null
 		}
 	}
-}
-#endregion
+}#endregion
 
 #region registry functions
 #http://stackoverflow.com/questions/5648931/test-if-registry-value-exists
@@ -3018,11 +3044,11 @@ Function WriteWordLine
 	[string]$output = ""
 	Switch ($style)
 	{
-		0 {$Script:Selection.Style = $Script:MyHash.Word_NoSpacing; Break}
-		1 {$Script:Selection.Style = $Script:MyHash.Word_Heading1; Break}
-		2 {$Script:Selection.Style = $Script:MyHash.Word_Heading2; Break}
-		3 {$Script:Selection.Style = $Script:MyHash.Word_Heading3; Break}
-		4 {$Script:Selection.Style = $Script:MyHash.Word_Heading4; Break}
+		0 		{$Script:Selection.Style = $Script:MyHash.Word_NoSpacing; Break}
+		1 		{$Script:Selection.Style = $Script:MyHash.Word_Heading1; Break}
+		2 		{$Script:Selection.Style = $Script:MyHash.Word_Heading2; Break}
+		3 		{$Script:Selection.Style = $Script:MyHash.Word_Heading3; Break}
+		4 		{$Script:Selection.Style = $Script:MyHash.Word_Heading4; Break}
 		Default {$Script:Selection.Style = $Script:MyHash.Word_NoSpacing; Break}
 	}
 	
@@ -3215,19 +3241,19 @@ Function WriteHTMLLine
 
 		Switch ($style)
 		{
-			1 {$HTMLStyle1 = "<h1>"; Break}
-			2 {$HTMLStyle1 = "<h2>"; Break}
-			3 {$HTMLStyle1 = "<h3>"; Break}
-			4 {$HTMLStyle1 = "<h4>"; Break}
+			1 		{$HTMLStyle1 = "<h1>"; Break}
+			2 		{$HTMLStyle1 = "<h2>"; Break}
+			3 		{$HTMLStyle1 = "<h3>"; Break}
+			4 		{$HTMLStyle1 = "<h4>"; Break}
 			Default {$HTMLStyle1 = ""; Break}
 		}
 
 		Switch ($style)
 		{
-			1 {$HTMLStyle2 = "</h1>"; Break}
-			2 {$HTMLStyle2 = "</h2>"; Break}
-			3 {$HTMLStyle2 = "</h3>"; Break}
-			4 {$HTMLStyle2 = "</h4>"; Break}
+			1 		{$HTMLStyle2 = "</h1>"; Break}
+			2 		{$HTMLStyle2 = "</h2>"; Break}
+			3 		{$HTMLStyle2 = "</h3>"; Break}
+			4 		{$HTMLStyle2 = "</h4>"; Break}
 			Default {$HTMLStyle2 = ""; Break}
 		}
 
@@ -4210,56 +4236,60 @@ Function ShowScriptOptions
 {
 	Write-Verbose "$(Get-Date): "
 	Write-Verbose "$(Get-Date): "
-	Write-Verbose "$(Get-Date): AddDateTime   : $($AddDateTime)"
-	Write-Verbose "$(Get-Date): AdminAddress  : $($AdminAddress)"
+	Write-Verbose "$(Get-Date): AddDateTime    : $($AddDateTime)"
+	Write-Verbose "$(Get-Date): AdminAddress   : $($AdminAddress)"
 	If($MSWORD -or $PDF)
 	{
-		Write-Verbose "$(Get-Date): Company Name  : $($Script:CoName)"
-		Write-Verbose "$(Get-Date): Cover Page    : $($CoverPage)"
+		Write-Verbose "$(Get-Date): Company Name   : $($Script:CoName)"
+		Write-Verbose "$(Get-Date): Company Address: $($CompanyAddress)"
+		Write-Verbose "$(Get-Date): Company Email  : $($CompanyEmail)"
+		Write-Verbose "$(Get-Date): Company Fax    : $($CompanyFax)"
+		Write-Verbose "$(Get-Date): Company Phone  : $($CompanyPhone)"
+		Write-Verbose "$(Get-Date): Cover Page     : $($CoverPage)"
 	}
-	Write-Verbose "$(Get-Date): Dev           : $($Dev)"
+	Write-Verbose "$(Get-Date): Dev            : $($Dev)"
 	If($Dev)
 	{
-		Write-Verbose "$(Get-Date): DevErrorFile  : $($Script:DevErrorFile)"
+		Write-Verbose "$(Get-Date): DevErrorFile   : $($Script:DevErrorFile)"
 	}
-	Write-Verbose "$(Get-Date): Domain        : $($Domain)"
-	Write-Verbose "$(Get-Date): End Date      : $($EndDate)"
-	Write-Verbose "$(Get-Date): Filename1     : $($Script:filename1)"
+	Write-Verbose "$(Get-Date): Domain         : $($Domain)"
+	Write-Verbose "$(Get-Date): End Date       : $($EndDate)"
+	Write-Verbose "$(Get-Date): Filename1      : $($Script:filename1)"
 	If($PDF)
 	{
-		Write-Verbose "$(Get-Date): Filename2     : $($Script:filename2)"
+		Write-Verbose "$(Get-Date): Filename2      : $($Script:filename2)"
 	}
-	Write-Verbose "$(Get-Date): Folder        : $($Folder)"
-	Write-Verbose "$(Get-Date): From          : $($From)"
-	Write-Verbose "$(Get-Date): HW Inventory  : $($Hardware)"
-	Write-Verbose "$(Get-Date): Save As HTML  : $($HTML)"
-	Write-Verbose "$(Get-Date): Save As PDF   : $($PDF)"
-	Write-Verbose "$(Get-Date): Save As TEXT  : $($TEXT)"
-	Write-Verbose "$(Get-Date): Save As WORD  : $($MSWORD)"
-	Write-Verbose "$(Get-Date): ScriptInfo    : $($ScriptInfo)"
-	Write-Verbose "$(Get-Date): Smtp Port     : $($SmtpPort)"
-	Write-Verbose "$(Get-Date): Smtp Server   : $($SmtpServer)"
-	Write-Verbose "$(Get-Date): Start Date    : $($StartDate)"
-	Write-Verbose "$(Get-Date): Title         : $($Script:Title)"
-	Write-Verbose "$(Get-Date): To            : $($To)"
-	Write-Verbose "$(Get-Date): Use SSL       : $($UseSSL)"
-	Write-Verbose "$(Get-Date): User          : $($User)"
+	Write-Verbose "$(Get-Date): Folder         : $($Folder)"
+	Write-Verbose "$(Get-Date): From           : $($From)"
+	Write-Verbose "$(Get-Date): HW Inventory   : $($Hardware)"
+	Write-Verbose "$(Get-Date): Save As HTML   : $($HTML)"
+	Write-Verbose "$(Get-Date): Save As PDF    : $($PDF)"
+	Write-Verbose "$(Get-Date): Save As TEXT   : $($TEXT)"
+	Write-Verbose "$(Get-Date): Save As WORD   : $($MSWORD)"
+	Write-Verbose "$(Get-Date): ScriptInfo     : $($ScriptInfo)"
+	Write-Verbose "$(Get-Date): Smtp Port      : $($SmtpPort)"
+	Write-Verbose "$(Get-Date): Smtp Server    : $($SmtpServer)"
+	Write-Verbose "$(Get-Date): Start Date     : $($StartDate)"
+	Write-Verbose "$(Get-Date): Title          : $($Script:Title)"
+	Write-Verbose "$(Get-Date): To             : $($To)"
+	Write-Verbose "$(Get-Date): Use SSL        : $($UseSSL)"
+	Write-Verbose "$(Get-Date): User           : $($User)"
 	If($MSWORD -or $PDF)
 	{
-		Write-Verbose "$(Get-Date): User Name     : $($UserName)"
+		Write-Verbose "$(Get-Date): User Name      : $($UserName)"
 	}
 	Write-Verbose "$(Get-Date): "
-	Write-Verbose "$(Get-Date): OS Detected   : $($Script:RunningOS)"
-	Write-Verbose "$(Get-Date): PoSH version  : $($Host.Version)"
-	Write-Verbose "$(Get-Date): PSCulture     : $($PSCulture)"
-	Write-Verbose "$(Get-Date): PSUICulture   : $($PSUICulture)"
+	Write-Verbose "$(Get-Date): OS Detected    : $($Script:RunningOS)"
+	Write-Verbose "$(Get-Date): PoSH version   : $($Host.Version)"
+	Write-Verbose "$(Get-Date): PSCulture      : $($PSCulture)"
+	Write-Verbose "$(Get-Date): PSUICulture    : $($PSUICulture)"
 	If($MSWORD -or $PDF)
 	{
-		Write-Verbose "$(Get-Date): Word language : $($Script:WordLanguageValue)"
-		Write-Verbose "$(Get-Date): Word version  : $($Script:WordProduct)"
+		Write-Verbose "$(Get-Date): Word language  : $($Script:WordLanguageValue)"
+		Write-Verbose "$(Get-Date): Word version   : $($Script:WordProduct)"
 	}
 	Write-Verbose "$(Get-Date): "
-	Write-Verbose "$(Get-Date): Script start  : $($Script:StartTime)"
+	Write-Verbose "$(Get-Date): Script start   : $($Script:StartTime)"
 	Write-Verbose "$(Get-Date): "
 	Write-Verbose "$(Get-Date): "
 }
@@ -4808,40 +4838,40 @@ Function DeviceStatus
 	{
 		Switch ($xDevice.diskVersionAccess)
 		{
-			0 {$xDevicediskVersionAccess = "Production"; Break}
-			1 {$xDevicediskVersionAccess = "Test"; Break}
-			2 {$xDevicediskVersionAccess = "Maintenance"; Break}
-			3 {$xDevicediskVersionAccess = "Personal vDisk"; Break}
+			0 		{$xDevicediskVersionAccess = "Production"; Break}
+			1 		{$xDevicediskVersionAccess = "Test"; Break}
+			2 		{$xDevicediskVersionAccess = "Maintenance"; Break}
+			3 		{$xDevicediskVersionAccess = "Personal vDisk"; Break}
 			Default {$xDevicediskVersionAccess = "vDisk access type could not be determined: $($xDevice.diskVersionAccess)"; Break}
 		}
 
-		Switch($xDevice.bdmBoot)
+		Switch ($xDevice.bdmBoot)
 		{
-			0 {$xDevicebdmBoot = "PXE boot"; Break}
-			1 {$xDevicebdmBoot = "BDM disk"; Break}
+			0 		{$xDevicebdmBoot = "PXE boot"; Break}
+			1 		{$xDevicebdmBoot = "BDM disk"; Break}
 			Default {$xDevicebdmBoot = "Boot mode could not be determined: $($xDevice.bdmBoot)"; Break}
 		}
 
-		Switch($xDevice.licenseType)
+		Switch ($xDevice.licenseType)
 		{
-			0 {$xDevicelicenseType = "No License"; Break}
-			1 {$xDevicelicenseType = "Desktop License"; Break}
-			2 {$xDevicelicenseType = "Server License"; Break}
-			5 {$xDevicelicenseType = "OEM SmartClient License"; Break}
-			6 {$xDevicelicenseType = "XenApp License"; Break}
-			7 {$xDevicelicenseType = "XenDesktop License"; Break}
+			0 		{$xDevicelicenseType = "No License"; Break}
+			1 		{$xDevicelicenseType = "Desktop License"; Break}
+			2 		{$xDevicelicenseType = "Server License"; Break}
+			5 		{$xDevicelicenseType = "OEM SmartClient License"; Break}
+			6 		{$xDevicelicenseType = "XenApp License"; Break}
+			7 		{$xDevicelicenseType = "XenDesktop License"; Break}
 			Default {$xDevicelicenseType = "Device license type could not be determined: $($xDevice.licenseType)"; Break}
 		}
 
 		Switch ($xDevice.logLevel)
 		{
-			0   {$xDevicelogLevel = "Off"; Break}
-			1   {$xDevicelogLevel = "Fatal"; Break}
-			2   {$xDevicelogLevel = "Error"; Break}
-			3   {$xDevicelogLevel = "Warning"; Break}
-			4   {$xDevicelogLevel = "Info"; Break}
-			5   {$xDevicelogLevel = "Debug"; Break}
-			6   {$xDevicelogLevel = "Trace"; Break}
+			0   	{$xDevicelogLevel = "Off"; Break}
+			1   	{$xDevicelogLevel = "Fatal"; Break}
+			2   	{$xDevicelogLevel = "Error"; Break}
+			3   	{$xDevicelogLevel = "Warning"; Break}
+			4   	{$xDevicelogLevel = "Info"; Break}
+			5   	{$xDevicelogLevel = "Debug"; Break}
+			6   	{$xDevicelogLevel = "Trace"; Break}
 			Default {$xDevicelogLevel = "Logging level could not be determined: $($xDevice.logLevel)"; Break}
 		}
 
@@ -5025,7 +5055,6 @@ Function ProcessScriptSetup
 			Set-PVSConnection -server $AdminAddress -EA 0 4>$Null
 		}
 
-		#If($? -and (Get-PVSConnection).Server -eq $AdminAddress 4>$Null)
 		If($?)
 		{
 			$Script:Remoting = $True
@@ -5058,16 +5087,8 @@ Function ProcessScriptSetup
 	$soapserver = $Null
 	$StreamService = $Null
 
-#	If($Script:Remoting)
-#	{
-		$soapserver = Get-Service -ComputerName $AdminAddress -EA 0 | Where-Object {$_.DisplayName -like "*Citrix PVS Soap Server*"}
-		$StreamService = Get-Service -ComputerName $AdminAddress -EA 0 | Where-Object {$_.DisplayName -like "*Citrix PVS Stream Service*"}
-#	}
-#	Else
-#	{
-#		$soapserver = Get-Service -EA 0 | Where-Object {$_.DisplayName -like "*Citrix PVS Soap Server*"}
-#		$StreamService = Get-Service -EA 0 | Where-Object {$_.DisplayName -like "*Citrix PVS Stream Service*"}
-#	}
+	$soapserver = Get-Service -ComputerName $AdminAddress -EA 0 | Where-Object {$_.DisplayName -like "*Citrix PVS Soap Server*"}
+	$StreamService = Get-Service -ComputerName $AdminAddress -EA 0 | Where-Object {$_.DisplayName -like "*Citrix PVS Stream Service*"}
 
 	If($soapserver.Status -ne "Running")
 	{
@@ -5166,171 +5187,171 @@ Function OutputAuditTrail
 		ForEach($Audit in $Audits)
 		{
 			$xAction = ""
-			Switch([int]$Audit.action)
+			Switch ([int]$Audit.action)
 			{
-				1 { $xAction = "Add AuthGroup"; Break }
-				2 { $xAction = "Add Collection"; Break }
-				3 { $xAction = "Add Device"; Break }
-				4 { $xAction = "Add DiskLocator"; Break }
-				5 { $xAction = "Add FarmView"; Break }
-				6 { $xAction = "Add Server"; Break }
-				7 { $xAction = "Add Site"; Break }
-				8 { $xAction = "Add SiteView"; Break }
-				9 { $xAction = "Add Store"; Break }
-				10 { $xAction = "Add UserGroup"; Break }
-				11 { $xAction = "Add VirtualHostingPool"; Break }
-				12 { $xAction = "Add UpdateTask"; Break }
-				13 { $xAction = "Add DiskUpdateDevice"; Break }
-				1001 { $xAction = "Delete AuthGroup"; Break }
-				1002 { $xAction = "Delete Collection"; Break }
-				1003 { $xAction = "Delete Device"; Break }
-				1004 { $xAction = "Delete DeviceDiskCacheFile"; Break }
-				1005 { $xAction = "Delete DiskLocator"; Break }
-				1006 { $xAction = "Delete FarmView"; Break }
-				1007 { $xAction = "Delete Server"; Break }
-				1008 { $xAction = "Delete ServerStore"; Break }
-				1009 { $xAction = "Delete Site"; Break }
-				1010 { $xAction = "Delete SiteView"; Break }
-				1011 { $xAction = "Delete Store"; Break }
-				1012 { $xAction = "Delete UserGroup"; Break }
-				1013 { $xAction = "Delete VirtualHostingPool"; Break }
-				1014 { $xAction = "Delete UpdateTask"; Break }
-				1015 { $xAction = "Delete DiskUpdateDevice"; Break }
-				1016 { $xAction = "Delete DiskVersion"; Break }
-				2001 { $xAction = "Run AddDeviceToDomain"; Break }
-				2002 { $xAction = "Run ApplyAutoUpdate"; Break }
-				2003 { $xAction = "Run ApplyIncrementalUpdate"; Break }
-				2004 { $xAction = "Run ArchiveAuditTrail"; Break }
-				2005 { $xAction = "Run AssignAuthGroup"; Break }
-				2006 { $xAction = "Run AssignDevice"; Break }
-				2007 { $xAction = "Run AssignDiskLocator"; Break }
-				2008 { $xAction = "Run AssignServer"; Break }
-				2009 { $xAction = "Run WithReturnBoot"; Break }
-				2010 { $xAction = "Run CopyPasteDevice"; Break }
-				2011 { $xAction = "Run CopyPasteDisk"; Break }
-				2012 { $xAction = "Run CopyPasteServer"; Break }
-				2013 { $xAction = "Run CreateDirectory"; Break }
-				2014 { $xAction = "Run CreateDiskCancel"; Break }
-				2015 { $xAction = "Run DisableCollection"; Break }
-				2016 { $xAction = "Run DisableDevice"; Break }
-				2017 { $xAction = "Run DisableDeviceDiskLocator"; Break }
-				2018 { $xAction = "Run DisableDiskLocator"; Break }
-				2019 { $xAction = "Run DisableUserGroup"; Break }
-				2020 { $xAction = "Run DisableUserGroupDiskLocator"; Break }
-				2021 { $xAction = "Run WithReturnDisplayMessage"; Break }
-				2022 { $xAction = "Run EnableCollection"; Break }
-				2023 { $xAction = "Run EnableDevice"; Break }
-				2024 { $xAction = "Run EnableDeviceDiskLocator"; Break }
-				2025 { $xAction = "Run EnableDiskLocator"; Break }
-				2026 { $xAction = "Run EnableUserGroup"; Break }
-				2027 { $xAction = "Run EnableUserGroupDiskLocator"; Break }
-				2028 { $xAction = "Run ExportOemLicenses"; Break }
-				2029 { $xAction = "Run ImportDatabase"; Break }
-				2030 { $xAction = "Run ImportDevices"; Break }
-				2031 { $xAction = "Run ImportOemLicenses"; Break }
-				2032 { $xAction = "Run MarkDown"; Break }
-				2033 { $xAction = "Run WithReturnReboot"; Break }
-				2034 { $xAction = "Run RemoveAuthGroup"; Break }
-				2035 { $xAction = "Run RemoveDevice"; Break }
-				2036 { $xAction = "Run RemoveDeviceFromDomain"; Break }
-				2037 { $xAction = "Run RemoveDirectory"; Break }
-				2038 { $xAction = "Run RemoveDiskLocator"; Break }
-				2039 { $xAction = "Run ResetDeviceForDomain"; Break }
-				2040 { $xAction = "Run ResetDatabaseConnection"; Break }
-				2041 { $xAction = "Run Restart StreamingService"; Break }
-				2042 { $xAction = "Run WithReturnShutdown"; Break }
-				2043 { $xAction = "Run StartStreamingService"; Break }
-				2044 { $xAction = "Run StopStreamingService"; Break }
-				2045 { $xAction = "Run UnlockAllDisk"; Break }
-				2046 { $xAction = "Run UnlockDisk"; Break }
-				2047 { $xAction = "Run ServerStoreVolumeAccess"; Break }
-				2048 { $xAction = "Run ServerStoreVolumeMode"; Break }
-				2049 { $xAction = "Run MergeDisk"; Break }
-				2050 { $xAction = "Run RevertDiskVersion"; Break }
-				2051 { $xAction = "Run PromoteDiskVersion"; Break }
-				2052 { $xAction = "Run CancelDiskMaintenance"; Break }
-				2053 { $xAction = "Run ActivateDevice"; Break }
-				2054 { $xAction = "Run AddDiskVersion"; Break }
-				2055 { $xAction = "Run ExportDisk"; Break }
-				2056 { $xAction = "Run AssignDisk"; Break }
-				2057 { $xAction = "Run RemoveDisk"; Break }
-				2058 { $xAction = "Run DiskUpdateStart"; Break }
-				2059 { $xAction = "Run DiskUpdateCancel"; Break }
-				2060 { $xAction = "Run SetOverrideVersion"; Break }
-				2061 { $xAction = "Run CancelTask"; Break }
-				2062 { $xAction = "Run ClearTask"; Break }
-				2063 { $xAction = "Run ForceInventory"; Break }
-				2064 { $xAction = "Run UpdateBDM"; Break }
-				2065 { $xAction = "Run StartDeviceDiskTempVersionMode"; Break }
-				2066 { $xAction = "Run StopDeviceDiskTempVersionMode"; Break }
-				3001 { $xAction = "Run WithReturnCreateDisk"; Break }
-				3002 { $xAction = "Run WithReturnCreateDiskStatus"; Break }
-				3003 { $xAction = "Run WithReturnMapDisk"; Break }
-				3004 { $xAction = "Run WithReturnRebalanceDevices"; Break }
-				3005 { $xAction = "Run WithReturnCreateMaintenanceVersion"; Break }
-				3006 { $xAction = "Run WithReturnImportDisk"; Break }
-				4001 { $xAction = "Run ByteArrayInputImportDevices"; Break }
-				4002 { $xAction = "Run ByteArrayInputImportOemLicenses"; Break }
-				5001 { $xAction = "Run ByteArrayOutputArchiveAuditTrail"; Break }
-				5002 { $xAction = "Run ByteArrayOutputExportOemLicenses"; Break }
-				6001 { $xAction = "Set AuthGroup"; Break }
-				6002 { $xAction = "Set Collection"; Break }
-				6003 { $xAction = "Set Device"; Break }
-				6004 { $xAction = "Set Disk"; Break }
-				6005 { $xAction = "Set DiskLocator"; Break }
-				6006 { $xAction = "Set Farm"; Break }
-				6007 { $xAction = "Set FarmView"; Break }
-				6008 { $xAction = "Set Server"; Break }
-				6009 { $xAction = "Set ServerBiosBootstrap"; Break }
-				6010 { $xAction = "Set ServerBootstrap"; Break }
-				6011 { $xAction = "Set ServerStore"; Break }
-				6012 { $xAction = "Set Site"; Break }
-				6013 { $xAction = "Set SiteView"; Break }
-				6014 { $xAction = "Set Store"; Break }
-				6015 { $xAction = "Set UserGroup"; Break }
-				6016 { $xAction = "Set VirtualHostingPool"; Break }
-				6017 { $xAction = "Set UpdateTask"; Break }
-				6018 { $xAction = "Set DiskUpdateDevice"; Break }
-				7001 { $xAction = "Set ListDeviceBootstraps"; Break }
-				7002 { $xAction = "Set ListDeviceBootstraps Delete"; Break }
-				7003 { $xAction = "Set ListDeviceBootstraps Add"; Break }
-				7004 { $xAction = "Set ListDeviceCustomProperty"; Break }
-				7005 { $xAction = "Set ListDeviceCustomPropertyDelete"; Break }
-				7006 { $xAction = "Set ListDeviceCustomPropertyAdd"; Break }
-				7007 { $xAction = "Set ListDeviceDiskPrinters"; Break }
-				7008 { $xAction = "Set ListDeviceDiskPrintersDelete"; Break }
-				7009 { $xAction = "Set ListDeviceDiskPrintersAdd"; Break }
-				7010 { $xAction = "Set ListDevicePersonality"; Break }
-				7011 { $xAction = "Set ListDevicePersonalityDelete"; Break }
-				7012 { $xAction = "Set ListDevicePersonalityAdd"; Break }
-				7013 { $xAction = "Set ListDiskLocatorCustomProperty"; Break }
-				7014 { $xAction = "Set ListDiskLocatorCustomPropertyDelete"; Break }
-				7015 { $xAction = "Set ListDiskLocatorCustomPropertyAdd"; Break }
-				7016 { $xAction = "Set ListServerCustomProperty"; Break }
-				7017 { $xAction = "Set ListServerCustomPropertyDelete"; Break }
-				7018 { $xAction = "Set ListServerCustomPropertyAdd"; Break }
-				7019 { $xAction = "Set ListUserGroupCustomProperty"; Break }
-				7020 { $xAction = "Set ListUserGroupCustomPropertyDelete"; Break }
-				7021 { $xAction = "Set ListUserGroupCustomPropertyAdd"; Break }				
+				1 		{ $xAction = "Add AuthGroup"; Break }
+				2 		{ $xAction = "Add Collection"; Break }
+				3 		{ $xAction = "Add Device"; Break }
+				4 		{ $xAction = "Add DiskLocator"; Break }
+				5 		{ $xAction = "Add FarmView"; Break }
+				6 		{ $xAction = "Add Server"; Break }
+				7 		{ $xAction = "Add Site"; Break }
+				8 		{ $xAction = "Add SiteView"; Break }
+				9 		{ $xAction = "Add Store"; Break }
+				10 		{ $xAction = "Add UserGroup"; Break }
+				11 		{ $xAction = "Add VirtualHostingPool"; Break }
+				12 		{ $xAction = "Add UpdateTask"; Break }
+				13 		{ $xAction = "Add DiskUpdateDevice"; Break }
+				1001 	{ $xAction = "Delete AuthGroup"; Break }
+				1002 	{ $xAction = "Delete Collection"; Break }
+				1003 	{ $xAction = "Delete Device"; Break }
+				1004 	{ $xAction = "Delete DeviceDiskCacheFile"; Break }
+				1005 	{ $xAction = "Delete DiskLocator"; Break }
+				1006 	{ $xAction = "Delete FarmView"; Break }
+				1007 	{ $xAction = "Delete Server"; Break }
+				1008 	{ $xAction = "Delete ServerStore"; Break }
+				1009 	{ $xAction = "Delete Site"; Break }
+				1010 	{ $xAction = "Delete SiteView"; Break }
+				1011 	{ $xAction = "Delete Store"; Break }
+				1012 	{ $xAction = "Delete UserGroup"; Break }
+				1013 	{ $xAction = "Delete VirtualHostingPool"; Break }
+				1014 	{ $xAction = "Delete UpdateTask"; Break }
+				1015 	{ $xAction = "Delete DiskUpdateDevice"; Break }
+				1016 	{ $xAction = "Delete DiskVersion"; Break }
+				2001 	{ $xAction = "Run AddDeviceToDomain"; Break }
+				2002 	{ $xAction = "Run ApplyAutoUpdate"; Break }
+				2003 	{ $xAction = "Run ApplyIncrementalUpdate"; Break }
+				2004 	{ $xAction = "Run ArchiveAuditTrail"; Break }
+				2005 	{ $xAction = "Run AssignAuthGroup"; Break }
+				2006 	{ $xAction = "Run AssignDevice"; Break }
+				2007 	{ $xAction = "Run AssignDiskLocator"; Break }
+				2008 	{ $xAction = "Run AssignServer"; Break }
+				2009 	{ $xAction = "Run WithReturnBoot"; Break }
+				2010 	{ $xAction = "Run CopyPasteDevice"; Break }
+				2011 	{ $xAction = "Run CopyPasteDisk"; Break }
+				2012 	{ $xAction = "Run CopyPasteServer"; Break }
+				2013 	{ $xAction = "Run CreateDirectory"; Break }
+				2014 	{ $xAction = "Run CreateDiskCancel"; Break }
+				2015 	{ $xAction = "Run DisableCollection"; Break }
+				2016 	{ $xAction = "Run DisableDevice"; Break }
+				2017 	{ $xAction = "Run DisableDeviceDiskLocator"; Break }
+				2018 	{ $xAction = "Run DisableDiskLocator"; Break }
+				2019 	{ $xAction = "Run DisableUserGroup"; Break }
+				2020 	{ $xAction = "Run DisableUserGroupDiskLocator"; Break }
+				2021 	{ $xAction = "Run WithReturnDisplayMessage"; Break }
+				2022 	{ $xAction = "Run EnableCollection"; Break }
+				2023 	{ $xAction = "Run EnableDevice"; Break }
+				2024 	{ $xAction = "Run EnableDeviceDiskLocator"; Break }
+				2025 	{ $xAction = "Run EnableDiskLocator"; Break }
+				2026 	{ $xAction = "Run EnableUserGroup"; Break }
+				2027 	{ $xAction = "Run EnableUserGroupDiskLocator"; Break }
+				2028 	{ $xAction = "Run ExportOemLicenses"; Break }
+				2029 	{ $xAction = "Run ImportDatabase"; Break }
+				2030 	{ $xAction = "Run ImportDevices"; Break }
+				2031 	{ $xAction = "Run ImportOemLicenses"; Break }
+				2032 	{ $xAction = "Run MarkDown"; Break }
+				2033 	{ $xAction = "Run WithReturnReboot"; Break }
+				2034 	{ $xAction = "Run RemoveAuthGroup"; Break }
+				2035 	{ $xAction = "Run RemoveDevice"; Break }
+				2036 	{ $xAction = "Run RemoveDeviceFromDomain"; Break }
+				2037 	{ $xAction = "Run RemoveDirectory"; Break }
+				2038 	{ $xAction = "Run RemoveDiskLocator"; Break }
+				2039 	{ $xAction = "Run ResetDeviceForDomain"; Break }
+				2040 	{ $xAction = "Run ResetDatabaseConnection"; Break }
+				2041 	{ $xAction = "Run Restart StreamingService"; Break }
+				2042 	{ $xAction = "Run WithReturnShutdown"; Break }
+				2043 	{ $xAction = "Run StartStreamingService"; Break }
+				2044 	{ $xAction = "Run StopStreamingService"; Break }
+				2045 	{ $xAction = "Run UnlockAllDisk"; Break }
+				2046 	{ $xAction = "Run UnlockDisk"; Break }
+				2047 	{ $xAction = "Run ServerStoreVolumeAccess"; Break }
+				2048 	{ $xAction = "Run ServerStoreVolumeMode"; Break }
+				2049 	{ $xAction = "Run MergeDisk"; Break }
+				2050 	{ $xAction = "Run RevertDiskVersion"; Break }
+				2051 	{ $xAction = "Run PromoteDiskVersion"; Break }
+				2052 	{ $xAction = "Run CancelDiskMaintenance"; Break }
+				2053 	{ $xAction = "Run ActivateDevice"; Break }
+				2054 	{ $xAction = "Run AddDiskVersion"; Break }
+				2055 	{ $xAction = "Run ExportDisk"; Break }
+				2056 	{ $xAction = "Run AssignDisk"; Break }
+				2057 	{ $xAction = "Run RemoveDisk"; Break }
+				2058 	{ $xAction = "Run DiskUpdateStart"; Break }
+				2059 	{ $xAction = "Run DiskUpdateCancel"; Break }
+				2060 	{ $xAction = "Run SetOverrideVersion"; Break }
+				2061 	{ $xAction = "Run CancelTask"; Break }
+				2062 	{ $xAction = "Run ClearTask"; Break }
+				2063 	{ $xAction = "Run ForceInventory"; Break }
+				2064 	{ $xAction = "Run UpdateBDM"; Break }
+				2065 	{ $xAction = "Run StartDeviceDiskTempVersionMode"; Break }
+				2066 	{ $xAction = "Run StopDeviceDiskTempVersionMode"; Break }
+				3001 	{ $xAction = "Run WithReturnCreateDisk"; Break }
+				3002 	{ $xAction = "Run WithReturnCreateDiskStatus"; Break }
+				3003 	{ $xAction = "Run WithReturnMapDisk"; Break }
+				3004 	{ $xAction = "Run WithReturnRebalanceDevices"; Break }
+				3005 	{ $xAction = "Run WithReturnCreateMaintenanceVersion"; Break }
+				3006 	{ $xAction = "Run WithReturnImportDisk"; Break }
+				4001 	{ $xAction = "Run ByteArrayInputImportDevices"; Break }
+				4002 	{ $xAction = "Run ByteArrayInputImportOemLicenses"; Break }
+				5001 	{ $xAction = "Run ByteArrayOutputArchiveAuditTrail"; Break }
+				5002	{ $xAction = "Run ByteArrayOutputExportOemLicenses"; Break }
+				6001	{ $xAction = "Set AuthGroup"; Break }
+				6002 	{ $xAction = "Set Collection"; Break }
+				6003 	{ $xAction = "Set Device"; Break }
+				6004 	{ $xAction = "Set Disk"; Break }
+				6005 	{ $xAction = "Set DiskLocator"; Break }
+				6006 	{ $xAction = "Set Farm"; Break }
+				6007 	{ $xAction = "Set FarmView"; Break }
+				6008 	{ $xAction = "Set Server"; Break }
+				6009 	{ $xAction = "Set ServerBiosBootstrap"; Break }
+				6010 	{ $xAction = "Set ServerBootstrap"; Break }
+				6011 	{ $xAction = "Set ServerStore"; Break }
+				6012 	{ $xAction = "Set Site"; Break }
+				6013 	{ $xAction = "Set SiteView"; Break }
+				6014 	{ $xAction = "Set Store"; Break }
+				6015	{ $xAction = "Set UserGroup"; Break }
+				6016 	{ $xAction = "Set VirtualHostingPool"; Break }
+				6017 	{ $xAction = "Set UpdateTask"; Break }
+				6018 	{ $xAction = "Set DiskUpdateDevice"; Break }
+				7001 	{ $xAction = "Set ListDeviceBootstraps"; Break }
+				7002 	{ $xAction = "Set ListDeviceBootstraps Delete"; Break }
+				7003 	{ $xAction = "Set ListDeviceBootstraps Add"; Break }
+				7004 	{ $xAction = "Set ListDeviceCustomProperty"; Break }
+				7005 	{ $xAction = "Set ListDeviceCustomPropertyDelete"; Break }
+				7006 	{ $xAction = "Set ListDeviceCustomPropertyAdd"; Break }
+				7007 	{ $xAction = "Set ListDeviceDiskPrinters"; Break }
+				7008 	{ $xAction = "Set ListDeviceDiskPrintersDelete"; Break }
+				7009 	{ $xAction = "Set ListDeviceDiskPrintersAdd"; Break }
+				7010 	{ $xAction = "Set ListDevicePersonality"; Break }
+				7011 	{ $xAction = "Set ListDevicePersonalityDelete"; Break }
+				7012 	{ $xAction = "Set ListDevicePersonalityAdd"; Break }
+				7013 	{ $xAction = "Set ListDiskLocatorCustomProperty"; Break }
+				7014 	{ $xAction = "Set ListDiskLocatorCustomPropertyDelete"; Break }
+				7015 	{ $xAction = "Set ListDiskLocatorCustomPropertyAdd"; Break }
+				7016 	{ $xAction = "Set ListServerCustomProperty"; Break }
+				7017 	{ $xAction = "Set ListServerCustomPropertyDelete"; Break }
+				7018 	{ $xAction = "Set ListServerCustomPropertyAdd"; Break }
+				7019	{ $xAction = "Set ListUserGroupCustomProperty"; Break }
+				7020 	{ $xAction = "Set ListUserGroupCustomPropertyDelete"; Break }
+				7021 	{ $xAction = "Set ListUserGroupCustomPropertyAdd"; Break }				
 				Default {$xAction = "Unknown"; Break }
 			}
 			$xType = ""
 			Switch ($Audit.type)
 			{
-				0 {$xType = "Many"; Break }
-				1 {$xType = "AuthGroup"; Break }
-				2 {$xType = "Collection"; Break }
-				3 {$xType = "Device"; Break }
-				4 {$xType = "Disk"; Break }
-				5 {$xType = "DiskLocator"; Break }
-				6 {$xType = "Farm"; Break }
-				7 {$xType = "FarmView"; Break }
-				8 {$xType = "Server"; Break }
-				9 {$xType = "Site"; Break }
-				10 {$xType = "SiteView"; Break }
-				11 {$xType = "Store"; Break }
-				12 {$xType = "System"; Break }
-				13 {$xType = "UserGroup"; Break }
+				0 		{$xType = "Many"; Break }
+				1 		{$xType = "AuthGroup"; Break }
+				2 		{$xType = "Collection"; Break }
+				3 		{$xType = "Device"; Break }
+				4 		{$xType = "Disk"; Break }
+				5 		{$xType = "DiskLocator"; Break }
+				6 		{$xType = "Farm"; Break }
+				7 		{$xType = "FarmView"; Break }
+				8 		{$xType = "Server"; Break }
+				9 		{$xType = "Site"; Break }
+				10 		{$xType = "SiteView"; Break }
+				11 		{$xType = "Store"; Break }
+				12 		{$xType = "System"; Break }
+				13 		{$xType = "UserGroup"; Break }
 				Default { {$xType = "Undefined"; Break }}
 			}
 			If($MSWord -or $PDF)
@@ -5551,7 +5572,6 @@ Function OutputauthGroupUsages
 #endregion
 
 #region pvs farm data
-
 Function ProcessFarm
 {
 	[bool]$Script:FarmAutoAddEnabled = $False
@@ -5614,9 +5634,9 @@ Function OutputFarm
 	$xmergeMode = ""
 	Switch ($Farm.mergeMode)
 	{
-		0   {$xmergeMode = "Production"; Break}
-		1   {$xmergeMode = "Test"; Break}
-		2   {$xmergeMode = "Maintenance"; Break}
+		0   	{$xmergeMode = "Production"; Break}
+		1   	{$xmergeMode = "Test"; Break}
+		2   	{$xmergeMode = "Maintenance"; Break}
 		Default {$xmergeMode = "Default access mode could not be determined: $($Farm.mergeMode)"; Break}
 	}
 	$xadGroupsEnabled = ""
@@ -5641,6 +5661,7 @@ Function OutputFarm
 		{
 			$ScriptInformation += @{ Data = "Description"; Value = $farm.description; }
 		}
+		$ScriptInformation += @{ Data = "PVS Version"; Value = $Script:version; }
 		$Table = AddWordTable -Hashtable $ScriptInformation `
 		-Columns Data,Value `
 		-List `
@@ -5666,6 +5687,7 @@ Function OutputFarm
 		{
 			Line 1 "Description`t: " $farm.description
 		}
+		Line 1 "PVS Version`t: " $Script:version
 	}
 	ElseIf($HTML)
 	{
@@ -5678,6 +5700,7 @@ Function OutputFarm
 		{
 			$rowdata += @(,('Description',($htmlsilver -bor $htmlbold),$farm.description,$htmlwhite))
 		}
+		$rowdata += @(,('PVS Version',($htmlsilver -bor $htmlbold),$Script:version,$htmlwhite))
 		
 		$msg = ""
 		FormatHTMLTable $msg "auto" -rowArray $rowdata -columnArray $columnHeaders
@@ -6706,7 +6729,6 @@ Function OutputSite
 						}
 						ElseIf($HTML)
 						{
-							#WriteHTMLLine 4 0 "Bootstrap file: " $ServerBootstrap.name
 							$rowdata = @()
 							If($ServerBootstrap.bootserver1_Ip -ne "0.0.0.0")
 							{
@@ -6896,7 +6918,6 @@ Function OutputSite
 						}
 						ElseIf($HTML)
 						{
-							#WriteHTMLLine 0 0 "Options"
 							$rowdata = @()
 							$columnHeaders = @("Verbose mode",($htmlsilver -bor $htmlbold),$verboseMode,$htmlwhite)
 							$rowdata += @(,('Interrupt safe mode',($htmlsilver -bor $htmlbold),$interruptSafeMode,$htmlwhite))
@@ -6964,14 +6985,14 @@ Function OutputSite
 				$accessMode = "Standard Image (multi-device, read-only access)"
 				Switch ($Disk.writeCacheType)
 				{
-					0   {$writeCacheType = "Private Image"; Break}
-					1   {$writeCacheType = "Cache on server"; Break}
-					3   {$writeCacheType = "Cache in device RAM"; Break}
-					4   {$writeCacheType = "Cache on device hard disk"; Break}
-					6   {$writeCacheType = "Device RAM Disk"; Break}
-					7   {$writeCacheType = "Cache on server persisted"; Break}
-					8   {$writeCacheType = "Cache on device hard drive persisted (NT 6.1 and later)"; Break}
-					9   {$writeCacheType = "Cache in device RAM with overflow on hard disk"; Break}
+					0   	{$writeCacheType = "Private Image"; Break}
+					1   	{$writeCacheType = "Cache on server"; Break}
+					3   	{$writeCacheType = "Cache in device RAM"; Break}
+					4   	{$writeCacheType = "Cache on device hard disk"; Break}
+					6   	{$writeCacheType = "Device RAM Disk"; Break}
+					7   	{$writeCacheType = "Cache on server persisted"; Break}
+					8   	{$writeCacheType = "Cache on device hard drive persisted (NT 6.1 and later)"; Break}
+					9   	{$writeCacheType = "Cache in device RAM with overflow on hard disk"; Break}
 					Default {$writeCacheType = "Cache type could not be determined: $($Disk.writeCacheType)"; Break}
 				}
 			}
@@ -7012,9 +7033,9 @@ Function OutputSite
 			}
 			Switch ($Disk.licenseMode)
 			{
-				0 {$licenseMode = "None"; Break}
-				1 {$licenseMode = "Multiple Activation Key (MAK)"; Break}
-				2 {$licenseMode = "Key Management Service (KMS)"; Break}
+				0 		{$licenseMode = "None"; Break}
+				1 		{$licenseMode = "Multiple Activation Key (MAK)"; Break}
+				2 		{$licenseMode = "Key Management Service (KMS)"; Break}
 				Default {$licenseMode = "Volume License Mode could not be determined: $($Disk.licenseMode)"; Break}
 			}
 			If($Disk.autoUpdateEnabled)
@@ -7116,7 +7137,6 @@ Function OutputSite
 			{
 				WriteHTMLLine 3 0 $Disk.diskLocatorName
 				WriteHTMLLine 4 0 "vDisk Properties"
-				#WriteHTMLLine 0 0 "General"
 				$rowdata = @()
 				$columnHeaders = @("Site",($htmlsilver -bor $htmlbold),$Disk.siteName,$htmlwhite)
 				$rowdata += @(,('Store',($htmlsilver -bor $htmlbold),$Disk.storeName,$htmlwhite))
@@ -7258,7 +7278,6 @@ Function OutputSite
 			}
 			ElseIf($HTML)
 			{
-				#WriteHTMLLine 0 0 "Identification"
 				$rowdata = @()
 				$columnHeaders = @()
 				If(![String]::IsNullOrEmpty($Disk.description))
@@ -7468,7 +7487,6 @@ Function OutputSite
 			}
 			ElseIf($HTML)
 			{
-				#WriteHTMLLine 0 0 "Auto Update"
 				$rowdata = @()
 				$columnHeaders = @("Enable automatic updates for the vDisk",($htmlsilver -bor $htmlbold),$autoUpdateEnabled,$htmlwhite)
 				If($Disk.autoUpdateEnabled)
@@ -7580,85 +7598,85 @@ Function OutputSite
 
 					Switch ($DiskVersion.access)
 					{
-						"0" {$access = "Production"; Break }
-						"1" {$access = "Maintenance"; Break }
-						"2" {$access = "Maintenance Highest Version"; Break }
-						"3" {$access = "Override"; Break }
-						"4" {$access = "Merge"; Break }
-						"5" {$access = "Merge Maintenance"; Break }
-						"6" {$access = "Merge Test"; Break }
-						"7" {$access = "Test"; Break }
+						"0" 	{$access = "Production"; Break }
+						"1" 	{$access = "Maintenance"; Break }
+						"2" 	{$access = "Maintenance Highest Version"; Break }
+						"3" 	{$access = "Override"; Break }
+						"4" 	{$access = "Merge"; Break }
+						"5" 	{$access = "Merge Maintenance"; Break }
+						"6" 	{$access = "Merge Test"; Break }
+						"7" 	{$access = "Test"; Break }
 						Default {$access = "Access could not be determined: $($DiskVersion.access)"; Break }
 					}
 
 					Switch ($DiskVersion.type)
 					{
-						"0" {$DiskVersionType = "Base"; Break }
-						"1" {$DiskVersionType = "Manual"; Break }
-						"2" {$DiskVersionType = "Automatic"; Break }
-						"3" {$DiskVersionType = "Merge"; Break }
-						"4" {$DiskVersionType = "Merge Base"; Break }
+						"0" 	{$DiskVersionType = "Base"; Break }
+						"1" 	{$DiskVersionType = "Manual"; Break }
+						"2" 	{$DiskVersionType = "Automatic"; Break }
+						"3" 	{$DiskVersionType = "Merge"; Break }
+						"4" 	{$DiskVersionType = "Merge Base"; Break }
 						Default {$DiskVersionType = "Type could not be determined: $($DiskVersion.type)"; Break }
 					}
 
 					Switch ($DiskVersion.canDelete)
 					{
-						$False {$canDelete = "No"; Break }
-						$True {$canDelete = "Yes"; Break }
+						$False	{$canDelete = "No"; Break }
+						$True	{$canDelete = "Yes"; Break }
 					}
 
 					Switch ($DiskVersion.canMerge)
 					{
-						$False {$canMerge = "No"; Break }
-						$True {$canMerge = "Yes"; Break }
+						$False	{$canMerge = "No"; Break }
+						$True	{$canMerge = "Yes"; Break }
 					}
 
 					Switch ($DiskVersion.canMergeBase)
 					{
-						$False {$canMergeBase = "No"; Break }
-						$True {$canMergeBase = "Yes"; Break }
+						$False	{$canMergeBase = "No"; Break }
+						$True	{$canMergeBase = "Yes"; Break }
 					}
 
 					Switch ($DiskVersion.canPromote)
 					{
-						$False {$canPromote = "No"; Break }
-						$True {$canPromote = "Yes"; Break }
+						$False	{$canPromote = "No"; Break }
+						$True	{$canPromote = "Yes"; Break }
 					}
 
 					Switch ($DiskVersion.canRevertTest)
 					{
-						$False {$canRevertTest = "No"; Break }
-						$true {$canRevertTest = "Yes"; Break }
+						$False	{$canRevertTest = "No"; Break }
+						$true	{$canRevertTest = "Yes"; Break }
 					}
 
 					Switch ($DiskVersion.canRevertMaintenance)
 					{
-						$False {$canRevertMaintenance = "No"; Break }
-						$True {$canRevertMaintenance = "Yes"; Break }
+						$False	{$canRevertMaintenance = "No"; Break }
+						$True	{$canRevertMaintenance = "Yes"; Break }
 					}
 
 					Switch ($DiskVersion.canSetScheduledDate)
 					{
-						$False {$canSetScheduledDate = "No"; Break }
-						$True {$canSetScheduledDate = "Yes"; Break }
+						$False	{$canSetScheduledDate = "No"; Break }
+						$True	{$canSetScheduledDate = "Yes"; Break }
 					}
 
 					Switch ($DiskVersion.canOverride)
 					{
-						$False {$canOverride = "No"; Break }
-						$True {$canOverride = "Yes"; Break }
+						$False	{$canOverride = "No"; Break }
+						$True	{$canOverride = "Yes"; Break }
 					}
 
 					Switch ($DiskVersion.isPending)
 					{
-						$False {$isPending = "No, version Scheduled Date has occurred"; Break }
-						$True {$isPending = "Yes, version Scheduled Date has not occurred"; Break }
+						$False	{$isPending = "No, version Scheduled Date has occurred"; Break }
+						$True	{$isPending = "Yes, version Scheduled Date has not occurred"; Break }
 					}
 
 					Switch ($DiskVersion.goodInventoryStatus)
 					{
-						$False {$goodInventoryStatus = "Not available on all servers"; Break }
-						$True {$goodInventoryStatus = "Available on all servers"; Break }
+						$False	{$goodInventoryStatus = "Not available on all servers"; Break }
+						$True	{$goodInventoryStatus = "Available on all servers"; Break }
 						Default {$goodInventoryStatus = "Replication status could not be determined: $($DiskVersion.goodInventoryStatus)"; Break }
 					}
 
@@ -7788,9 +7806,9 @@ Function OutputSite
 
 			Switch ($Disk.subnetAffinity)
 			{
-				0 {$subnetAffinity = "None"; Break}
-				1 {$subnetAffinity = "Best Effort"; Break}
-				2 {$subnetAffinity = "Fixed"; Break}
+				0 		{$subnetAffinity = "None"; Break}
+				1 		{$subnetAffinity = "Best Effort"; Break}
+				2 		{$subnetAffinity = "Fixed"; Break}
 				Default {$subnetAffinity = "Subnet Affinity could not be determined: $($Disk.subnetAffinity)"; Break}
 			}
 
@@ -7897,19 +7915,6 @@ Function OutputSite
 	
 	If($? -and $Tasks -ne $Null)
 	{
-		<#If($MSWORD -or $PDF)
-		{
-			WriteWordLine 0 1 "vDisks"
-		}
-		ElseIf($Text)
-		{
-			Line 1 "vDisks"
-		}
-		ElseIf($HTML)
-		{
-			WriteHTMLLine 0 1 "vDisks"
-		}#>
-		
 		#process all the Update Managed vDisks for this site
 		Write-Verbose "$(Get-Date): `t`t`tProcessing all Update Managed vDisks for this site"
 		$ManagedvDisks = Get-PvsdiskUpdateDevice -siteName $PVSSite.SiteName -EA 0 4>$Null
@@ -7950,9 +7955,6 @@ Function OutputSite
 
 					SetWordCellFormat -Collection $Table.Columns.Item(1).Cells -Bold -BackgroundColor $wdColorGray15;
 
-					#$Table.Columns.Item(1).Width = 250;
-					#$Table.Columns.Item(2).Width = 250;
-
 					$Table.Rows.SetLeftIndent($Indent0TabStops,$wdAdjustProportional)
 
 					FindWordDocumentEnd
@@ -7973,7 +7975,6 @@ Function OutputSite
 				ElseIf($HTML)
 				{
 					WriteHTMLLine 4 0 "$($ManagedvDisk.storeName)`\$($ManagedvDisk.disklocatorName)"
-					#WriteHTMLLine 0 0 "General"
 					$rowdata = @()
 					$columnHeaders = @("vDisk",($htmlsilver -bor $htmlbold),"$($ManagedvDisk.storeName)`\$($ManagedvDisk.disklocatorName)",$htmlwhite)
 					$rowdata += @(,('Virtual Host Connection',($htmlsilver -bor $htmlbold),$ManagedvDisk.virtualHostingPoolName,$htmlwhite))
@@ -8031,7 +8032,6 @@ Function OutputSite
 					}
 					ElseIf($HTML)
 					{
-						#WriteHTMLLine 3 0 "Personality"
 						ForEach($PersonalityString in $PersonalityStrings.DevicePersonality)
 						{
 							$rowdata = @()
@@ -8093,12 +8093,12 @@ Function OutputSite
 				
 				Switch ($Task.recurrence)
 				{
-					0 {$xTaskRecurrence = "None"; Break}
-					1 {$xTaskRecurrence = "Daily Everyday"; Break}
-					2 {$xTaskRecurrence = "Daily Weekdays only"; Break}
-					3 {$xTaskRecurrence = "Weekly"; Break}
-					4 {$xTaskRecurrence = "Monthly Date"; Break}
-					5 {$xTaskRecurrence = "Monthly Type"; Break}
+					0 		{$xTaskRecurrence = "None"; Break}
+					1 		{$xTaskRecurrence = "Daily Everyday"; Break}
+					2 		{$xTaskRecurrence = "Daily Weekdays only"; Break}
+					3 		{$xTaskRecurrence = "Weekly"; Break}
+					4 		{$xTaskRecurrence = "Monthly Date"; Break}
+					5 		{$xTaskRecurrence = "Monthly Type"; Break}
 					Default {$xTaskRecurrence = "Recurrence type could not be determined: $($Task.recurrence)"; Break}
 				}
 
@@ -8137,13 +8137,13 @@ Function OutputSite
 
 				If($Task.recurrence -eq 5)
 				{
-					Switch($Task.monthlyOffset)
+					Switch ($Task.monthlyOffset)
 					{
-						1 {$xTaskmonthlyOffset = "First "; Break }
-						2 {$xTaskmonthlyOffset = "Second "; Break }
-						3 {$xTaskmonthlyOffset = "Third "; Break }
-						4 {$xTaskmonthlyOffset = "Fourth "; Break }
-						5 {$xTaskmonthlyOffset = "Last "; Break }
+						1 		{$xTaskmonthlyOffset = "First "; Break }
+						2 		{$xTaskmonthlyOffset = "Second "; Break }
+						3 		{$xTaskmonthlyOffset = "Third "; Break }
+						4 		{$xTaskmonthlyOffset = "Fourth "; Break }
+						5 		{$xTaskmonthlyOffset = "Last "; Break }
 						Default {$xTaskmonthlyOffset = "Monthly Offset could not be determined: $($Task.monthlyOffset)"; Break }
 					}
 				}
@@ -8157,19 +8157,19 @@ Function OutputSite
 					32 = "Friday";
 					64 = "Saturday" }
 
-				Switch($Task.esdType)
+				Switch ($Task.esdType)
 				{
-					""     {$xTaskesdType = "None (runs a custom script on the client)"; Break }
-					"WSUS" {$xTaskesdType = "Microsoft Windows Update Service (WSUS)"; Break }
-					"SCCM" {$xTaskesdType = "Microsoft System Center Configuration Manager (SCCM)"; Break }
+					""     	{$xTaskesdType = "None (runs a custom script on the client)"; Break }
+					"WSUS" 	{$xTaskesdType = "Microsoft Windows Update Service (WSUS)"; Break }
+					"SCCM" 	{$xTaskesdType = "Microsoft System Center Configuration Manager (SCCM)"; Break }
 					Default {$xTaskesdType = "ESD Client could not be determined: $($Task.esdType)"; Break }
 				}
 
-				Switch($Task.postUpdateApprove)
+				Switch ($Task.postUpdateApprove)
 				{
-					0 {$xTaskpostUpdateApprove = "Production"; Break }
-					1 {$xTaskpostUpdateApprove = "Test"; Break }
-					2 {$xTaskpostUpdateApprove = "Maintenance"; Break }
+					0 		{$xTaskpostUpdateApprove = "Production"; Break }
+					1 		{$xTaskpostUpdateApprove = "Test"; Break }
+					2 		{$xTaskpostUpdateApprove = "Maintenance"; Break }
 					Default {$xTaskpostUpdateApprove = "Access method for vDisk could not be determined: $($Task.postUpdateApprove)"; Break }
 				}
 
@@ -8190,9 +8190,6 @@ Function OutputSite
 
 					SetWordCellFormat -Collection $Table.Columns.Item(1).Cells -Bold -BackgroundColor $wdColorGray15;
 
-					#$Table.Columns.Item(1).Width = 250;
-					#$Table.Columns.Item(2).Width = 250;
-
 					$Table.Rows.SetLeftIndent($Indent0TabStops,$wdAdjustProportional)
 
 					FindWordDocumentEnd
@@ -8210,7 +8207,6 @@ Function OutputSite
 				ElseIf($HTML)
 				{
 					WriteHTMLLine 3 0 "Tasks"
-					#WriteHTMLLine 0 2 "General"
 					$rowdata = @()
 					$columnHeaders = @("Name",($htmlsilver -bor $htmlbold),$Task.updateTaskName,$htmlwhite)
 					$rowdata += @(,('Description',($htmlsilver -bor $htmlbold),$Task.description,$htmlwhite))
@@ -8353,10 +8349,7 @@ Function OutputSite
 					{
 						Line 3 "vDisks to be updated by this task:"
 					}
-					ElseIf($HTML)
-					{
-						#WriteHTMLLine 0 3 "vDisks to be updated by this task:"
-					}
+
 					ForEach($vDisk in $vDisks)
 					{
 						If($MSWord -or $PDF)
@@ -8372,9 +8365,6 @@ Function OutputSite
 							-AutoFit $wdAutoFitContent;
 
 							SetWordCellFormat -Collection $Table.Columns.Item(1).Cells -Bold -BackgroundColor $wdColorGray15;
-
-							#$Table.Columns.Item(1).Width = 250;
-							#$Table.Columns.Item(2).Width = 250;
 
 							$Table.Rows.SetLeftIndent($Indent0TabStops,$wdAdjustProportional)
 
@@ -8428,9 +8418,6 @@ Function OutputSite
 
 					SetWordCellFormat -Collection $Table.Columns.Item(1).Cells -Bold -BackgroundColor $wdColorGray15;
 
-					#$Table.Columns.Item(1).Width = 250;
-					#$Table.Columns.Item(2).Width = 250;
-
 					$Table.Rows.SetLeftIndent($Indent0TabStops,$wdAdjustProportional)
 
 					FindWordDocumentEnd
@@ -8444,7 +8431,6 @@ Function OutputSite
 				}
 				ElseIf($HTML)
 				{
-					#WriteHTMLLine 0 2 "ESD"
 					$rowdata = @()
 					$columnHeaders = @("ESD client to use",($htmlsilver -bor $htmlbold),$xTaskesdType,$htmlwhite)
 
@@ -8474,9 +8460,6 @@ Function OutputSite
 
 						SetWordCellFormat -Collection $Table.Columns.Item(1).Cells -Bold -BackgroundColor $wdColorGray15;
 
-						#$Table.Columns.Item(1).Width = 250;
-						#$Table.Columns.Item(2).Width = 250;
-
 						$Table.Rows.SetLeftIndent($Indent0TabStops,$wdAdjustProportional)
 
 						FindWordDocumentEnd
@@ -8495,7 +8478,6 @@ Function OutputSite
 					}
 					ElseIf($HTML)
 					{
-						#WriteHTMLLine 0 2 "Scripts"
 						$rowdata = @()
 						$columnHeaders = @("Scripts that execute with the vDisk update processing",($htmlsilver -bor $htmlbold),"",$htmlwhite)
 						$rowdata += @(,('     Pre-update script',($htmlsilver -bor $htmlbold),$Task.preUpdateScript,$htmlwhite))
@@ -8524,9 +8506,6 @@ Function OutputSite
 
 					SetWordCellFormat -Collection $Table.Columns.Item(1).Cells -Bold -BackgroundColor $wdColorGray15;
 
-					#$Table.Columns.Item(1).Width = 250;
-					#$Table.Columns.Item(2).Width = 250;
-
 					$Table.Rows.SetLeftIndent($Indent0TabStops,$wdAdjustProportional)
 
 					FindWordDocumentEnd
@@ -8540,7 +8519,6 @@ Function OutputSite
 				}
 				ElseIf($HTML)
 				{
-					#WriteHTMLLine 0 2 "Access"
 					$rowdata = @()
 					$columnHeaders = @("Upon successful completion, access assigned to the vDisk",($htmlsilver -bor $htmlbold),$xTaskpostUpdateApprove,$htmlwhite)
 
@@ -8617,7 +8595,6 @@ Function OutputSite
 			ElseIf($HTML)
 			{
 				WriteHTMLLine 3 0 $Collection.collectionName
-				#WriteHTMLLine 0 0 "General"
 				$rowdata = @()
 				$columnHeaders = @("Name",($htmlsilver -bor $htmlbold),$Collection.collectionName,$htmlwhite)
 				$rowdata += @(,('Description',($htmlsilver -bor $htmlbold),$Collection.description,$htmlwhite))
@@ -8738,10 +8715,7 @@ Function OutputSite
 			{
 				Line 2 "Auto-Add"
 			}
-			ElseIf($HTML)
-			{
-				#WriteHTMLLine 3 0 "Auto-Add"
-			}
+
 			If($Script:FarmAutoAddEnabled)
 			{
 				If($Collection.autoAddZeroFill)
@@ -8866,17 +8840,17 @@ Function OutputSite
 					{
 						Switch ($Device.type)
 						{
-							0 {$DeviceType = "Production"; Break }
-							1 {$DeviceType = "Test"; Break }
-							2 {$DeviceType = "Maintenance"; Break }
-							3 {$DeviceType = "Personal vDisk"; Break }
+							0 		{$DeviceType = "Production"; Break }
+							1 		{$DeviceType = "Test"; Break }
+							2 		{$DeviceType = "Maintenance"; Break }
+							3 		{$DeviceType = "Personal vDisk"; Break }
 							Default {$DeviceType = "Device type could not be determined: $($Device.type)"; Break }
 						}
 						Switch ($Device.bootFrom)
 						{
-							1 {$DeviceBootFrom = "vDisk"; Break }
-							2 {$DeviceBootFrom = "Hard Disk"; Break }
-							3 {$DeviceBootFrom = "Floppy Disk"; Break }
+							1 		{$DeviceBootFrom = "vDisk"; Break }
+							2 		{$DeviceBootFrom = "Hard Disk"; Break }
+							3 		{$DeviceBootFrom = "Floppy Disk"; Break }
 							Default {$DeviceBootFrom = "Boot from could not be determined: $($Device.bootFrom)"; Break }
 						}
 						If($Device.enabled)
@@ -8896,11 +8870,11 @@ Function OutputSite
 					{
 						$DevicelocalDiskEnabled = "No"
 					}
-					Switch($Device.authentication)
+					Switch ($Device.authentication)
 					{
-						0 {$DeviceAuthentication = "None"; Break }
-						1 {$DeviceAuthentication = "Username and password"; Break }
-						2 {$DeviceAuthentication = "External verification (User supplied method)"; Break }
+						0 		{$DeviceAuthentication = "None"; Break }
+						1 		{$DeviceAuthentication = "Username and password"; Break }
+						2 		{$DeviceAuthentication = "External verification (User supplied method)"; Break }
 						Default {$DeviceAuthentication = "Authentication type could not be determined: $($Device.authentication)"; Break }
 					}
 
@@ -8984,7 +8958,6 @@ Function OutputSite
 					}
 					ElseIf($HTML)
 					{
-						#WriteHTMLLine 3 0 "General"
 						$rowdata = @()
 						$columnHeaders = @("Name",($htmlsilver -bor $htmlbold),$Device.deviceName,$htmlwhite)
 						$rowdata += @(,('Description',($htmlsilver -bor $htmlbold),$Device.deviceName,$htmlwhite))
@@ -9028,15 +9001,11 @@ Function OutputSite
 					{
 						Line 0 "vDisks"
 					}
-					ElseIf($HTML)
-					{
-						#WriteHTMLLine 3 0 "vDisks"
-					}
+
 					#process all vdisks for this device
 					$vDisks = Get-PvsDiskInfo -deviceName $Device.deviceName -EA 0 4>$Null
 					If($? -and $vDisks -ne $Null)
 					{
-						#WriteWordLine 0 3 "Name: "
 						$vDiskArray = @()
 						ForEach($vDisk in $vDisks)
 						{
@@ -9240,9 +9209,6 @@ Function OutputSite
 
 						SetWordCellFormat -Collection $Table.Columns.Item(1).Cells -Bold -BackgroundColor $wdColorGray15;
 
-						#$Table.Columns.Item(1).Width = 250;
-						#$Table.Columns.Item(2).Width = 250;
-
 						$Table.Rows.SetLeftIndent($Indent0TabStops,$wdAdjustProportional)
 
 						FindWordDocumentEnd
@@ -9294,9 +9260,6 @@ Function OutputSite
 								-AutoFit $wdAutoFitContent;
 
 								SetWordCellFormat -Collection $Table.Columns.Item(1).Cells -Bold -BackgroundColor $wdColorGray15;
-
-								#$Table.Columns.Item(1).Width = 250;
-								#$Table.Columns.Item(2).Width = 250;
 
 								$Table.Rows.SetLeftIndent($Indent0TabStops,$wdAdjustProportional)
 
@@ -9355,7 +9318,6 @@ Function OutputSite
 				$txt = "Unable to retrieve devices"
 				OutputWarning $txt
 			}
-
 		}
 	}
 	ElseIf($? -and $Null -eq $Collections)
@@ -9368,7 +9330,6 @@ Function OutputSite
 		$txt = "Unable to retrieve Device Collections"
 		OutputWarning $txt
 	}	
-#>
 
 	#process all site views in site
 	Write-Verbose "$(Get-Date): `t`tProcessing all site views in site"
@@ -9434,7 +9395,6 @@ Function OutputSite
 			{
 				WriteHTMLLine 3 0 $SiteView.siteViewName
 				WriteHTMLLine 4 0 "View Properties"
-				#WriteHTMLLine 0 0 "General"
 				$rowdata = @()
 				$columnHeaders = @("Name",($htmlsilver -bor $htmlbold),$SiteView.siteViewName,$htmlwhite)
 				If(![String]::IsNullOrEmpty($SiteView.description))
@@ -9513,11 +9473,13 @@ Function OutputSite
 		{
 			Write-Verbose "$(Get-Date): `t`t`t`tProcessing virtual host $($vHost.virtualHostingPoolName)"
 			Write-Verbose "$(Get-Date): `t`t`t`t`tProcessing General Tab"
+			#26-Jun-2017 added 3 = Nutanix
 			Switch ($vHost.type)
 			{
-				0 {$vHostType = "Citrix XenServer"; Break}
-				1 {$vHostType = "Microsoft SCVMM/Hyper-V"; Break}
-				2 {$vHostType = "VMWare vSphere/ESX"; Break}
+				0 		{$vHostType = "Citrix XenServer"; Break}
+				1 		{$vHostType = "Microsoft SCVMM/Hyper-V"; Break}
+				2 		{$vHostType = "VMWare vSphere/ESX"; Break}
+				3 		{$vHostType = "Nutanix"; Break}
 				Default {$vHostType = "Virtualization Host type could not be determined: $($vHost.type)"; Break}
 			}
 
@@ -9617,7 +9579,6 @@ Function OutputSite
 			ElseIf($HTML)
 			{
 				WriteHTMLLine 3 0 $vHost.virtualHostingPoolName
-				#WriteHTMLLine 4 0 "General"
 				$rowdata = @()
 				$columnHeaders = @("Type",($htmlsilver -bor $htmlbold),$vHosttype,$htmlwhite)
 				$rowdata += @(,('Name',($htmlsilver -bor $htmlbold),$vHost.virtualHostingPoolName,$htmlwhite))
@@ -9645,7 +9606,6 @@ Function OutputSite
 				WriteHTMLLine 0 0 " "
 				
 				Write-Verbose "$(Get-Date): Processing vDisk Update Tab"
-				#WriteHTMLLine 4 0 "vDisk Update"
 				$rowdata = @()
 				$columnHeaders = @("Update limit",($htmlsilver -bor $htmlbold),$vHost.updateLimit.ToString(),$htmlwhite)
 				$rowdata += @(,('Update timeout',($htmlsilver -bor $htmlbold),"$($vHost.updateTimeout) minutes",$htmlwhite))
@@ -9797,7 +9757,6 @@ Function OutputServers
 		{
 			WriteHTMLLine 3 0 $Server.serverName
 			WriteHTMLLine 4 0 "Server Properties"
-			#WriteHTMLLine 0 0 "General"
 			$rowdata = @()
 			$columnHeaders = @("Name",($htmlsilver -bor $htmlbold),$Server.serverName,$htmlwhite)
 			If(![String]::IsNullOrEmpty($Server.description))
@@ -9866,7 +9825,6 @@ Function OutputServers
 		}
 		ElseIf($HTML)
 		{
-			#WriteHTMLLine 0 0 "Network"
 			$rowdata = @()
 			$columnHeaders = @("Streaming IP addresses",($htmlsilver -bor $htmlbold),"$($StreamingIPs[0])",$htmlwhite)
 			$cnt = -1
@@ -9907,7 +9865,6 @@ Function OutputServers
 			ElseIf($HTML)
 			{
 				WriteHTMLLine 3 0 "Stores"
-				#WriteHTMLLine 0 0 "Stores that this server supports:"
 			}
 			ForEach($store in $stores)
 			{
@@ -10050,7 +10007,6 @@ Function OutputServers
 		}
 		ElseIf($HTML)
 		{
-			#WriteHTMLLine 0 0 "Options"
 			$rowdata = @()
 			$columnHeaders = @("Active directory",($htmlsilver -bor $htmlbold),"",$htmlwhite)
 			$rowdata += @(,('     Automate computer account password updates',($htmlsilver -bor $htmlbold),$adMaxPasswordAgeEnabled,$htmlwhite))
@@ -10129,7 +10085,6 @@ Function OutputServers
 			}
 			ElseIf($HTML)
 			{
-				#WriteHTMLLine 0 0 "Problem Report"
 				$rowdata = @()
 				$columnHeaders = @("Most Recent Problem Report",($htmlsilver -bor $htmlbold),$CISDate,$htmlwhite)
 				$rowdata += @(,('Summary',($htmlsilver -bor $htmlbold),$CISSummary,$htmlwhite))
@@ -10207,7 +10162,6 @@ Function OutputServers
 		ElseIf($HTML)
 		{
 			WriteHTMLLine 3 0 "Advanced"
-			#WriteHTMLLine 0 0 "Server"
 			$rowdata = @()
 			$columnHeaders = @("Threads per port",($htmlsilver -bor $htmlbold),"$($Server.threadsPerPort)",$htmlwhite)
 			$rowdata += @(,('Buffers per thread',($htmlsilver -bor $htmlbold),$Server.buffersPerThread,$htmlwhite))
@@ -10252,7 +10206,6 @@ Function OutputServers
 		}
 		ElseIf($HTML)
 		{
-			#WriteHTMLLine 0 0 "Network"
 			$rowdata = @()
 			$columnHeaders = @("Ethernet MTU",($htmlsilver -bor $htmlbold),"$($Server.maxTransmissionUnits) (bytes)",$htmlwhite)
 			$rowdata += @(,('I/O burst size',($htmlsilver -bor $htmlbold),"$($Server.ioBurstSize) (KB)",$htmlwhite))
@@ -10297,7 +10250,6 @@ Function OutputServers
 		}
 		ElseIf($HTML)
 		{
-			#WriteHTMLLine 0 0 "Pacing"
 			$rowdata = @()
 			$columnHeaders = @("Boot pause seconds",($htmlsilver -bor $htmlbold),"$($Server.bootPauseSeconds)",$htmlwhite)
 			$rowdata += @(,('Maximum boot time',($htmlsilver -bor $htmlbold),"$($MaxBootTime) (minutes:seconds)",$htmlwhite))
@@ -10338,7 +10290,6 @@ Function OutputServers
 		}
 		ElseIf($HTML)
 		{
-			#WriteHTMLLine 0 0 "Device"
 			$rowdata = @()
 			$columnHeaders = @("License timeout",($htmlsilver -bor $htmlbold),"$($LicenseTimeout) (minutes:seconds)",$htmlwhite)
 
@@ -10446,7 +10397,6 @@ Function OutputFarmView
 	{
 		WriteHTMLLine 2 0 $FarmView.farmViewName
 		WriteHTMLLine 3 0 "View Properties"
-		#WriteHTMLLine 0 0 "General"
 		$rowdata = @()
 		$columnHeaders = @("Name",($htmlsilver -bor $htmlbold),$FarmView.farmViewName,$htmlwhite)
 		If(![String]::IsNullOrEmpty($FarmView.description))
@@ -10630,7 +10580,6 @@ Function OutputStore
 	ElseIf($HTML)
 	{
 		WriteHTMLLine 2 0 $Store.StoreName
-		#WriteHTMLLine 0 0 "General"
 		$rowdata = @()
 		$columnHeaders = @("Name",($htmlsilver -bor $htmlbold),$Store.StoreName,$htmlwhite)
 		If(![String]::IsNullOrEmpty($Store.description))
@@ -10741,7 +10690,6 @@ Function OutputStore
 	}
 	ElseIf($HTML)
 	{
-		#WriteHTMLLine 0 0 "Servers"
 		$rowdata = @()
 		$columnHeaders = @("Site",($htmlsilver -bor $htmlbold),$StoreSite,$htmlwhite)
 		$rowdata += @(,('Servers that provide this store',($htmlsilver -bor $htmlbold),$StoreServers[0],$htmlwhite))
@@ -10819,7 +10767,6 @@ Function OutputStore
 	}
 	ElseIf($HTML)
 	{
-		#WriteHTMLLine 0 0 "Paths"
 		$rowdata = @()
 		$columnHeaders = @("Default store path",($htmlsilver -bor $htmlbold),$Store.path,$htmlwhite)
 		If(![String]::IsNullOrEmpty($Store.cachePath))
@@ -11186,57 +11133,61 @@ Function ProcessScriptEnd
 	{
 		$SIFile = "$($pwd.Path)\PVSInventoryScriptInfo_$(Get-Date -f yyyy-MM-dd_HHmm).txt"
 		Out-File -FilePath $SIFile -InputObject "" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "Add DateTime  : $($AddDateTime)" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "AdminAddress  : $($AdminAddress)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "Add DateTime   : $($AddDateTime)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "AdminAddress   : $($AdminAddress)" 4>$Null
 		If($MSWORD -or $PDF)
 		{
-			Out-File -FilePath $SIFile -Append -InputObject "Company Name  : $($Script:CoName)" 4>$Null		
-			Out-File -FilePath $SIFile -Append -InputObject "Cover Page    : $($CoverPage)" 4>$Null
+			Out-File -FilePath $SIFile -Append -InputObject "Company Name   : $($Script:CoName)" 4>$Null		
+			Out-File -FilePath $SIFile -Append -InputObject "Company Address: $($CompanyAddress)" 4>$Null		
+			Out-File -FilePath $SIFile -Append -InputObject "Company Email  : $($CompanyEmail)" 4>$Null		
+			Out-File -FilePath $SIFile -Append -InputObject "Company Fax    : $($CompanyFax)" 4>$Null		
+			Out-File -FilePath $SIFile -Append -InputObject "Company Phone  : $($CompanyPhone)" 4>$Null		
+			Out-File -FilePath $SIFile -Append -InputObject "Cover Page     : $($CoverPage)" 4>$Null
 		}
-		Out-File -FilePath $SIFile -Append -InputObject "Dev           : $($Dev)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "Dev            : $($Dev)" 4>$Null
 		If($Dev)
 		{
-			Out-File -FilePath $SIFile -Append -InputObject "DevErrorFile  : $($Script:DevErrorFile)" 4>$Null
+			Out-File -FilePath $SIFile -Append -InputObject "DevErrorFile   : $($Script:DevErrorFile)" 4>$Null
 		}
-		Out-File -FilePath $SIFile -Append -InputObject "Domain        : $($Domain)" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "EndDate       : $($EndDate)" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "Filename1     : $($Script:FileName1)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "Domain         : $($Domain)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "EndDate        : $($EndDate)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "Filename1      : $($Script:FileName1)" 4>$Null
 		If($PDF)
 		{
-			Out-File -FilePath $SIFile -Append -InputObject "Filename2     : $($Script:FileName2)" 4>$Null
+			Out-File -FilePath $SIFile -Append -InputObject "Filename2      : $($Script:FileName2)" 4>$Null
 		}
-		Out-File -FilePath $SIFile -Append -InputObject "Folder        : $($Folder)" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "From          : $($From)" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "HW Inventory  : $($Hardware)" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "Save As HTML  : $($HTML)" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "Save As PDF   : $($PDF)" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "Save As TEXT  : $($TEXT)" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "Save As WORD  : $($MSWORD)" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "Script Info   : $($ScriptInfo)" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "Smtp Port     : $($SmtpPort)" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "Smtp Server   : $($SmtpServer)" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "Start Date    : $($StartDate)" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "Title         : $($Script:Title)" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "To            : $($To)" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "Use SSL       : $($UseSSL)" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "User          : $($User)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "Folder         : $($Folder)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "From           : $($From)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "HW Inventory   : $($Hardware)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "Save As HTML   : $($HTML)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "Save As PDF    : $($PDF)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "Save As TEXT   : $($TEXT)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "Save As WORD   : $($MSWORD)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "Script Info    : $($ScriptInfo)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "Smtp Port      : $($SmtpPort)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "Smtp Server    : $($SmtpServer)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "Start Date     : $($StartDate)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "Title          : $($Script:Title)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "To             : $($To)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "Use SSL        : $($UseSSL)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "User           : $($User)" 4>$Null
 		If($MSWORD -or $PDF)
 		{
-			Out-File -FilePath $SIFile -Append -InputObject "User Name     : $($UserName)" 4>$Null
+			Out-File -FilePath $SIFile -Append -InputObject "User Name      : $($UserName)" 4>$Null
 		}
 		Out-File -FilePath $SIFile -Append -InputObject "" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "OS Detected   : $($Script:RunningOS)" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "PoSH version  : $($Host.Version)" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "PSCulture     : $($PSCulture)" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "PSUICulture   : $($PSUICulture)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "OS Detected    : $($Script:RunningOS)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "PoSH version   : $($Host.Version)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "PSCulture      : $($PSCulture)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "PSUICulture    : $($PSUICulture)" 4>$Null
 		If($MSWORD -or $PDF)
 		{
-			Out-File -FilePath $SIFile -Append -InputObject "Word language : $($Script:WordLanguageValue)" 4>$Null
-			Out-File -FilePath $SIFile -Append -InputObject "Word version  : $($Script:WordProduct)" 4>$Null
+			Out-File -FilePath $SIFile -Append -InputObject "Word language  : $($Script:WordLanguageValue)" 4>$Null
+			Out-File -FilePath $SIFile -Append -InputObject "Word version   : $($Script:WordProduct)" 4>$Null
 		}
 		Out-File -FilePath $SIFile -Append -InputObject "" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "Script start  : $($Script:StartTime)" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "Elapsed time  : $($Str)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "Script start   : $($Script:StartTime)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "Elapsed time   : $($Str)" 4>$Null
 	}
 
 	$ErrorActionPreference = $SaveEAPreference

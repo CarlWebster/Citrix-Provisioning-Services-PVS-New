@@ -6,6 +6,21 @@
 #Thanks to Michael B. Smith, Joe Shonk and Stephane Thirion
 #for testing and fine-tuning tips 
 
+#Version 5.14 27-Jun-2017
+#	Added four new Cover Page properties
+#		Company Address
+#		Company Email
+#		Company Fax
+#		Company Phone
+#	Added support for version 7.14
+#	Removed code that made sure all Parameters were set to default values if for some reason they did exist or values were $Null
+#	Reordered the parameters in the help text and parameter list so they match and are grouped better
+#	Replaced _SetDocumentProperty function with Jim Moyle's Set-DocumentProperty function
+#	Updated Function ProcessScriptEnd for the new Cover Page properties and Parameters
+#	Updated Function ShowScriptOptions for the new Cover Page properties and Parameters
+#	Updated Function UpdateDocumentProperties for the new Cover Page properties and Parameters
+#	Updated help text
+
 #Version 5.13 30-Mar-2017 (aka The Jim Moyle Update)
 #	Added "Store free space" (reported by Jim Moyle)
 #	Changed checking for PVS version -eq 7.12 to -ge 7.12 to catch 7.13 and later versions (reported by Jim Moyle)
