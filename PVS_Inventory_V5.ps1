@@ -439,9 +439,9 @@
 	No objects are output from this script.  This script creates a Word or PDF document.
 .NOTES
 	NAME: PVS_Inventory_V5.ps1
-	VERSION: 5.16
+	VERSION: 5.17
 	AUTHOR: Carl Webster, Sr. Solutions Architect at Choice Solutions
-	LASTEDIT: April 6, 2018
+	LASTEDIT: July 9, 2019
 #>
 
 #endregion
@@ -582,30 +582,70 @@ Param(
 
 #HTML functions and sample text contributed by Ken Avram October 2014
 
-#Version 5.01 8-Feb-2016
-#	Added specifying an optional output folder
-#	Added the option to email the output file
-#	Fixed several spacing and typo errors
-#	Corrected help text
+#Version 5.17 8-July-2019
+#	Added to Farm properties, Citrix Provisioning license type: On-Premises or Cloud (new to 1808)
+#	Added to vDisk properties, Accelerated Office Activation (new to 1906)
+#	Added to vDisk properties, updated Write Cache types (new to 1811)
+#		Private Image with Asynchronous IO
+#		Cache on server, persistent with Asynchronous IO
+#		Cache in device RAM with overflow on hard disk with Asynchronous IO
 #
-#Version 5.02 12-Apr-2016
-#	Updated help text to show the console and snap-in installation
+#Version 5.16 6-Apr-2018
+#	Added Operating System information to Functions GetComputerWMIInfo and OutputComputerItem
+#	Code clean up from Visual Studio Code
 #
-#Version 5.03 17-Aug-2016
-#	Fixed a few Text and HTML output issues in the Hardware region
+#Version 5.15 8-Dec-2017
+#	Updated Function WriteHTMLLine with fixes from the script template
 #
-#Version 5.04 12-Sep-2016
-#	If remoting is used (-AdminAddress), check if the script is being run elevated. If not,
-#		show the script needs elevation and end the script
-#	Added Break statements to most of the Switch statements
-#	Added checking the NIC's "Allow the computer to turn off this device to save power" setting
+#Version 5.14 27-Jun-2017
+#	Added four new Cover Page properties
+#		Company Address
+#		Company Email
+#		Company Fax
+#		Company Phone
+#	Added support for version 7.14
+#	Removed code that made sure all Parameters were set to default values if for some reason they did exist or values were $Null
+#	Reordered the parameters in the help text and parameter list so they match and are grouped better
+#	Replaced _SetDocumentProperty function with Jim Moyle's Set-DocumentProperty function
+#	Updated Function ProcessScriptEnd for the new Cover Page properties and Parameters
+#	Updated Function ShowScriptOptions for the new Cover Page properties and Parameters
+#	Updated Function UpdateDocumentProperties for the new Cover Page properties and Parameters
+#	Updated help text
 #
-#Version 5.05 12-Sep-2016
-#	Add ShowScriptOptions when using TEXT or HTML
-#	Add in support for the -Dev and -ScriptInfo parameters
-#	Fix several issues with HTML and Text output
-#	Some general code cleanup of unused variables
-#	Add missing function validObject
+#Version 5.13 30-Mar-2017 (aka The Jim Moyle Update)
+#	Added "Store free space" (reported by Jim Moyle)
+#	Changed checking for PVS version -eq 7.12 to -ge 7.12 to catch 7.13 and later versions (reported by Jim Moyle)
+#	Fixed numerous HTML output issues (found when fixing other bugs reported by Jim Moyle)
+#	Fixed PersonalityStrings for Managed vDisks (reported by Jim Moyle)
+#	Fixed the remaining $Var -eq $Null issues by changing them to $Null -eq $Var (found when fixing other bugs reported by Jim Moyle)
+#	Fixed the vDisk Update, Update limit property not showing in the output
+#	Fixed wording for Word output for "Default write-cache paths", was "Default store path"
+#	Fixed wrong cmdlet being used for getting vDiskUpdateDevice status (reported by Jim Moyle)
+#	For Store properties, for Word/PDF/HTML output, changed the text "Store owner" to 
+#		"Site that acts as the owner of this store" to match the PVS console
+#	Updated help text
+#
+#Version 5.12 21-Feb-2017
+#	Added back "Use Datacenter licenses for desktops if no Desktop licenses are available" to Farm properties
+#		This was added back in PVS 7.13
+#	Fixed French wording for Table of Contents 2 (Thanks to David Rouquier)
+#
+#Version 5.11 31-Jan-2017
+#	Added support for "Configured for XenServer vDisk caching" to Target Devices and Hosts
+#	Added "Datacenter" for VMware Hosts
+#
+#Version 5.10 16-Dec-2016
+#	Added support for PVS 7.12
+#	Added the new vDisk property "Cached secrets cleanup disabled"
+#
+#Version 5.09 7-Nov-2016
+#	Added Chinese language support
+#
+#Version 5.08 22-Oct-2016
+#	More refinement of HTML output
+#
+#Version 5.07 19-Oct-2016
+#	Fixed formatting issues with HTML headings output
 #
 #Version 5.06 14-Sep-2016
 #	Add support for PVS 7.11
@@ -645,62 +685,30 @@ Param(
 #	Add write-cache type 6, Device RAM Disk, only because it is in the cmdlet's help text
 #	Fix issues with invalid variable names found by using the -Dev parameter
 #
-#Version 5.07 19-Oct-2016
-#	Fixed formatting issues with HTML headings output
+#Version 5.05 12-Sep-2016
+#	Add ShowScriptOptions when using TEXT or HTML
+#	Add in support for the -Dev and -ScriptInfo parameters
+#	Fix several issues with HTML and Text output
+#	Some general code cleanup of unused variables
+#	Add missing function validObject
 #
-#Version 5.08 22-Oct-2016
-#	More refinement of HTML output
+#Version 5.04 12-Sep-2016
+#	If remoting is used (-AdminAddress), check if the script is being run elevated. If not,
+#		show the script needs elevation and end the script
+#	Added Break statements to most of the Switch statements
+#	Added checking the NIC's "Allow the computer to turn off this device to save power" setting
 #
-#Version 5.09 7-Nov-2016
-#	Added Chinese language support
+#Version 5.03 17-Aug-2016
+#	Fixed a few Text and HTML output issues in the Hardware region
 #
-#Version 5.10 16-Dec-2016
-#	Added support for PVS 7.12
-#	Added the new vDisk property "Cached secrets cleanup disabled"
+#Version 5.02 12-Apr-2016
+#	Updated help text to show the console and snap-in installation
 #
-#Version 5.11 31-Jan-2017
-#	Added support for "Configured for XenServer vDisk caching" to Target Devices and Hosts
-#	Added "Datacenter" for VMware Hosts
-#
-#Version 5.12 21-Feb-2017
-#	Added back "Use Datacenter licenses for desktops if no Desktop licenses are available" to Farm properties
-#		This was added back in PVS 7.13
-#	Fixed French wording for Table of Contents 2 (Thanks to David Rouquier)
-#
-#Version 5.13 30-Mar-2017 (aka The Jim Moyle Update)
-#	Added "Store free space" (reported by Jim Moyle)
-#	Changed checking for PVS version -eq 7.12 to -ge 7.12 to catch 7.13 and later versions (reported by Jim Moyle)
-#	Fixed numerous HTML output issues (found when fixing other bugs reported by Jim Moyle)
-#	Fixed PersonalityStrings for Managed vDisks (reported by Jim Moyle)
-#	Fixed the remaining $Var -eq $Null issues by changing them to $Null -eq $Var (found when fixing other bugs reported by Jim Moyle)
-#	Fixed the vDisk Update, Update limit property not showing in the output
-#	Fixed wording for Word output for "Default write-cache paths", was "Default store path"
-#	Fixed wrong cmdlet being used for getting vDiskUpdateDevice status (reported by Jim Moyle)
-#	For Store properties, for Word/PDF/HTML output, changed the text "Store owner" to 
-#		"Site that acts as the owner of this store" to match the PVS console
-#	Updated help text
-#
-#Version 5.14 27-Jun-2017
-#	Added four new Cover Page properties
-#		Company Address
-#		Company Email
-#		Company Fax
-#		Company Phone
-#	Added support for version 7.14
-#	Removed code that made sure all Parameters were set to default values if for some reason they did exist or values were $Null
-#	Reordered the parameters in the help text and parameter list so they match and are grouped better
-#	Replaced _SetDocumentProperty function with Jim Moyle's Set-DocumentProperty function
-#	Updated Function ProcessScriptEnd for the new Cover Page properties and Parameters
-#	Updated Function ShowScriptOptions for the new Cover Page properties and Parameters
-#	Updated Function UpdateDocumentProperties for the new Cover Page properties and Parameters
-#	Updated help text
-#
-#Version 5.15 8-Dec-2017
-#	Updated Function WriteHTMLLine with fixes from the script template
-#
-#Version 5.16 6-Apr-2018
-#	Added Operating System information to Functions GetComputerWMIInfo and OutputComputerItem
-#	Code clean up from Visual Studio Code
+#Version 5.01 8-Feb-2016
+#	Added specifying an optional output folder
+#	Added the option to email the output file
+#	Fixed several spacing and typo errors
+#	Corrected help text
 #
 #endregion
 
@@ -942,7 +950,7 @@ Function GetComputerWMIInfo
 	# http://blog.myvirtualvision.com
 	# modified 1-May-2014 to work in trusted AD Forests and using different domain admin credentials	
 	# modified 17-Aug-2016 to fix a few issues with Text and HTML output
-	# modified 2-Apr-2018 to add ComputerOS information
+	# modified 2-Aug-2018 to add ComputerOS information
 
 	#Get Computer info
 	Write-Verbose "$(Get-Date): `t`tProcessing WMI Computer information"
@@ -1372,7 +1380,7 @@ Function GetComputerWMIInfo
 Function OutputComputerItem
 {
 	Param([object]$Item, [string]$OS)
-	# modified 2-Apr-2018 to add Operating System information
+	# modified 2-Aug-2018 to add Operating System information
 	
 	If($MSWord -or $PDF)
 	{
@@ -5922,7 +5930,7 @@ Function OutputFarm
 	#licensing tab
 	Write-Verbose "$(Get-Date): `tProcessing Licensing Tab"
 	
-	If($farm.licenseTradeUp -eq "1")
+	If($farm.licenseTradeUp -eq "1" -or $farm.licenseTradeUp -eq $True)
 	{
 		$DatacenterLicense = "Yes"
 	}
@@ -5937,7 +5945,23 @@ Function OutputFarm
 		[System.Collections.Hashtable[]] $ScriptInformation = @()
 		$ScriptInformation += @{ Data = "License server name"; Value = $farm.licenseServer; }
 		$ScriptInformation += @{ Data = "License server port"; Value = $farm.licenseServerPort; }
-		If($Script:PVSFullVersion -ge "7.13")
+		If($Script:PVSFullVersion -ge "7.19")
+		{
+			$ScriptInformation += @{ Data = "Citrix Provisioning license type"; Value = ""; }
+			If($farm.LicenseSKU -eq 2)
+			{
+				$ScriptInformation += @{ Data = "     On-Premises"; Value = "Yes"; }
+				$ScriptInformation += @{ Data = "          Use Datacenter licenses for desktops if no Desktop licenses are available"; Value = $DatacenterLicense; }
+				$ScriptInformation += @{ Data = "     Cloud"; Value = "No"; }
+			}
+			Else
+			{
+				$ScriptInformation += @{ Data = "     On-Premises"; Value = "No"; }
+				$ScriptInformation += @{ Data = "          Use Datacenter licenses for desktops if no Desktop licenses are available"; Value = $DatacenterLicense; }
+				$ScriptInformation += @{ Data = "     Cloud"; Value = "Yes"; }
+			}
+		}
+		ElseIf($Script:PVSFullVersion -ge "7.13")
 		{
 			$ScriptInformation += @{ Data = "Use Datacenter licenses for desktops if no Desktop licenses are available"; Value = $DatacenterLicense; }
 		}
@@ -5961,7 +5985,23 @@ Function OutputFarm
 		Line 0 "Licensing"
 		Line 1 "License server name`t: " $farm.licenseServer
 		Line 1 "License server port`t: " $farm.licenseServerPort
-		If($Script:PVSFullVersion -ge "7.13")
+		If($Script:PVSFullVersion -ge "7.19")
+		{
+			Line 1 "Citrix Provisioning license type" ""
+			If($farm.LicenseSKU -eq 2)
+			{
+				Line 2 "On-Premises`t: " "Yes"
+				Line 3 "Use Datacenter licenses for desktops if no Desktop licenses are available: " $DatacenterLicense
+				Line 2 "Cloud`t`t: " "No"
+			}
+			Else
+			{
+				Line 2 "On-Premises`t: " "No"
+				Line 3 "Use Datacenter licenses for desktops if no Desktop licenses are available: " $DatacenterLicense
+				Line 2 "Cloud`t`t: " "Yes"
+			}
+		}
+		ElseIf($Script:PVSFullVersion -ge "7.13")
 		{
 			Line 1 "Use Datacenter licenses for desktops if no Desktop licenses are available: " $DatacenterLicense
 		}
@@ -5972,7 +6012,23 @@ Function OutputFarm
 		$rowdata = @()
 		$columnHeaders = @("License server name",($htmlsilver -bor $htmlbold),$farm.licenseServer,$htmlwhite)
 		$rowdata += @(,('License server port',($htmlsilver -bor $htmlbold),$farm.licenseServerPort,$htmlwhite))
-		If($Script:PVSFullVersion -ge "7.13")
+		If($Script:PVSFullVersion -ge "7.19")
+		{
+			$rowdata += @(,("Citrix Provisioning license type",($htmlsilver -bor $htmlbold),"",$htmlwhite))
+			If($farm.LicenseSKU -eq 2)
+			{
+				$rowdata += @(,("     On-Premises",($htmlsilver -bor $htmlbold),"Yes",$htmlwhite))
+				$rowdata += @(,("          Use Datacenter licenses for desktops if no Desktop licenses are available",($htmlsilver -bor $htmlbold),$DatacenterLicense,$htmlwhite))
+				$rowdata += @(,("     Cloud",($htmlsilver -bor $htmlbold),"No",$htmlwhite))
+			}
+			Else
+			{
+				$rowdata += @(,("     On-Premises",($htmlsilver -bor $htmlbold),"No",$htmlwhite))
+				$rowdata += @(,("          Use Datacenter licenses for desktops if no Desktop licenses are available",($htmlsilver -bor $htmlbold),$DatacenterLicense,$htmlwhite))
+				$rowdata += @(,("     Cloud",($htmlsilver -bor $htmlbold),"Yes",$htmlwhite))
+			}
+		}
+		ElseIf($Script:PVSFullVersion -ge "7.13")
 		{
 			$rowdata += @(,('Use Datacenter licenses for desktops if no Desktop licenses are available',($htmlsilver -bor $htmlbold),$DatacenterLicense,$htmlwhite))
 		}
@@ -7130,9 +7186,12 @@ Function OutputSite
 					3   	{$writeCacheType = "Cache in device RAM"; Break}
 					4   	{$writeCacheType = "Cache on device hard disk"; Break}
 					6   	{$writeCacheType = "Device RAM Disk"; Break}
-					7   	{$writeCacheType = "Cache on server persisted"; Break}
+					7   	{$writeCacheType = "Cache on server, persistent"; Break}
 					8   	{$writeCacheType = "Cache on device hard drive persisted (NT 6.1 and later)"; Break}
 					9   	{$writeCacheType = "Cache in device RAM with overflow on hard disk"; Break}
+					10   	{$writeCacheType = "Private Image with Asynchronous IO"; Break} #added 1811
+					11   	{$writeCacheType = "Cache on server, persistent with Asynchronous IO"; Break} #added 1811
+					12   	{$writeCacheType = "Cache in device RAM with overflow on hard disk with Asynchronous IO"; Break} #added 1811
 					Default {$writeCacheType = "Cache type could not be determined: $($Disk.writeCacheType)"; Break}
 				}
 			}
@@ -7177,6 +7236,17 @@ Function OutputSite
 				1 		{$licenseMode = "Multiple Activation Key (MAK)"; Break}
 				2 		{$licenseMode = "Key Management Service (KMS)"; Break}
 				Default {$licenseMode = "Volume License Mode could not be determined: $($Disk.licenseMode)"; Break}
+			}
+			If($Script:PVSFullVersion -ge "7.22")
+			{
+				If($Disk.AccelerateOfficeActivation)
+				{
+					$AccelerateOfficeActivation = "Yes"
+				}
+				Else
+				{
+					$AccelerateOfficeActivation = "No"
+				}
 			}
 			If($Disk.autoUpdateEnabled)
 			{
@@ -7520,6 +7590,10 @@ Function OutputSite
 				WriteWordLine 0 0 "Microsoft Volume Licensing"
 				[System.Collections.Hashtable[]] $ScriptInformation = @()
 				$ScriptInformation += @{ Data = "Microsoft license type"; Value = $licenseMode; }
+				If($Script:PVSFullVersion -ge "7.22")
+				{
+					$ScriptInformation += @{ Data = "Accelerated Office Activation"; Value = $AccelerateOfficeActivation; }
+				}
 				$Table = AddWordTable -Hashtable $ScriptInformation `
 				-Columns Data,Value `
 				-List `
@@ -7538,7 +7612,15 @@ Function OutputSite
 			ElseIf($Text)
 			{
 				Line 2 "Microsoft Volume Licensing"
-				Line 3 "Microsoft license type: " $licenseMode
+				If($Script:PVSFullVersion -ge "7.22")
+				{
+					Line 3 "Microsoft license type`t`t: " $licenseMode
+					Line 3 "Accelerated Office Activation`t: " $AccelerateOfficeActivation
+				}
+				Else
+				{
+					Line 3 "Microsoft license type: " $licenseMode
+				}
 				Line 0 ""
 			}
 			ElseIf($HTML)
@@ -7546,6 +7628,10 @@ Function OutputSite
 				#WriteHTMLLine 0 0 "Microsoft Volume Licensing"
 				$rowdata = @()
 				$columnHeaders = @("Microsoft license type",($htmlsilver -bor $htmlbold),$licenseMode,$htmlwhite)
+				If($Script:PVSFullVersion -ge "7.22")
+				{
+					$rowdata += @(,('Accelerated Office Activation',($htmlsilver -bor $htmlbold),$AccelerateOfficeActivation,$htmlwhite))
+				}
 				
 				$msg = "Microsoft Volume Licensing"
 				FormatHTMLTable $msg "auto" -rowArray $rowdata -columnArray $columnHeaders
