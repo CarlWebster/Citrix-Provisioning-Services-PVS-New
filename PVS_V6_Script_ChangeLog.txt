@@ -1,0 +1,61 @@
+#Carl Webster, CTP Fellow
+#webster@carlwebster.com
+#@carlwebster on Twitter
+#http://www.CarlWebster.com
+#This script written for "Benji", March 19, 2012
+#Thanks to Michael B. Smith, Joe Shonk and Stephane Thirion for testing and fine-tuning tips 
+
+#Version 6.00 is based on 5.21
+#
+#Version 6.00 18-Jan-2021
+#	Added new function OutputNotice
+#		Change some Warnings to Notices using OutputNotice
+#	Added new function SetFileNames as replacement for SetFileNames1and2
+#	Added the PVS Version to functions ShowScriptInfo and ProcessScriptEnd
+#	Added to the Computer Hardware section, the server's Power Plan
+#	Allow multiple output formats. You can now select any combination of HTML, MSWord, PDF, or Text
+#	Changed all Write-Verbose statements from Get-Date to Get-Date -Format G as requested by Guy Leech
+#	Changed getting the path for the PVS module from the environment variable for "ProgramFiles" to the console installation path (Thanks to Guy Leech)
+#	Changed some Write-Error to Write-Warning and changed some Write-Warning to Write-Host
+#	Changed the default output to HTML
+#	Cleanup HTML, MSWord, PDF, and text output
+#	Fixed remaining $Null comparisons where $null was on the right instead of the left of the comparison
+#	Reformatted Appendix A to make it fit the content better
+#	If you select PDF for Output and Microsoft Word is not installed, update the error message to state that PDF uses Word's SaveAs PDF function
+#	Reformatted most Write-Error message to show better in the console
+#	Removed all invalid links from comments
+#	Removed all comments referencing versions before 6.00
+#	Removed existing Script ParameterSets and left only one for "WordPDF"
+#	Remove the Password parameter to keep from having the password entered as plaintext
+#		Use Get-Credential and code from Frank Lindenblatt to get the password from the $credential object
+#		The Set-PvsConnection uses only a plaintext password
+#		If you get prompted for credentials, you can blame Citrix for their poorly written and dumb Set-PvsConnection cmdlet. 
+#		It returns no information or status. To stop using a plain text password (the main impetus behind this update), I switched to using Get-Credential. 
+#		Because of the almost useless Set-PvsConnection cmdlet, I don't know if you entered valid credentials or not or why the connection attempt to the PVS server failed.
+#	Removed the requirement for elevation when remoting to the PVS server
+#	Updated the following functions to the latest versions:
+#		AddHTMLTable
+#		AddWordTable
+#		CheckWordPrereq
+#		FormatHTMLTable
+#		GetComputerWMIInfo
+#		GetCulture
+#		Line
+#		OutputComputerItem
+#		OutputDriveItem
+#		OutputNicItem
+#		OutputProcessorItem
+#		ProcessDocumentOutput
+#		SaveandCloseDocumentandShutdownWord
+#		SaveandCloseHTMLDocument
+#		SaveandCloseTextDocument
+#		SetupHTML
+#		SetupText
+#		SetupWord
+#		SetWordCellFormat
+#		SetWordHashTable
+#		ValidateCoverPage
+#		WriteHTMLLine
+#		WriteWordLine
+#	Updated the help text
+#	Updated the ReadMe file
