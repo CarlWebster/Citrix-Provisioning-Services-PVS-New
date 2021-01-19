@@ -5,6 +5,21 @@
 #This script written for "Benji", March 19, 2012
 #Thanks to Michael B. Smith, Joe Shonk and Stephane Thirion for testing and fine-tuning tips 
 
+#Version 5.22 18-Jan-2021
+#	Added new function OutputNotice
+#		Change some Warnings to Notices using OutputNotice
+#	Added to the Computer Hardware section, the server's Power Plan
+#	Changed all Write-Verbose statements from Get-Date to Get-Date -Format G as requested by Guy Leech
+#	Changed some Write-Error to Write-Warning and changed some Write-Warning to Write-Host
+#	Fixed remaining $Null comparisons where $null was on the right instead of the left of the comparison
+#	If you select PDF for Output and Microsoft Word is not installed, update the error message to state that PDF uses Word's SaveAs PDF function
+#	Reformatted Appendix A to make it fit the content better
+#	Reformatted most Write-Error message to show better in the console
+#	Removed the requirement for elevation when remoting to the PVS server
+#	Reordered the parameters in an order recommended by Guy Leech
+#	Updated the help text
+#	Updated the ReadMe file
+
 #Version 5.21 8-May-2020
 #	Add checking for a Word version of 0, which indicates the Office installation needs repairing
 #	Add loading the PVS.Snapin DLL as a module
