@@ -594,6 +594,7 @@ Param(
 #		It returns no information or status. To stop using a plain text password (the main impetus behind this update), I switched to using Get-Credential. 
 #		Because of the almost useless Set-PvsConnection cmdlet, I don't know if you entered valid credentials or not or why the connection attempt to the PVS server failed.
 #	Removed the requirement for elevation when remoting to the PVS server
+#	Reordered the parameters in an order recommended by Guy Leech
 #	Updated the following functions to the latest versions:
 #		AddHTMLTable
 #		AddWordTable
@@ -629,7 +630,7 @@ Set-StrictMode -Version Latest
 #force  on
 $PSDefaultParameterValues = @{"*:Verbose"=$True}
 $SaveEAPreference = $ErrorActionPreference
-#$ErrorActionPreference = 'SilentlyContinue'
+$ErrorActionPreference = 'SilentlyContinue'
 
 If($Null -eq $HTML)
 {
@@ -5888,12 +5889,12 @@ Function OutputFarm
 	}
 	ElseIf($? -and $Null -eq $AuthGroups)
 	{
-		$txt = "There are no Farm authorization group"
+		$txt = "There are no Farm authorization groups"
 		OutputNotice $txt
 	}
 	Else
 	{
-		$txt = "Unable to retrieve Farm authorization group"
+		$txt = "Unable to retrieve Farm authorization groups"
 		OutputWarning $txt
 	}
 
@@ -7158,7 +7159,7 @@ Function OutputSite
 			}
 			Else
 			{
-				$txt = "Unable to retrieve Bootstrao Names"
+				$txt = "Unable to retrieve Bootstrap Names"
 				OutputWarning $txt
 			}
 		}
