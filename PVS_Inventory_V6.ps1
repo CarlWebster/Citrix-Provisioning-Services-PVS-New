@@ -587,7 +587,9 @@ Param(
 #	Added error checking in Function Check-NeededPSSnapins (Requested by Guy Leech)
 #	Added new parameter LimitTargetDevices
 #		Updated Function OutputSite 
-#		Updated function ShowScriptOptions and ProcessScriptEnd
+#		Updated functions ShowScriptOptions and ProcessScriptEnd
+#	Updated the help text
+#	Updated the ReadMe file
 #
 #Version 6.00 18-Jan-2021
 #	Added new function OutputNotice
