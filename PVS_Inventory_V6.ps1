@@ -21,7 +21,7 @@
 	
 	Creates an output file named after the PVS farm.
 	
-	Word and PDF Document includes a Cover Page, Table of Contents and Footer.
+	Word and PDF Document includes a Cover Page, Table of Contents, and Footer.
 	
 	Includes support for the following language versions of Microsoft Word:
 		Catalan
@@ -38,7 +38,7 @@
 		Swedish
 
 .PARAMETER AdminAddress
-	Specifies the name of a PVS server that the PowerShell script connects to. 
+	Specifies the name of a PVS server that the PowerShell script connects. 
 	This parameter has an alias of AA.
 .PARAMETER Domain
 	Specifies the domain used for the AdminAddress connection. 
@@ -84,7 +84,7 @@
 
 	Format for date only is MM/DD/YYYY.
 	
-	Format to include a specific time range is "MM/DD/YYYY HH:MM:SS" in 24 hour format.
+	Format to include a specific time range is "MM/DD/YYYY HH:MM:SS" in 24-hour format.
 	The double quotes are needed.
 	
 	Default is today's date minus seven days.
@@ -94,7 +94,7 @@
 
 	Format for date only is MM/DD/YYYY.
 	
-	Format to include a specific time range is "MM/DD/YYYY HH:MM:SS" in 24 hour format.
+	Format to include a specific time range is "MM/DD/YYYY HH:MM:SS" in 24-hour format.
 	The double quotes are needed.
 	
 	Default is today's date.
@@ -104,6 +104,10 @@
 	Network Interface Cards
 	This parameter is disabled by default.
 	This parameter has an alias of HW.
+.PARAMETER LimitTargetDevices
+	Limits the number of target devices processed.
+	Default value is 1.
+	This parameter has an alias of LTD.
 .PARAMETER MSWord
 	SaveAs DOCX file
 	This parameter is set True if no other output format is selected.
@@ -235,6 +239,13 @@
 	Creates an HTML report by default.
 	The computer running the script for the AdminAddress.
 .EXAMPLE
+	PS C:\PSScript > .\PVS_Inventory_V6.ps1 -LimitTargetDevices 5
+	
+	Creates an HTML report by default.
+	The Target Device section is limited to the first five target devices in each Device 
+	Collection.
+	The computer running the script for the AdminAddress.
+.EXAMPLE
 	PS C:\PSScript > .\PVS_Inventory_V6.ps1 -PDF 
 	
 	Will use all Default values and save the document as a PDF file.
@@ -266,7 +277,7 @@
 	-CoverPage "Mod" -UserName "Carl Webster" -MSWord
 
 	Creates a Microsoft Word report.
-	Will use:
+	Uses:
 		Carl Webster Consulting for the Company Name.
 		Mod for the Cover Page format.
 		Carl Webster for the User Name.
@@ -275,7 +286,7 @@
 	-UN "Carl Webster" -AdminAddress PVS1 -MSWord
 
 	Creates a Microsoft Word report.
-	Will use:
+	Uses:
 		Carl Webster Consulting for the Company Name (alias CN).
 		Mod for the Cover Page format (alias CP).
 		Carl Webster for the User Name (alias UN).
@@ -288,7 +299,7 @@
 	
 	Prompts for the password for the cwebster account.
 	
-	Will use:
+	Uses:
 		Carl Webster Consulting for the Company Name (alias CN).
 		Mod for the Cover Page format (alias CP).
 		Carl Webster for the User Name (alias UN).
@@ -303,7 +314,7 @@
 	
 	Prompts for the password for the cwebster account.
 	
-	Will use:
+	Uses:
 		Carl Webster Consulting for the Company Name (alias CN).
 		Mod for the Cover Page format (alias CP).
 		Carl Webster for the User Name (alias UN).
@@ -316,23 +327,23 @@
 	England" -CompanyFax "+44 1753 276600" -CompanyPhone "+44 1753 276200"
 	
 	Creates a Microsoft Word report.
-	Will use:
+	Uses:
 		Sherlock Holmes Consulting for the Company Name.
 		Exposure for the Cover Page format.
 		Dr. Watson for the User Name.
 		221B Baker Street, London, England for the Company Address.
 		+44 1753 276600 for the Company Fax.
-		+44 1753 276200 for the Compnay Phone.
+		+44 1753 276200 for the Company Phone.
 .EXAMPLE
 	PS C:\PSScript .\PVS_Inventory_V6.ps1 -CompanyName "Sherlock Holmes Consulting" 
 	-CoverPage Facet -UserName "Dr. Watson" -CompanyEmail SuperSleuth@SherlockHolmes.com
 
 	Creates a Microsoft Word report.
-	Will use:
+	Uses:
 		Sherlock Holmes Consulting for the Company Name.
 		Facet for the Cover Page format.
 		Dr. Watson for the User Name.
-		SuperSleuth@SherlockHolmes.com for the Compnay Email.
+		SuperSleuth@SherlockHolmes.com for the Company Email.
 .EXAMPLE
 	PS C:\PSScript > .\PVS_Inventory_V6.ps1 -StartDate "01/01/2021" -EndDate "01/31/2021" 
 	
@@ -361,18 +372,18 @@
 	Creates an HTML document.
 	Administrator for the User Name.
 	
-	Output file will be saved in the path \\FileServer\ShareName
+	Output file is saved in the path \\FileServer\ShareName
 .EXAMPLE
 	PS C:\PSScript > .\PVS_Inventory_V6.ps1 -SmtpServer mail.domain.tld -From 
 	XDAdmin@domain.tld -To ITGroup@domain.tld	
 
-	The script uses the email server mail.domain.tld, sending from XDAdmin@domain.tld, 
+	The script uses the email server mail.domain.tld, sending from XDAdmin@domain.tld and 
 	sending to ITGroup@domain.tld.
 
 	The script uses the default SMTP port 25 and does not use SSL.
 
-    If the current user's credentials are not valid to send email, the script prompts the 
-    user to enter valid credentials.
+	If the current user's credentials are not valid to an send email, the script prompts 
+	the user to enter valid credentials.
 .EXAMPLE
 	PS C:\PSScript > .\PVS_Inventory_V6.ps1 -SmtpServer mailrelay.domain.tld -From 
 	Anonymous@domain.tld -To ITGroup@domain.tld	
@@ -380,10 +391,10 @@
 	***SENDING UNAUTHENTICATED EMAIL***
 
 	The script uses the email server mailrelay.domain.tld, sending from 
-	anonymous@domain.tld, sending to ITGroup@domain.tld.
+	anonymous@domain.tld and sending to ITGroup@domain.tld.
 
-	To send unauthenticated email using an email relay server requires the From email account 
-	to use the name Anonymous.
+	To send an unauthenticated email using an email relay server requires the From email 
+	account to use the name Anonymous.
 
 	The script uses the default SMTP port 25 and does not use SSL.
 	
@@ -391,11 +402,11 @@
 	https://support.google.com/a/answer/2956491?hl=en
 	https://support.google.com/a/answer/176600?hl=en
 
-	To send email using a Gmail or g-suite account, you may have to turn ON
-	the "Less secure app access" option on your account.
+	To send an email using a Gmail or g-suite account, you may have to turn ON the "Less 
+	secure app access" option on your account.
 	***GMAIL/G SUITE SMTP RELAY***
 
-	The script generates an anonymous secure password for the anonymous@domain.tld 
+	The script generates an anonymous, secure password for the anonymous@domain.tld 
 	account.
 .EXAMPLE
 	PS C:\PSScript > .\PVS_Inventory_V6.ps1 -SmtpServer 
@@ -410,42 +421,42 @@
 	
 	***OFFICE 365 Example***
 
-	The script uses the email server labaddomain-com.mail.protection.outlook.com, 
-	sending from SomeEmailAddress@labaddomain.com, sending to ITGroupDL@labaddomain.com.
+	The script uses the email server labaddomain-com.mail.protection.outlook.com, sending 
+	from SomeEmailAddress@labaddomain.com and sending to ITGroupDL@labaddomain.com.
 
 	The script uses the default SMTP port 25 and SSL.
 .EXAMPLE
 	PS C:\PSScript > .\PVS_Inventory_V6.ps1 -SmtpServer smtp.office365.com -SmtpPort 587 
 	-UseSSL -From Webster@CarlWebster.com -To ITGroup@CarlWebster.com	
 
-	The script uses the email server smtp.office365.com on port 587 using SSL, 
-	sending from webster@carlwebster.com, sending to ITGroup@carlwebster.com.
+	The script uses the email server smtp.office365.com on port 587 using SSL, sending from 
+	webster@carlwebster.com and sending to ITGroup@carlwebster.com.
 
-    If the current user's credentials are not valid to send email, the script prompts the 
-    user to enter valid credentials.
+	If the current user's credentials are not valid to send an email, the script prompts 
+	the user to enter valid credentials.
 .EXAMPLE
 	PS C:\PSScript > .\PVS_Inventory_V6.ps1 -SmtpServer smtp.gmail.com -SmtpPort 587
 	-UseSSL -From Webster@CarlWebster.com -To ITGroup@CarlWebster.com	
 
 	*** NOTE ***
-	To send email using a Gmail or g-suite account, you may have to turn ON
-	the "Less secure app access" option on your account.
+	To send an email using a Gmail or g-suite account, you may have to turn ON the "Less 
+	secure app access" option on your account.
 	*** NOTE ***
 	
-	The script uses the email server smtp.gmail.com on port 587 using SSL, 
-	sending from webster@gmail.com, sending to ITGroup@carlwebster.com.
+	The script uses the email server smtp.gmail.com on port 587 using SSL, sending from 
+	webster@gmail.com and sending to ITGroup@carlwebster.com.
 
-    If the current user's credentials are not valid to send email, the script prompts the 
-    user to enter valid credentials.
+	If the current user's credentials are not valid to an send email, the script prompts 
+	the user to enter valid credentials.
 .INPUTS
 	None. You cannot pipe objects to this script.
 .OUTPUTS
 	No objects are output from this script. This script creates a Word or PDF document.
 .NOTES
 	NAME: PVS_Inventory_V6.ps1
-	VERSION: 6.00
+	VERSION: 6.01
 	AUTHOR: Carl Webster
-	LASTEDIT: January 18, 2021
+	LASTEDIT: January 25, 2021
 #>
 
 #endregion
@@ -499,6 +510,10 @@ Param(
 	[parameter(Mandatory=$False)] 
 	[Alias("HW")]
 	[Switch]$Hardware=$False, 
+
+	[parameter(Mandatory=$False)] 
+	[Alias("LTD")]
+	[int]$LimitTargetDevices=1, 
 
 	[parameter(ParameterSetName="WordPDF",Mandatory=$False)] 
 	[Switch]$MSWord=$False,
@@ -567,6 +582,12 @@ Param(
 #Created on December 21, 2020
 
 #Version 6.00 is based on 5.21
+#
+#Version 6.01 25-Jan-2021
+#	Added error checking in Function Check-NeededPSSnapins (Requested by Guy Leech)
+#	Added new parameter LimitTargetDevices
+#		Updated Function OutputSite 
+#		Updated function ShowScriptOptions and ProcessScriptEnd
 #
 #Version 6.00 18-Jan-2021
 #	Added new function OutputNotice
@@ -819,6 +840,11 @@ If($Dev)
 	$Script:DevErrorFile = "$Script:pwdpath\PVSInventoryScriptErrors_$(Get-Date -f yyyy-MM-dd_HHmm).txt"
 }
 
+If($LimitTargetDevices -lt 0)
+{
+	Write-Verbose "$(Get-Date -Format G): Change LimitTargetDevices from a negative number to 1"
+	$LimitTargetDevices = 1
+}
 #endregion
 
 #region initialize variables for word html and text
@@ -4385,73 +4411,74 @@ Function ShowScriptOptions
 {
 	Write-Verbose "$(Get-Date -Format G): "
 	Write-Verbose "$(Get-Date -Format G): "
-	Write-Verbose "$(Get-Date -Format G): AddDateTime    : $($AddDateTime)"
-	Write-Verbose "$(Get-Date -Format G): AdminAddress   : $($AdminAddress)"
+	Write-Verbose "$(Get-Date -Format G): AddDateTime         : $($AddDateTime)"
+	Write-Verbose "$(Get-Date -Format G): AdminAddress        : $($AdminAddress)"
 	If($MSWORD -or $PDF)
 	{
-		Write-Verbose "$(Get-Date -Format G): Company Name   : $($Script:CoName)"
-		Write-Verbose "$(Get-Date -Format G): Company Address: $($CompanyAddress)"
-		Write-Verbose "$(Get-Date -Format G): Company Email  : $($CompanyEmail)"
-		Write-Verbose "$(Get-Date -Format G): Company Fax    : $($CompanyFax)"
-		Write-Verbose "$(Get-Date -Format G): Company Phone  : $($CompanyPhone)"
-		Write-Verbose "$(Get-Date -Format G): Cover Page     : $($CoverPage)"
+		Write-Verbose "$(Get-Date -Format G): Company Name        : $($Script:CoName)"
+		Write-Verbose "$(Get-Date -Format G): Company Address     : $($CompanyAddress)"
+		Write-Verbose "$(Get-Date -Format G): Company Email       : $($CompanyEmail)"
+		Write-Verbose "$(Get-Date -Format G): Company Fax         : $($CompanyFax)"
+		Write-Verbose "$(Get-Date -Format G): Company Phone       : $($CompanyPhone)"
+		Write-Verbose "$(Get-Date -Format G): Cover Page          : $($CoverPage)"
 	}
-	Write-Verbose "$(Get-Date -Format G): Dev            : $($Dev)"
+	Write-Verbose "$(Get-Date -Format G): Dev                 : $($Dev)"
 	If($Dev)
 	{
-		Write-Verbose "$(Get-Date -Format G): DevErrorFile   : $($Script:DevErrorFile)"
+		Write-Verbose "$(Get-Date -Format G): DevErrorFile        : $($Script:DevErrorFile)"
 	}
-	Write-Verbose "$(Get-Date -Format G): Domain         : $($Domain)"
-	Write-Verbose "$(Get-Date -Format G): End Date       : $($EndDate)"
+	Write-Verbose "$(Get-Date -Format G): Domain              : $($Domain)"
+	Write-Verbose "$(Get-Date -Format G): End Date            : $($EndDate)"
 	If($HTML)
 	{
-		Write-Verbose "$(Get-Date -Format G): HTMLFilename   : $($Script:HTMLFilename)"
+		Write-Verbose "$(Get-Date -Format G): HTMLFilename        : $($Script:HTMLFilename)"
 	}
 	If($MSWord)
 	{
-		Write-Verbose "$(Get-Date -Format G): WordFilename   : $($Script:WordFilename)"
+		Write-Verbose "$(Get-Date -Format G): WordFilename        : $($Script:WordFilename)"
 	}
 	If($PDF)
 	{
-		Write-Verbose "$(Get-Date -Format G): PDFFilename    : $($Script:PDFFilename)"
+		Write-Verbose "$(Get-Date -Format G): PDFFilename         : $($Script:PDFFilename)"
 	}
 	If($Text)
 	{
-		Write-Verbose "$(Get-Date -Format G): TextFilename   : $($Script:TextFilename)"
+		Write-Verbose "$(Get-Date -Format G): TextFilename        : $($Script:TextFilename)"
 	}
-	Write-Verbose "$(Get-Date -Format G): Folder         : $($Folder)"
-	Write-Verbose "$(Get-Date -Format G): From           : $($From)"
-	Write-Verbose "$(Get-Date -Format G): HW Inventory   : $($Hardware)"
-	Write-Verbose "$(Get-Date -Format G): Log            : $($Log)"
-	Write-Verbose "$(Get-Date -Format G): PVS Version    : $($Script:Version.ToString())"
-	Write-Verbose "$(Get-Date -Format G): Save As HTML   : $($HTML)"
-	Write-Verbose "$(Get-Date -Format G): Save As PDF    : $($PDF)"
-	Write-Verbose "$(Get-Date -Format G): Save As TEXT   : $($TEXT)"
-	Write-Verbose "$(Get-Date -Format G): Save As WORD   : $($MSWORD)"
-	Write-Verbose "$(Get-Date -Format G): ScriptInfo     : $($ScriptInfo)"
-	Write-Verbose "$(Get-Date -Format G): Smtp Port      : $($SmtpPort)"
-	Write-Verbose "$(Get-Date -Format G): Smtp Server    : $($SmtpServer)"
-	Write-Verbose "$(Get-Date -Format G): Start Date     : $($StartDate)"
-	Write-Verbose "$(Get-Date -Format G): Title          : $($Script:Title)"
-	Write-Verbose "$(Get-Date -Format G): To             : $($To)"
-	Write-Verbose "$(Get-Date -Format G): Use SSL        : $($UseSSL)"
-	Write-Verbose "$(Get-Date -Format G): User           : $($User)"
+	Write-Verbose "$(Get-Date -Format G): Folder              : $($Folder)"
+	Write-Verbose "$(Get-Date -Format G): From                : $($From)"
+	Write-Verbose "$(Get-Date -Format G): HW Inventory        : $($Hardware)"
+	Write-Verbose "$(Get-Date -Format G): Limit Target Devices: $($LimitTargetDevices)"
+	Write-Verbose "$(Get-Date -Format G): Log                 : $($Log)"
+	Write-Verbose "$(Get-Date -Format G): PVS Version         : $($Script:Version.ToString())"
+	Write-Verbose "$(Get-Date -Format G): Save As HTML        : $($HTML)"
+	Write-Verbose "$(Get-Date -Format G): Save As PDF         : $($PDF)"
+	Write-Verbose "$(Get-Date -Format G): Save As TEXT        : $($TEXT)"
+	Write-Verbose "$(Get-Date -Format G): Save As WORD        : $($MSWORD)"
+	Write-Verbose "$(Get-Date -Format G): ScriptInfo          : $($ScriptInfo)"
+	Write-Verbose "$(Get-Date -Format G): Smtp Port           : $($SmtpPort)"
+	Write-Verbose "$(Get-Date -Format G): Smtp Server         : $($SmtpServer)"
+	Write-Verbose "$(Get-Date -Format G): Start Date          : $($StartDate)"
+	Write-Verbose "$(Get-Date -Format G): Title               : $($Script:Title)"
+	Write-Verbose "$(Get-Date -Format G): To                  : $($To)"
+	Write-Verbose "$(Get-Date -Format G): Use SSL             : $($UseSSL)"
+	Write-Verbose "$(Get-Date -Format G): User                : $($User)"
 	If($MSWORD -or $PDF)
 	{
-		Write-Verbose "$(Get-Date -Format G): User Name      : $($UserName)"
+		Write-Verbose "$(Get-Date -Format G): User Name           : $($UserName)"
 	}
 	Write-Verbose "$(Get-Date -Format G): "
-	Write-Verbose "$(Get-Date -Format G): OS Detected    : $($Script:RunningOS)"
-	Write-Verbose "$(Get-Date -Format G): PoSH version   : $($Host.Version)"
-	Write-Verbose "$(Get-Date -Format G): PSCulture      : $($PSCulture)"
-	Write-Verbose "$(Get-Date -Format G): PSUICulture    : $($PSUICulture)"
+	Write-Verbose "$(Get-Date -Format G): OS Detected         : $($Script:RunningOS)"
+	Write-Verbose "$(Get-Date -Format G): PoSH version        : $($Host.Version)"
+	Write-Verbose "$(Get-Date -Format G): PSCulture           : $($PSCulture)"
+	Write-Verbose "$(Get-Date -Format G): PSUICulture         : $($PSUICulture)"
 	If($MSWORD -or $PDF)
 	{
-		Write-Verbose "$(Get-Date -Format G): Word language  : $($Script:WordLanguageValue)"
-		Write-Verbose "$(Get-Date -Format G): Word version   : $($Script:WordProduct)"
+		Write-Verbose "$(Get-Date -Format G): Word language       : $($Script:WordLanguageValue)"
+		Write-Verbose "$(Get-Date -Format G): Word version        : $($Script:WordProduct)"
 	}
 	Write-Verbose "$(Get-Date -Format G): "
-	Write-Verbose "$(Get-Date -Format G): Script start   : $($Script:StartTime)"
+	Write-Verbose "$(Get-Date -Format G): Script start        : $($Script:StartTime)"
 	Write-Verbose "$(Get-Date -Format G): "
 	Write-Verbose "$(Get-Date -Format G): "
 }
@@ -4864,8 +4891,8 @@ Function Check-NeededPSSnapins
 	$RegisteredSnapins = @()
 
 	#Creates arrays of strings, rather than objects, we're passing strings so this will be more robust.
-	$loadedSnapins += Get-Pssnapin | ForEach-Object {$_.name}
-	$registeredSnapins += Get-Pssnapin -Registered | ForEach-Object {$_.name}
+	$loadedSnapins += Get-PSSnapin | ForEach-Object {$_.name}
+	$registeredSnapins += Get-PSSnapin -Registered | ForEach-Object {$_.name}
 
 	ForEach($Snapin in $Snapins)
 	{
@@ -4886,7 +4913,19 @@ Function Check-NeededPSSnapins
 			Else
 			{
 				#Snapin is registered, but not loaded, loading it now:
-				Add-PSSnapin -Name $snapin -EA 0 *>$Null
+				Write-Host "Loading Windows PowerShell snap-in: $snapin"
+				Add-PSSnapin -Name $snapin -EA 0
+
+				If(!($?))
+				{
+					Write-Error "
+	`n`n
+	Error loading snapin: $($error[0].Exception.Message)
+	`n`n
+	Script cannot continue.
+	`n`n"
+					Return $false
+				}				
 			}
 		}
 	}
@@ -9063,10 +9102,42 @@ Function OutputSite
 
 			#for each collection, process each device
 			Write-Verbose "$(Get-Date -Format G): `t`t`tProcessing each collection process for each device"
-			$Devices = Get-PvsDeviceInfo -collectionId $Collection.collectionId -EA 0 4>$Null
+			#$Devices = Get-PvsDeviceInfo -collectionId $Collection.collectionId -EA 0 4>$Null
+			$Devices = Get-PvsDeviceInfo -collectionId $Collection.collectionId -EA 0 4>$Null | Select-Object -First $LimitTargetDevices
 			
 			If($? -and $Null -ne $Devices)
 			{
+				If($LimitTargetDevices -eq 1)
+				{
+					If($MSWord -or $PDF)
+					{
+						WriteWordLine 0 0 "Only showing $LimitTargetDevices Target Device" $Null 8 $False $True	
+					}
+					If($Text)
+					{
+						Line 0 "Only showing $LimitTargetDevices Target Device"
+					}
+					If($HTML)
+					{
+						WriteHTMLLine 0 0 "Only showing $LimitTargetDevices Target Device" "" "Calibri" 1
+					}
+				}
+				Else
+				{
+					If($MSWord -or $PDF)
+					{
+						WriteWordLine 0 0 "Only showing $LimitTargetDevices Target Devices" $Null 8 $False $True	
+					}
+					If($Text)
+					{
+						Line 0 "Only showing $LimitTargetDevices Target Devices"
+					}
+					If($HTML)
+					{
+						WriteHTMLLine 0 0 "Only showing $LimitTargetDevices Target Devices" "" "Calibri" 1
+					}
+				}
+
 				ForEach($Device in $Devices)
 				{
 					Write-Verbose "$(Get-Date -Format G): `t`t`t`tProcessing Device $($Device.deviceName)"
@@ -11410,74 +11481,75 @@ Function ProcessScriptEnd
 	{
 		$SIFile = "$($Script:pwdpath)\PVSInventoryScriptInfo_$(Get-Date -f yyyy-MM-dd_HHmm).txt"
 		Out-File -FilePath $SIFile -InputObject "" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "Add DateTime   : $($AddDateTime)" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "AdminAddress   : $($AdminAddress)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "Add DateTime        : $($AddDateTime)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "AdminAddress        : $($AdminAddress)" 4>$Null
 		If($MSWORD -or $PDF)
 		{
-			Out-File -FilePath $SIFile -Append -InputObject "Company Name   : $($Script:CoName)" 4>$Null		
-			Out-File -FilePath $SIFile -Append -InputObject "Company Address: $($CompanyAddress)" 4>$Null		
-			Out-File -FilePath $SIFile -Append -InputObject "Company Email  : $($CompanyEmail)" 4>$Null		
-			Out-File -FilePath $SIFile -Append -InputObject "Company Fax    : $($CompanyFax)" 4>$Null		
-			Out-File -FilePath $SIFile -Append -InputObject "Company Phone  : $($CompanyPhone)" 4>$Null		
-			Out-File -FilePath $SIFile -Append -InputObject "Cover Page     : $($CoverPage)" 4>$Null
+			Out-File -FilePath $SIFile -Append -InputObject "Company Name        : $($Script:CoName)" 4>$Null		
+			Out-File -FilePath $SIFile -Append -InputObject "Company Address     : $($CompanyAddress)" 4>$Null		
+			Out-File -FilePath $SIFile -Append -InputObject "Company Email       : $($CompanyEmail)" 4>$Null		
+			Out-File -FilePath $SIFile -Append -InputObject "Company Fax         : $($CompanyFax)" 4>$Null		
+			Out-File -FilePath $SIFile -Append -InputObject "Company Phone       : $($CompanyPhone)" 4>$Null		
+			Out-File -FilePath $SIFile -Append -InputObject "Cover Page          : $($CoverPage)" 4>$Null
 		}
-		Out-File -FilePath $SIFile -Append -InputObject "Dev            : $($Dev)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "Dev                 : $($Dev)" 4>$Null
 		If($Dev)
 		{
-			Out-File -FilePath $SIFile -Append -InputObject "DevErrorFile   : $($Script:DevErrorFile)" 4>$Null
+			Out-File -FilePath $SIFile -Append -InputObject "DevErrorFile        : $($Script:DevErrorFile)" 4>$Null
 		}
-		Out-File -FilePath $SIFile -Append -InputObject "Domain         : $($Domain)" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "EndDate        : $($EndDate)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "Domain              : $($Domain)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "EndDate             : $($EndDate)" 4>$Null
 		If($HTML)
 		{
-			Out-File -FilePath $SIFile -Append -InputObject "HTMLFilename   : $($Script:HTMLFileName)" 4>$Null
+			Out-File -FilePath $SIFile -Append -InputObject "HTMLFilename        : $($Script:HTMLFileName)" 4>$Null
 		}
 		If($MSWord)
 		{
-			Out-File -FilePath $SIFile -Append -InputObject "WordFilename   : $($Script:WordFileName)" 4>$Null
+			Out-File -FilePath $SIFile -Append -InputObject "WordFilename        : $($Script:WordFileName)" 4>$Null
 		}
 		If($PDF)
 		{
-			Out-File -FilePath $SIFile -Append -InputObject "PDFFilename    : $($Script:PDFFileName)" 4>$Null
+			Out-File -FilePath $SIFile -Append -InputObject "PDFFilename         : $($Script:PDFFileName)" 4>$Null
 		}
 		If($Text)
 		{
-			Out-File -FilePath $SIFile -Append -InputObject "TextFilename   : $($Script:TextFileName)" 4>$Null
+			Out-File -FilePath $SIFile -Append -InputObject "TextFilename        : $($Script:TextFileName)" 4>$Null
 		}
-		Out-File -FilePath $SIFile -Append -InputObject "Folder         : $($Folder)" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "From           : $($From)" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "HW Inventory   : $($Hardware)" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "Log            : $($Log)" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "PVS Version    : $($Script:Version.ToString())" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "Save As HTML   : $($HTML)" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "Save As PDF    : $($PDF)" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "Save As TEXT   : $($TEXT)" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "Save As WORD   : $($MSWORD)" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "Script Info    : $($ScriptInfo)" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "Smtp Port      : $($SmtpPort)" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "Smtp Server    : $($SmtpServer)" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "Start Date     : $($StartDate)" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "Title          : $($Script:Title)" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "To             : $($To)" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "Use SSL        : $($UseSSL)" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "User           : $($User)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "Folder              : $($Folder)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "From                : $($From)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "HW Inventory        : $($Hardware)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "Limit Target Devices: $($LimitTargetDevices)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "Log                 : $($Log)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "PVS Version         : $($Script:Version.ToString())" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "Save As HTML        : $($HTML)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "Save As PDF         : $($PDF)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "Save As TEXT        : $($TEXT)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "Save As WORD        : $($MSWORD)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "Script Info         : $($ScriptInfo)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "Smtp Port           : $($SmtpPort)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "Smtp Server         : $($SmtpServer)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "Start Date          : $($StartDate)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "Title               : $($Script:Title)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "To                  : $($To)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "Use SSL             : $($UseSSL)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "User                : $($User)" 4>$Null
 		If($MSWORD -or $PDF)
 		{
-			Out-File -FilePath $SIFile -Append -InputObject "User Name      : $($UserName)" 4>$Null
+			Out-File -FilePath $SIFile -Append -InputObject "User Name           : $($UserName)" 4>$Null
 		}
 		Out-File -FilePath $SIFile -Append -InputObject "" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "OS Detected    : $($Script:RunningOS)" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "PoSH version   : $($Host.Version)" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "PSCulture      : $($PSCulture)" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "PSUICulture    : $($PSUICulture)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "OS Detected         : $($Script:RunningOS)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "PoSH version        : $($Host.Version)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "PSCulture           : $($PSCulture)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "PSUICulture         : $($PSUICulture)" 4>$Null
 		If($MSWORD -or $PDF)
 		{
-			Out-File -FilePath $SIFile -Append -InputObject "Word language  : $($Script:WordLanguageValue)" 4>$Null
-			Out-File -FilePath $SIFile -Append -InputObject "Word version   : $($Script:WordProduct)" 4>$Null
+			Out-File -FilePath $SIFile -Append -InputObject "Word language       : $($Script:WordLanguageValue)" 4>$Null
+			Out-File -FilePath $SIFile -Append -InputObject "Word version        : $($Script:WordProduct)" 4>$Null
 		}
 		Out-File -FilePath $SIFile -Append -InputObject "" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "Script start   : $($Script:StartTime)" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "Elapsed time   : $($Str)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "Script start        : $($Script:StartTime)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "Elapsed time        : $($Str)" 4>$Null
 	}
 
 	#stop transcript logging
