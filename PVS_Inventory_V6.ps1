@@ -79,6 +79,27 @@
 	
 	This parameter is disabled by default.
 	This parameter has an alias of SI.
+.PARAMETER ReportFooter
+	Outputs a footer section at the end of the report.
+
+	This parameter has an alias of RF.
+	
+	Report Footer
+		Report information:
+			Created with: <Script Name> - Release Date: <Script Release Date>
+			Script version: <Script Version>
+			Started on <Date Time in Local Format>
+			Elapsed time: nn days, nn hours, nn minutes, nn.nn seconds
+			Ran from domain <Domain Name> by user <Username>
+			Ran from the folder <Folder Name>
+
+	Script Name and Script Release date are script-specific variables.
+	Script version is a script variable.
+	Start Date Time in Local Format is a script variable.
+	Elapsed time is a calculated value.
+	Domain Name is $env:USERDNSDOMAIN.
+	Username is $env:USERNAME.
+	Folder Name is a script variable.
 .PARAMETER StartDate
 	Start date for the Audit Trail report.
 
@@ -454,9 +475,9 @@
 	No objects are output from this script. This script creates a Word or PDF document.
 .NOTES
 	NAME: PVS_Inventory_V6.ps1
-	VERSION: 6.01
+	VERSION: 6.02
 	AUTHOR: Carl Webster
-	LASTEDIT: January 25, 2021
+	LASTEDIT: September 2, 2021
 #>
 
 #endregion
@@ -499,6 +520,10 @@ Param(
 	[Alias("SI")]
 	[Switch]$ScriptInfo=$False,
 	
+	[parameter(Mandatory=$False)] 
+	[Alias("RF")]
+	[Switch]$ReportFooter=$False,
+
 	[parameter(Mandatory=$False)] 
 	[Alias("SD")]
 	[Datetime]$StartDate = ((Get-Date -displayhint date).AddDays(-7)),
@@ -583,6 +608,22 @@ Param(
 
 #Version 6.00 is based on 5.21
 #
+#Version 6.02 2-Sep-2021
+#	Add array error checking for non-empty arrays before attempting to create the Word table for most Word tables
+#	Add Function OutputReportFooter
+#	Add Parameter ReportFooter
+#		Outputs a footer section at the end of the report.
+#		Report Footer
+#			Report information:
+#				Created with: <Script Name> - Release Date: <Script Release Date>
+#				Script version: <Script Version>
+#				Started on <Date Time in Local Format>
+#				Elapsed time: nn days, nn hours, nn minutes, nn.nn seconds
+#				Ran from domain <Domain Name> by user <Username>
+#				Ran from the folder <Folder Name>
+#	Update Functions SaveandCloseTextDocument and SaveandCloseHTMLDocument to add a "Report Complete" line
+#	Update Functions ShowScriptOptions and ProcessScriptEnd to add $ReportFooter
+#
 #Version 6.01 25-Jan-2021
 #	Added error checking in Function Check-NeededPSSnapins (Requested by Guy Leech)
 #	Added new parameter LimitTargetDevices
@@ -652,8 +693,12 @@ Set-StrictMode -Version Latest
 
 #force  on
 $PSDefaultParameterValues = @{"*:Verbose"=$True}
-$SaveEAPreference = $ErrorActionPreference
-$ErrorActionPreference = 'SilentlyContinue'
+$SaveEAPreference         = $ErrorActionPreference
+$ErrorActionPreference    = 'SilentlyContinue'
+$script:MyVersion         = '6.02'
+$Script:ScriptName        = "PVS_Inventory_V6.ps1"
+$tmpdate                  = [datetime] "09/02/2021"
+$Script:ReleaseDate       = $tmpdate.ToUniversalTime().ToShortDateString()
 
 If($Null -eq $HTML)
 {
@@ -4413,74 +4458,75 @@ Function ShowScriptOptions
 {
 	Write-Verbose "$(Get-Date -Format G): "
 	Write-Verbose "$(Get-Date -Format G): "
-	Write-Verbose "$(Get-Date -Format G): AddDateTime         : $($AddDateTime)"
-	Write-Verbose "$(Get-Date -Format G): AdminAddress        : $($AdminAddress)"
+	Write-Verbose "$(Get-Date -Format G): AddDateTime         : $AddDateTime"
+	Write-Verbose "$(Get-Date -Format G): AdminAddress        : $AdminAddress"
 	If($MSWORD -or $PDF)
 	{
-		Write-Verbose "$(Get-Date -Format G): Company Name        : $($Script:CoName)"
-		Write-Verbose "$(Get-Date -Format G): Company Address     : $($CompanyAddress)"
-		Write-Verbose "$(Get-Date -Format G): Company Email       : $($CompanyEmail)"
-		Write-Verbose "$(Get-Date -Format G): Company Fax         : $($CompanyFax)"
-		Write-Verbose "$(Get-Date -Format G): Company Phone       : $($CompanyPhone)"
-		Write-Verbose "$(Get-Date -Format G): Cover Page          : $($CoverPage)"
+		Write-Verbose "$(Get-Date -Format G): Company Name        : $Script:CoName"
+		Write-Verbose "$(Get-Date -Format G): Company Address     : $CompanyAddress"
+		Write-Verbose "$(Get-Date -Format G): Company Email       : $CompanyEmail"
+		Write-Verbose "$(Get-Date -Format G): Company Fax         : $CompanyFax"
+		Write-Verbose "$(Get-Date -Format G): Company Phone       : $CompanyPhone"
+		Write-Verbose "$(Get-Date -Format G): Cover Page          : $CoverPage"
 	}
-	Write-Verbose "$(Get-Date -Format G): Dev                 : $($Dev)"
+	Write-Verbose "$(Get-Date -Format G): Dev                 : $Dev"
 	If($Dev)
 	{
-		Write-Verbose "$(Get-Date -Format G): DevErrorFile        : $($Script:DevErrorFile)"
+		Write-Verbose "$(Get-Date -Format G): DevErrorFile        : $Script:DevErrorFile"
 	}
-	Write-Verbose "$(Get-Date -Format G): Domain              : $($Domain)"
-	Write-Verbose "$(Get-Date -Format G): End Date            : $($EndDate)"
+	Write-Verbose "$(Get-Date -Format G): Domain              : $Domain"
+	Write-Verbose "$(Get-Date -Format G): End Date            : $EndDate"
 	If($HTML)
 	{
-		Write-Verbose "$(Get-Date -Format G): HTMLFilename        : $($Script:HTMLFilename)"
+		Write-Verbose "$(Get-Date -Format G): HTMLFilename        : $Script:HTMLFilename"
 	}
 	If($MSWord)
 	{
-		Write-Verbose "$(Get-Date -Format G): WordFilename        : $($Script:WordFilename)"
+		Write-Verbose "$(Get-Date -Format G): WordFilename        : $Script:WordFilename"
 	}
 	If($PDF)
 	{
-		Write-Verbose "$(Get-Date -Format G): PDFFilename         : $($Script:PDFFilename)"
+		Write-Verbose "$(Get-Date -Format G): PDFFilename         : $Script:PDFFilename"
 	}
 	If($Text)
 	{
-		Write-Verbose "$(Get-Date -Format G): TextFilename        : $($Script:TextFilename)"
+		Write-Verbose "$(Get-Date -Format G): TextFilename        : $Script:TextFilename"
 	}
-	Write-Verbose "$(Get-Date -Format G): Folder              : $($Folder)"
-	Write-Verbose "$(Get-Date -Format G): From                : $($From)"
-	Write-Verbose "$(Get-Date -Format G): HW Inventory        : $($Hardware)"
-	Write-Verbose "$(Get-Date -Format G): Limit Target Devices: $($LimitTargetDevices)"
-	Write-Verbose "$(Get-Date -Format G): Log                 : $($Log)"
-	Write-Verbose "$(Get-Date -Format G): PVS Version         : $($Script:Version.ToString())"
-	Write-Verbose "$(Get-Date -Format G): Save As HTML        : $($HTML)"
-	Write-Verbose "$(Get-Date -Format G): Save As PDF         : $($PDF)"
-	Write-Verbose "$(Get-Date -Format G): Save As TEXT        : $($TEXT)"
-	Write-Verbose "$(Get-Date -Format G): Save As WORD        : $($MSWORD)"
-	Write-Verbose "$(Get-Date -Format G): ScriptInfo          : $($ScriptInfo)"
-	Write-Verbose "$(Get-Date -Format G): Smtp Port           : $($SmtpPort)"
-	Write-Verbose "$(Get-Date -Format G): Smtp Server         : $($SmtpServer)"
-	Write-Verbose "$(Get-Date -Format G): Start Date          : $($StartDate)"
-	Write-Verbose "$(Get-Date -Format G): Title               : $($Script:Title)"
-	Write-Verbose "$(Get-Date -Format G): To                  : $($To)"
-	Write-Verbose "$(Get-Date -Format G): Use SSL             : $($UseSSL)"
-	Write-Verbose "$(Get-Date -Format G): User                : $($User)"
+	Write-Verbose "$(Get-Date -Format G): Folder              : $Folder"
+	Write-Verbose "$(Get-Date -Format G): From                : $From"
+	Write-Verbose "$(Get-Date -Format G): HW Inventory        : $Hardware"
+	Write-Verbose "$(Get-Date -Format G): Limit Target Devices: $LimitTargetDevices"
+	Write-Verbose "$(Get-Date -Format G): Log                 : $Log"
+	Write-Verbose "$(Get-Date -Format G): PVS Version         : $Script:Version.ToString()"
+	Write-Verbose "$(Get-Date -Format G): Report Footer       : $ReportFooter"
+	Write-Verbose "$(Get-Date -Format G): Save As HTML        : $HTML"
+	Write-Verbose "$(Get-Date -Format G): Save As PDF         : $PDF"
+	Write-Verbose "$(Get-Date -Format G): Save As TEXT        : $TEXT"
+	Write-Verbose "$(Get-Date -Format G): Save As WORD        : $MSWORD"
+	Write-Verbose "$(Get-Date -Format G): ScriptInfo          : $ScriptInfo"
+	Write-Verbose "$(Get-Date -Format G): Smtp Port           : $SmtpPort"
+	Write-Verbose "$(Get-Date -Format G): Smtp Server         : $SmtpServer"
+	Write-Verbose "$(Get-Date -Format G): Start Date          : $StartDate"
+	Write-Verbose "$(Get-Date -Format G): Title               : $Script:Title"
+	Write-Verbose "$(Get-Date -Format G): To                  : $To"
+	Write-Verbose "$(Get-Date -Format G): Use SSL             : $UseSSL"
+	Write-Verbose "$(Get-Date -Format G): User                : $User"
 	If($MSWORD -or $PDF)
 	{
-		Write-Verbose "$(Get-Date -Format G): User Name           : $($UserName)"
+		Write-Verbose "$(Get-Date -Format G): User Name           : $UserName"
 	}
 	Write-Verbose "$(Get-Date -Format G): "
-	Write-Verbose "$(Get-Date -Format G): OS Detected         : $($Script:RunningOS)"
-	Write-Verbose "$(Get-Date -Format G): PoSH version        : $($Host.Version)"
-	Write-Verbose "$(Get-Date -Format G): PSCulture           : $($PSCulture)"
-	Write-Verbose "$(Get-Date -Format G): PSUICulture         : $($PSUICulture)"
+	Write-Verbose "$(Get-Date -Format G): OS Detected         : $Script:RunningOS"
+	Write-Verbose "$(Get-Date -Format G): PoSH version        : $Host.Version"
+	Write-Verbose "$(Get-Date -Format G): PSCulture           : $PSCulture"
+	Write-Verbose "$(Get-Date -Format G): PSUICulture         : $PSUICulture"
 	If($MSWORD -or $PDF)
 	{
-		Write-Verbose "$(Get-Date -Format G): Word language       : $($Script:WordLanguageValue)"
-		Write-Verbose "$(Get-Date -Format G): Word version        : $($Script:WordProduct)"
+		Write-Verbose "$(Get-Date -Format G): Word language       : $Script:WordLanguageValue"
+		Write-Verbose "$(Get-Date -Format G): Word version        : $Script:WordProduct"
 	}
 	Write-Verbose "$(Get-Date -Format G): "
-	Write-Verbose "$(Get-Date -Format G): Script start        : $($Script:StartTime)"
+	Write-Verbose "$(Get-Date -Format G): Script start        : $Script:StartTime"
 	Write-Verbose "$(Get-Date -Format G): "
 	Write-Verbose "$(Get-Date -Format G): "
 }
@@ -4627,12 +4673,16 @@ Function SetupHTML
 Function SaveandCloseTextDocument
 {
 	Write-Verbose "$(Get-Date -Format G): Saving Text file"
+	Line 0 ""
+	Line 0 "Report Complete"
 	Write-Output $global:Output.ToString() | Out-File $Script:TextFileName 4>$Null
 }
 
 Function SaveandCloseHTMLDocument
 {
 	Write-Verbose "$(Get-Date -Format G): Saving HTML file"
+	WriteHTMLLine 0 0 ""
+	WriteHTMLLine 0 0 "Report Complete"
 	Out-File -FilePath $Script:HTMLFileName -Append -InputObject "<p></p></body></html>" 4>$Null
 }
 
@@ -4718,6 +4768,70 @@ Function TestComputerName
 		#computer is online but for some reason $ComputerName cannot be converted to a System.Net.IpAddress
 	}
 	Return $CName
+}
+
+Function OutputReportFooter
+{
+	<#
+	Report Footer
+		Report information:
+			Created with: <Script Name> - Release Date: <Script Release Date>
+			Script version: <Script Version>
+			Started on <Date Time in Local Format>
+			Elapsed time: nn days, nn hours, nn minutes, nn.nn seconds
+			Ran from domain <Domain Name> by user <Username>
+			Ran from the folder <Folder Name>
+
+	Script Name and Script Release date are script-specific variables.
+	Script version is a script variable.
+	Start Date Time in Local Format is a script variable.
+	Domain Name is $env:USERDNSDOMAIN.
+	Username is $env:USERNAME.
+	Folder Name is a script variable.
+	#>
+
+	$runtime = $(Get-Date) - $Script:StartTime
+	$Str = [string]::format("{0} days, {1} hours, {2} minutes, {3}.{4} seconds",
+		$runtime.Days,
+		$runtime.Hours,
+		$runtime.Minutes,
+		$runtime.Seconds,
+		$runtime.Milliseconds)
+
+	If($MSWORD -or $PDF)
+	{
+		$Script:selection.InsertNewPage()
+		WriteWordLine 1 0 "Report Footer"
+		WriteWordLine 2 0 "Report Information:"
+		WriteWordLine 0 1 "Created with: $Script:ScriptName - Release Date: $Script:ReleaseDate"
+		WriteWordLine 0 1 "Script version: $Script:MyVersion"
+		WriteWordLine 0 1 "Started on $Script:StartTime"
+		WriteWordLine 0 1 "Elapsed time: $Str"
+		WriteWordLine 0 1 "Ran from domain $env:USERDNSDOMAIN by user $env:USERNAME"
+		WriteWordLine 0 1 "Ran from the folder $Script:pwdpath"
+	}
+	If($Text)
+	{
+		Line 0 "///  Report Footer  \\\"
+		Line 1 "Report Information:"
+		Line 2 "Created with: $Script:ScriptName - Release Date: $Script:ReleaseDate"
+		Line 2 "Script version: $Script:MyVersion"
+		Line 2 "Started on $Script:StartTime"
+		Line 2 "Elapsed time: $Str"
+		Line 2 "Ran from domain $env:USERDNSDOMAIN by user $env:USERNAME"
+		Line 2 "Ran from the folder $Script:pwdpath"
+	}
+	If($HTML)
+	{
+		WriteHTMLLine 1 0 "///&nbsp;&nbsp;Report Footer&nbsp;&nbsp;\\\"
+		WriteHTMLLine 2 0 "Report Information:"
+		WriteHTMLLine 0 1 "Created with: $Script:ScriptName - Release Date: $Script:ReleaseDate"
+		WriteHTMLLine 0 1 "Script version: $Script:MyVersion"
+		WriteHTMLLine 0 1 "Started on $Script:StartTime"
+		WriteHTMLLine 0 1 "Elapsed time: $Str"
+		WriteHTMLLine 0 1 "Ran from domain $env:USERDNSDOMAIN by user $env:USERNAME"
+		WriteHTMLLine 0 1 "Ran from the folder $Script:pwdpath"
+	}
 }
 
 Function ProcessDocumentOutput
@@ -4978,18 +5092,21 @@ Function OutputViewMembers
 	}
 	If($MSword -or $PDF)
 	{
-		$Table = AddWordTable -Hashtable $MembersWordTable `
-		-Columns Name `
-		-Format $wdTableGrid `
-		-AutoFit $wdAutoFitContent;
+		If($MembersWordTable.Count -gt 0)
+		{
+			$Table = AddWordTable -Hashtable $MembersWordTable `
+			-Columns Name `
+			-Format $wdTableGrid `
+			-AutoFit $wdAutoFitContent;
 
-		SetWordCellFormat -Collection $Table.Rows.Item(1).Cells -Bold -BackgroundColor $wdColorGray15;
+			SetWordCellFormat -Collection $Table.Rows.Item(1).Cells -Bold -BackgroundColor $wdColorGray15;
 
-		$Table.Rows.SetLeftIndent($Indent0TabStops,$wdAdjustProportional)
+			$Table.Rows.SetLeftIndent($Indent0TabStops,$wdAdjustProportional)
 
-		FindWordDocumentEnd
-		$Table = $Null
-		WriteWordLine 0 0 ""
+			FindWordDocumentEnd
+			$Table = $Null
+			WriteWordLine 0 0 ""
+		}
 	}
 	If($HTML)
 	{
@@ -5590,27 +5707,30 @@ Function OutputAuditTrail
 
 		If($MSWord -or $PDF)
 		{
-			$Table = AddWordTable -Hashtable $AuditWordTable `
-			-Columns DateTime,Action,Type,Name,User,Domain,Path `
-			-Headers "Date/Time","Action","Type","Name","User","Domain","Path" `
-			-AutoFit $wdAutoFitFixed;
+			If($AuditWordTable.Count -gt 0)
+			{
+				$Table = AddWordTable -Hashtable $AuditWordTable `
+				-Columns DateTime,Action,Type,Name,User,Domain,Path `
+				-Headers "Date/Time","Action","Type","Name","User","Domain","Path" `
+				-AutoFit $wdAutoFitFixed;
 
-			#set table to 9 point
-			SetWordCellFormat -Collection $Table -Size 9 -BackgroundColor $wdColorWhite
-			SetWordCellFormat -Collection $Table.Rows.Item(1).Cells -Bold -BackgroundColor $wdColorGray15;
+				#set table to 9 point
+				SetWordCellFormat -Collection $Table -Size 9 -BackgroundColor $wdColorWhite
+				SetWordCellFormat -Collection $Table.Rows.Item(1).Cells -Bold -BackgroundColor $wdColorGray15;
 
-			$Table.Columns.Item(1).Width = 65;
-			$Table.Columns.Item(2).Width = 95;
-			$Table.Columns.Item(3).Width = 50;
-			$Table.Columns.Item(4).Width = 65;
-			$Table.Columns.Item(5).Width = 65;
-			$Table.Columns.Item(6).Width = 80;
-			$Table.Columns.Item(7).Width = 80;
+				$Table.Columns.Item(1).Width = 65;
+				$Table.Columns.Item(2).Width = 95;
+				$Table.Columns.Item(3).Width = 50;
+				$Table.Columns.Item(4).Width = 65;
+				$Table.Columns.Item(5).Width = 65;
+				$Table.Columns.Item(6).Width = 80;
+				$Table.Columns.Item(7).Width = 80;
 
-			$Table.Rows.SetLeftIndent($Indent0TabStops,$wdAdjustProportional)
+				$Table.Rows.SetLeftIndent($Indent0TabStops,$wdAdjustProportional)
 
-			FindWordDocumentEnd
-			$Table = $Null
+				FindWordDocumentEnd
+				$Table = $Null
+			}
 		}
 		If($HTML)
 		{
@@ -5667,18 +5787,21 @@ Function OutputauthGroups
 	
 	If($MSword -or $PDF)
 	{
-		$Table = AddWordTable -Hashtable $AuthWordTable `
-		-Columns Name `
-		-Format $wdTableGrid `
-		-AutoFit $wdAutoFitContent;
+		If($AuthWordTable.Count -gt 0)
+		{
+			$Table = AddWordTable -Hashtable $AuthWordTable `
+			-Columns Name `
+			-Format $wdTableGrid `
+			-AutoFit $wdAutoFitContent;
 
-		SetWordCellFormat -Collection $Table.Rows.Item(1).Cells -Bold -BackgroundColor $wdColorGray15;
+			SetWordCellFormat -Collection $Table.Rows.Item(1).Cells -Bold -BackgroundColor $wdColorGray15;
 
-		$Table.Rows.SetLeftIndent($Indent0TabStops,$wdAdjustProportional)
+			$Table.Rows.SetLeftIndent($Indent0TabStops,$wdAdjustProportional)
 
-		FindWordDocumentEnd
-		$Table = $Null
-		WriteWordLine 0 0 ""
+			FindWordDocumentEnd
+			$Table = $Null
+			WriteWordLine 0 0 ""
+		}
 	}
 	If($Text)
 	{
@@ -5732,18 +5855,21 @@ Function OutputauthGroupUsages
 	
 	If($MSword -or $PDF)
 	{
-		$Table = AddWordTable -Hashtable $AuthWordTable `
-		-Columns Name `
-		-Format $wdTableGrid `
-		-AutoFit $wdAutoFitContent;
+		If($AuthWordTable.Count -gt 0)
+		{
+			$Table = AddWordTable -Hashtable $AuthWordTable `
+			-Columns Name `
+			-Format $wdTableGrid `
+			-AutoFit $wdAutoFitContent;
 
-		SetWordCellFormat -Collection $Table.Rows.Item(1).Cells -Bold -BackgroundColor $wdColorGray15;
+			SetWordCellFormat -Collection $Table.Rows.Item(1).Cells -Bold -BackgroundColor $wdColorGray15;
 
-		$Table.Rows.SetLeftIndent($Indent0TabStops,$wdAdjustProportional)
+			$Table.Rows.SetLeftIndent($Indent0TabStops,$wdAdjustProportional)
 
-		FindWordDocumentEnd
-		$Table = $Null
-		WriteWordLine 0 0 ""
+			FindWordDocumentEnd
+			$Table = $Null
+			WriteWordLine 0 0 ""
+		}
 	}
 	If($Text)
 	{
@@ -6881,18 +7007,21 @@ Function OutputSite
 								$CurrentServiceIndex++;
 							}
 
-							$Table = AddWordTable -Hashtable $ItemsWordTable `
-							-Columns IPAddress, Port, SubnetMask, Gateway `
-							-Headers "IP Address", "Port", "Subnet Mask", "Gateway" `
-							-AutoFit $wdAutoFitContent;
+							If($ItemsWordTable.Count -gt 0)
+							{
+								$Table = AddWordTable -Hashtable $ItemsWordTable `
+								-Columns IPAddress, Port, SubnetMask, Gateway `
+								-Headers "IP Address", "Port", "Subnet Mask", "Gateway" `
+								-AutoFit $wdAutoFitContent;
 
-							SetWordCellFormat -Collection $Table.Rows.Item(1).Cells -Bold -BackgroundColor $wdColorGray15;
+								SetWordCellFormat -Collection $Table.Rows.Item(1).Cells -Bold -BackgroundColor $wdColorGray15;
 
-							$Table.Rows.SetLeftIndent($Indent0TabStops,$wdAdjustProportional)
+								$Table.Rows.SetLeftIndent($Indent0TabStops,$wdAdjustProportional)
 
-							FindWordDocumentEnd
-							$Table = $Null
-							WriteWordLine 0 0 ""
+								FindWordDocumentEnd
+								$Table = $Null
+								WriteWordLine 0 0 ""
+							}
 						}
 						If($Text)
 						{
@@ -11292,28 +11421,31 @@ Function OutputAppendixA
 
 	If($MSWord -or $PDF)
 	{
-		$Table = AddWordTable -Hashtable $ItemsWordTable `
-		-Columns ServerName, ThreadsperPort, BuffersperThread, ServerCacheTimeout, LocalConcurrentIOLimit, RemoteConcurrentIOLimit, EthernetMTU, IOBurstSize, EnableNonblockingIO `
-		-Headers "Server Name", "Threads per Port", "Buffers per Thread", "Server Cache Timeout", "Local Concurrent IO Limit", "Remote Concurrent IO Limit", "Ethernet MTU", "IO Burst Size", "Enable Non-blocking IO" `
-		-AutoFit $wdAutoFitFixed;
+		If($ItemsWordTable.Count -gt 0)
+		{
+			$Table = AddWordTable -Hashtable $ItemsWordTable `
+			-Columns ServerName, ThreadsperPort, BuffersperThread, ServerCacheTimeout, LocalConcurrentIOLimit, RemoteConcurrentIOLimit, EthernetMTU, IOBurstSize, EnableNonblockingIO `
+			-Headers "Server Name", "Threads per Port", "Buffers per Thread", "Server Cache Timeout", "Local Concurrent IO Limit", "Remote Concurrent IO Limit", "Ethernet MTU", "IO Burst Size", "Enable Non-blocking IO" `
+			-AutoFit $wdAutoFitFixed;
 
-		SetWordCellFormat -Collection $Table -Size 9 -BackgroundColor $wdColorWhite
-		SetWordCellFormat -Collection $Table.Rows.Item(1).Cells -Bold -BackgroundColor $wdColorGray15;
+			SetWordCellFormat -Collection $Table -Size 9 -BackgroundColor $wdColorWhite
+			SetWordCellFormat -Collection $Table.Rows.Item(1).Cells -Bold -BackgroundColor $wdColorGray15;
 
-		$Table.Rows.SetLeftIndent($Indent0TabStops,$wdAdjustProportional)
+			$Table.Rows.SetLeftIndent($Indent0TabStops,$wdAdjustProportional)
 
-		$Table.Columns.Item(1).Width = 56;
-		$Table.Columns.Item(2).Width = 55;
-		$Table.Columns.Item(3).Width = 55;
-		$Table.Columns.Item(4).Width = 55;
-		$Table.Columns.Item(5).Width = 55;
-		$Table.Columns.Item(6).Width = 55;
-		$Table.Columns.Item(7).Width = 55;
-		$Table.Columns.Item(8).Width = 55;
-		$Table.Columns.Item(8).Width = 55;
+			$Table.Columns.Item(1).Width = 56;
+			$Table.Columns.Item(2).Width = 55;
+			$Table.Columns.Item(3).Width = 55;
+			$Table.Columns.Item(4).Width = 55;
+			$Table.Columns.Item(5).Width = 55;
+			$Table.Columns.Item(6).Width = 55;
+			$Table.Columns.Item(7).Width = 55;
+			$Table.Columns.Item(8).Width = 55;
+			$Table.Columns.Item(8).Width = 55;
 
-		FindWordDocumentEnd
-		$Table = $Null
+			FindWordDocumentEnd
+			$Table = $Null
+		}
 	}
 	If($HTML)
 	{
@@ -11405,17 +11537,20 @@ Function OutputAppendixB
 
 	If($MSWord -or $PDF)
 	{
-		$Table = AddWordTable -Hashtable $ItemsWordTable `
-		-Columns ServerName, BootPauseSeconds, MaximumBootTime, MaximumDevicesBooting, vDiskCreationPacing, LicenseTimeout `
-		-Headers "Server Name", "Boot Pause Seconds", "Maximum Boot Time", "Maximum Devices Booting", "vDisk Creation Pacing", "License Timeout" `
-		-AutoFit $wdAutoFitContent;
+		If($ItemsWordTable.Count -gt 0)
+		{
+			$Table = AddWordTable -Hashtable $ItemsWordTable `
+			-Columns ServerName, BootPauseSeconds, MaximumBootTime, MaximumDevicesBooting, vDiskCreationPacing, LicenseTimeout `
+			-Headers "Server Name", "Boot Pause Seconds", "Maximum Boot Time", "Maximum Devices Booting", "vDisk Creation Pacing", "License Timeout" `
+			-AutoFit $wdAutoFitContent;
 
-		SetWordCellFormat -Collection $Table.Rows.Item(1).Cells -Bold -BackgroundColor $wdColorGray15;
+			SetWordCellFormat -Collection $Table.Rows.Item(1).Cells -Bold -BackgroundColor $wdColorGray15;
 
-		$Table.Rows.SetLeftIndent($Indent0TabStops,$wdAdjustProportional)
+			$Table.Rows.SetLeftIndent($Indent0TabStops,$wdAdjustProportional)
 
-		FindWordDocumentEnd
-		$Table = $Null
+			FindWordDocumentEnd
+			$Table = $Null
+		}
 	}
 	If($HTML)
 	{
@@ -11483,75 +11618,76 @@ Function ProcessScriptEnd
 	{
 		$SIFile = "$($Script:pwdpath)\PVSInventoryScriptInfo_$(Get-Date -f yyyy-MM-dd_HHmm).txt"
 		Out-File -FilePath $SIFile -InputObject "" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "Add DateTime        : $($AddDateTime)" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "AdminAddress        : $($AdminAddress)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "Add DateTime        : $AddDateTime" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "AdminAddress        : $AdminAddress" 4>$Null
 		If($MSWORD -or $PDF)
 		{
-			Out-File -FilePath $SIFile -Append -InputObject "Company Name        : $($Script:CoName)" 4>$Null		
-			Out-File -FilePath $SIFile -Append -InputObject "Company Address     : $($CompanyAddress)" 4>$Null		
-			Out-File -FilePath $SIFile -Append -InputObject "Company Email       : $($CompanyEmail)" 4>$Null		
-			Out-File -FilePath $SIFile -Append -InputObject "Company Fax         : $($CompanyFax)" 4>$Null		
-			Out-File -FilePath $SIFile -Append -InputObject "Company Phone       : $($CompanyPhone)" 4>$Null		
-			Out-File -FilePath $SIFile -Append -InputObject "Cover Page          : $($CoverPage)" 4>$Null
+			Out-File -FilePath $SIFile -Append -InputObject "Company Name        : $Script:CoName" 4>$Null		
+			Out-File -FilePath $SIFile -Append -InputObject "Company Address     : $CompanyAddress" 4>$Null		
+			Out-File -FilePath $SIFile -Append -InputObject "Company Email       : $CompanyEmail" 4>$Null		
+			Out-File -FilePath $SIFile -Append -InputObject "Company Fax         : $CompanyFax" 4>$Null		
+			Out-File -FilePath $SIFile -Append -InputObject "Company Phone       : $CompanyPhone" 4>$Null		
+			Out-File -FilePath $SIFile -Append -InputObject "Cover Page          : $CoverPage" 4>$Null
 		}
-		Out-File -FilePath $SIFile -Append -InputObject "Dev                 : $($Dev)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "Dev                 : $Dev" 4>$Null
 		If($Dev)
 		{
-			Out-File -FilePath $SIFile -Append -InputObject "DevErrorFile        : $($Script:DevErrorFile)" 4>$Null
+			Out-File -FilePath $SIFile -Append -InputObject "DevErrorFile        : $Script:DevErrorFile" 4>$Null
 		}
-		Out-File -FilePath $SIFile -Append -InputObject "Domain              : $($Domain)" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "EndDate             : $($EndDate)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "Domain              : $Domain" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "EndDate             : $EndDate" 4>$Null
 		If($HTML)
 		{
-			Out-File -FilePath $SIFile -Append -InputObject "HTMLFilename        : $($Script:HTMLFileName)" 4>$Null
+			Out-File -FilePath $SIFile -Append -InputObject "HTMLFilename        : $Script:HTMLFileName" 4>$Null
 		}
 		If($MSWord)
 		{
-			Out-File -FilePath $SIFile -Append -InputObject "WordFilename        : $($Script:WordFileName)" 4>$Null
+			Out-File -FilePath $SIFile -Append -InputObject "WordFilename        : $Script:WordFileName" 4>$Null
 		}
 		If($PDF)
 		{
-			Out-File -FilePath $SIFile -Append -InputObject "PDFFilename         : $($Script:PDFFileName)" 4>$Null
+			Out-File -FilePath $SIFile -Append -InputObject "PDFFilename         : $Script:PDFFileName" 4>$Null
 		}
 		If($Text)
 		{
-			Out-File -FilePath $SIFile -Append -InputObject "TextFilename        : $($Script:TextFileName)" 4>$Null
+			Out-File -FilePath $SIFile -Append -InputObject "TextFilename        : $Script:TextFileName" 4>$Null
 		}
-		Out-File -FilePath $SIFile -Append -InputObject "Folder              : $($Folder)" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "From                : $($From)" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "HW Inventory        : $($Hardware)" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "Limit Target Devices: $($LimitTargetDevices)" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "Log                 : $($Log)" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "PVS Version         : $($Script:Version.ToString())" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "Save As HTML        : $($HTML)" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "Save As PDF         : $($PDF)" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "Save As TEXT        : $($TEXT)" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "Save As WORD        : $($MSWORD)" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "Script Info         : $($ScriptInfo)" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "Smtp Port           : $($SmtpPort)" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "Smtp Server         : $($SmtpServer)" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "Start Date          : $($StartDate)" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "Title               : $($Script:Title)" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "To                  : $($To)" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "Use SSL             : $($UseSSL)" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "User                : $($User)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "Folder              : $Folder" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "From                : $From" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "HW Inventory        : $Hardware" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "Limit Target Devices: $LimitTargetDevices" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "Log                 : $Log" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "PVS Version         : $Script:Version.ToString()" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "Report Footer       : $ReportFooter" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "Save As HTML        : $HTML" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "Save As PDF         : $PDF" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "Save As TEXT        : $TEXT" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "Save As WORD        : $MSWORD" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "Script Info         : $ScriptInfo" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "Smtp Port           : $SmtpPort" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "Smtp Server         : $SmtpServer" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "Start Date          : $StartDate" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "Title               : $Script:Title" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "To                  : $To" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "Use SSL             : $UseSSL" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "User                : $User" 4>$Null
 		If($MSWORD -or $PDF)
 		{
-			Out-File -FilePath $SIFile -Append -InputObject "User Name           : $($UserName)" 4>$Null
+			Out-File -FilePath $SIFile -Append -InputObject "User Name           : $UserName" 4>$Null
 		}
 		Out-File -FilePath $SIFile -Append -InputObject "" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "OS Detected         : $($Script:RunningOS)" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "PoSH version        : $($Host.Version)" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "PSCulture           : $($PSCulture)" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "PSUICulture         : $($PSUICulture)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "OS Detected         : $Script:RunningOS" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "PoSH version        : $Host.Version" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "PSCulture           : $PSCulture" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "PSUICulture         : $PSUICulture" 4>$Null
 		If($MSWORD -or $PDF)
 		{
-			Out-File -FilePath $SIFile -Append -InputObject "Word language       : $($Script:WordLanguageValue)" 4>$Null
-			Out-File -FilePath $SIFile -Append -InputObject "Word version        : $($Script:WordProduct)" 4>$Null
+			Out-File -FilePath $SIFile -Append -InputObject "Word language       : $Script:WordLanguageValue" 4>$Null
+			Out-File -FilePath $SIFile -Append -InputObject "Word version        : $Script:WordProduct" 4>$Null
 		}
 		Out-File -FilePath $SIFile -Append -InputObject "" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "Script start        : $($Script:StartTime)" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "Elapsed time        : $($Str)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "Script start        : $Script:StartTime" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "Elapsed time        : $Str" 4>$Null
 	}
 
 	#stop transcript logging
@@ -11604,6 +11740,11 @@ $AbstractTitle = "Citrix Provisioning Services Inventory"
 $SubjectTitle = "Citrix Provisioning Services Inventory"
 
 UpdateDocumentProperties $AbstractTitle $SubjectTitle
+
+If($ReportFooter)
+{
+	OutputReportFooter
+}
 
 ProcessDocumentOutput
 
