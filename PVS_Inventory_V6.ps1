@@ -488,9 +488,9 @@
 	No objects are output from this script. This script creates a Word or PDF document.
 .NOTES
 	NAME: PVS_Inventory_V6.ps1
-	VERSION: 6.03
+	VERSION: 6.04
 	AUTHOR: Carl Webster
-	LASTEDIT: February 8, 2022
+	LASTEDIT: March 6, 2022
 #>
 
 #endregion
@@ -621,6 +621,21 @@ Param(
 
 #Version 6.00 is based on 5.21
 #
+#Version 6.04 6-Mar-2022
+#	Add Function Get-IPAddress
+#	Fixed bug when retrieving a Device Collection's Administrators and Operators
+#		I was not comparing to the specific device collection name, which returned all administrators and 
+#		operators for all device collections and not the device collection being processed 
+#	Format the Farm, Properties, Status section to match the console output
+#	In Function OutputFarm, add the following:
+#		License server IP address
+#		For the Options tab info, section headings to Word/PDF and HTML output that were in the Text output
+#		SQL Server IP address
+#		Failover partner IP address
+#		MultiSubnetFailover to Farm Status section
+#			Thanks to Arnaud Pain
+#			I can't believe no one has asked for this since PVS 7.11 was released on 14-Sep-2016
+#		
 #Version 6.03 8-Feb-2022
 #	Changed the date format for the transcript and error log files from yyyy-MM-dd_HHmm format to the FileDateTime format
 #		The format is yyyyMMddTHHmmssffff (case-sensitive, using a 4-digit year, 2-digit month, 2-digit day, 
@@ -778,9 +793,9 @@ Set-StrictMode -Version Latest
 $PSDefaultParameterValues = @{"*:Verbose"=$True}
 $SaveEAPreference         = $ErrorActionPreference
 $ErrorActionPreference    = 'SilentlyContinue'
-$script:MyVersion         = '6.03'
+$script:MyVersion         = '6.04'
 $Script:ScriptName        = "PVS_Inventory_V6.ps1"
-$tmpdate                  = [datetime] "02/08/2022"
+$tmpdate                  = [datetime] "03/06/2022"
 $Script:ReleaseDate       = $tmpdate.ToUniversalTime().ToShortDateString()
 
 If($Null -eq $HTML)
@@ -5993,6 +6008,39 @@ Function ProcessFarm
 	OutputFarm $farm
 }
 
+Function Get-IPAddress
+{
+	#V1.16 added new function
+	Param([string]$ComputerName)
+	
+	If( ! [string]::ISNullOrEmpty( $computername ) )
+	{
+		$IPAddress = "Unable to determine"
+		
+		Try
+		{
+			$IP = Test-Connection -ComputerName $ComputerName -Count 1 | Select-Object IPV4Address
+		}
+		
+		Catch
+		{
+			$IP = "Unable to resolve IP address"
+		}
+
+		If($? -and $Null -ne $IP -and $IP -ne "Unable to resolve IP address")
+		{
+			$IPAddress = $IP.IPV4Address.IPAddressToString
+		}
+	}
+	Else
+	{
+		$IPAddress = ""
+	}
+	
+	Return $IPAddress
+}
+
+
 Function OutputFarm
 {
 	Param([object]$farm)
@@ -6165,6 +6213,7 @@ Function OutputFarm
 
 	#licensing tab
 	Write-Verbose "$(Get-Date -Format G): `tProcessing Licensing Tab"
+	$LicenseServerIPAddress = Get-IPAddress $farm.licenseServer #added in V1.16
 	
 	If($farm.licenseTradeUp -eq "1" -or $farm.licenseTradeUp -eq $True)
 	{
@@ -6180,6 +6229,7 @@ Function OutputFarm
 		WriteWordLine 2 0 "Licensing"
 		[System.Collections.Hashtable[]] $ScriptInformation = @()
 		$ScriptInformation += @{ Data = "License server name"; Value = $farm.licenseServer; }
+		$ScriptInformation += @{ Data = "License server IP"; Value = $LicenseServerIPAddress; }
 		$ScriptInformation += @{ Data = "License server port"; Value = $farm.licenseServerPort; }
 		If($Script:Version -ge "7.19")
 		{
@@ -6223,6 +6273,7 @@ Function OutputFarm
 	{
 		Line 0 "Licensing"
 		Line 1 "License server name`t: " $farm.licenseServer
+		Line 1 "License server IP`t: " $LicenseServerIPAddress
 		Line 1 "License server port`t: " $farm.licenseServerPort
 		If($Script:Version -ge "7.19")
 		{
@@ -6255,6 +6306,7 @@ Function OutputFarm
 		WriteHTMLLine 2 0 "Licensing"
 		$rowdata = @()
 		$columnHeaders = @("License server name",($htmlsilver -bor $htmlbold),$farm.licenseServer,$htmlwhite)
+		$rowdata += @(,('License server IP',($htmlsilver -bor $htmlbold),$LicenseServerIPAddress,$htmlwhite))
 		$rowdata += @(,('License server port',($htmlsilver -bor $htmlbold),$farm.licenseServerPort,$htmlwhite))
 		If($Script:Version -ge "7.19")
 		{
@@ -6303,16 +6355,20 @@ Function OutputFarm
 	{
 		WriteWordLine 2 0 "Options"
 		[System.Collections.Hashtable[]] $ScriptInformation = @()
-		$ScriptInformation += @{ Data = "Enable auto-add"; Value = $xautoAddEnabled; }
+		$ScriptInformation += @{ Data = "Auto-add"; Value = $xautoAddEnabled; }
+		$ScriptInformation += @{ Data = "     Enable auto-add"; Value = $xautoAddEnabled; }
 		If($farm.autoAddEnabled)
 		{
-			$ScriptInformation += @{ Data = "Add new devices to this site"; Value = $farm.DefaultSiteName; }
+			$ScriptInformation += @{ Data = "     Add new devices to this site"; Value = $farm.DefaultSiteName; }
 		}
-		$ScriptInformation += @{ Data = "Enable auditing"; Value = $xauditingEnabled; }
-		$ScriptInformation += @{ Data = "Enable offline database support"; Value = $xofflineDatabaseSupportEnabled; }
+		$ScriptInformation += @{ Data = "Auditing"; Value = $xauditingEnabled; }
+		$ScriptInformation += @{ Data = "     Enable auditing"; Value = $xauditingEnabled; }
+		$ScriptInformation += @{ Data = "Offline database support"; Value = $xofflineDatabaseSupportEnabled; }
+		$ScriptInformation += @{ Data = "     Enable offline database support"; Value = $xofflineDatabaseSupportEnabled; }
 		If($Script:Version -ge "7.11")
 		{
-			$ScriptInformation += @{ Data = "Send anonymous statistics and usage information"; Value = $CEIP; }
+			$ScriptInformation += @{ Data = "Customer Experience Improvement Program"; Value = $CEIP; }
+			$ScriptInformation += @{ Data = "     Send anonymous statistics and usage information"; Value = $CEIP; }
 		}
 		$Table = AddWordTable -Hashtable $ScriptInformation `
 		-Columns Data,Value `
@@ -6352,16 +6408,20 @@ Function OutputFarm
 	{
 		WriteHTMLLine 2 0 "Options"
 		$rowdata = @()
-		$columnHeaders = @("Enable auto-add",($htmlsilver -bor $htmlbold),$xautoAddEnabled,$htmlwhite)
+		$columnHeaders = @("Auto-add",($htmlsilver -bor $htmlbold),$xautoAddEnabled,$htmlwhite)
+		$rowdata += @(,('     Enable auto-add',($htmlsilver -bor $htmlbold),$xautoAddEnabled,$htmlwhite))
 		If($farm.autoAddEnabled)
 		{
-			$rowdata += @(,('Add new devices to this site',($htmlsilver -bor $htmlbold),$farm.DefaultSiteName,$htmlwhite))
+			$rowdata += @(,('     Add new devices to this site',($htmlsilver -bor $htmlbold),$farm.DefaultSiteName,$htmlwhite))
 		}
-		$rowdata += @(,('Enable auditing',($htmlsilver -bor $htmlbold),$xauditingEnabled,$htmlwhite))
-		$rowdata += @(,('Enable offline database support',($htmlsilver -bor $htmlbold),$xofflineDatabaseSupportEnabled,$htmlwhite))
+		$rowdata += @(,('Auditing',($htmlsilver -bor $htmlbold),$xauditingEnabled,$htmlwhite))
+		$rowdata += @(,('     Enable auditing',($htmlsilver -bor $htmlbold),$xauditingEnabled,$htmlwhite))
+		$rowdata += @(,('Offline database support',($htmlsilver -bor $htmlbold),$xofflineDatabaseSupportEnabled,$htmlwhite))
+		$rowdata += @(,('     Enable offline database support',($htmlsilver -bor $htmlbold),$xofflineDatabaseSupportEnabled,$htmlwhite))
 		If($Script:Version -ge "7.11")
 		{
-			$rowdata += @(,('Send anonymous statistics and usage information',($htmlsilver -bor $htmlbold),$CEIP,$htmlwhite))
+			$rowdata += @(,("Customer Experience Improvement Program",($htmlsilver -bor $htmlbold),"",$htmlwhite))
+			$rowdata += @(,('     Send anonymous statistics and usage information',($htmlsilver -bor $htmlbold),$CEIP,$htmlwhite))
 		}
 		FormatHTMLTable "" "auto" -rowArray $rowdata -columnArray $columnHeaders
 	}
@@ -6409,25 +6469,55 @@ Function OutputFarm
 
 	#status tab
 	Write-Verbose "$(Get-Date -Format G): `tProcessing Status Tab"
+	$dbServer = $farm.databaseServerName
+	If( ( $inx = $dbServer.IndexOfAny( ',\' ) ) -ge 0 )
+	{
+		#strip the instance name and/or port name, if present
+		Write-Verbose "$(Get-Date -Format G): Removing '$( $dbServer.SubString( $inx ) )' from SQL server name to get IP address"
+		$dbServer = $dbServer.SubString( 0, $inx )
+		Write-Verbose "$(Get-Date -Format G): dbServer now '$dbServer'"
+	}
+	$SQLServerIPAddress = Get-IPAddress $dbServer #added in V1.16
+	
+	$dbServer = $farm.failoverPartnerServerName
+	If( ( $inx = $dbServer.IndexOfAny( ',\' ) ) -ge 0 )
+	{
+		#strip the instance name and/or port name, if present
+		Write-Verbose "$(Get-Date -Format G): Removing '$( $dbServer.SubString( $inx ) )' from SQL server name to get IP address"
+		$dbServer = $dbServer.SubString( 0, $inx )
+		Write-Verbose "$(Get-Date -Format G): dbServer now '$dbServer'"
+	}
+	$FailoverSQLServerIPAddress = Get-IPAddress $dbServer #added in V1.16
+	
+	If($Script:Version -ge "7.11")
+	{
+		If($Script:farm.multiSubnetFailover -eq "1")
+		{
+			$MultiSubnetFailover = "True"
+		}
+		Else
+		{
+			$MultiSubnetFailover = "False"
+		}
+	}
+	Else
+	{
+		$MultiSubnetFailover = "No supported on PVS $($Script:PVSFullVersion)"
+	}
+
 	If($MSword -or $PDF)
 	{
 		WriteWordLine 2 0 "Status"
 		WriteWordLine 0 0 "Current status of the farm:"
 		[System.Collections.Hashtable[]] $ScriptInformation = @()
 		$ScriptInformation += @{ Data = "Database server"; Value = $farm.databaseServerName; }
-		If(![String]::IsNullOrEmpty($farm.databaseInstanceName))
-		{
-			$ScriptInformation += @{ Data = "Database instance"; Value = $farm.databaseInstanceName; }
-		}
+		$ScriptInformation += @{ Data = "Database server IP"; Value = $SQLServerIPAddress; }
+		$ScriptInformation += @{ Data = "Database instance"; Value = $farm.databaseInstanceName; }
 		$ScriptInformation += @{ Data = "Database"; Value = $farm.databaseName; }
-		If(![String]::IsNullOrEmpty($farm.failoverPartnerServerName))
-		{
-			$ScriptInformation += @{ Data = "Failover Partner Server"; Value = $farm.failoverPartnerServerName; }
-		}
-		If(![String]::IsNullOrEmpty($farm.failoverPartnerInstanceName))
-		{
-			$ScriptInformation += @{ Data = "Failover Partner Instance"; Value = $farm.failoverPartnerServerName; }
-		}
+		$ScriptInformation += @{ Data = "Failover Partner Server"; Value = $farm.failoverPartnerServerName; }
+		$ScriptInformation += @{ Data = "Failover Partner Server IP"; Value = $FailoverSQLServerIPAddress; }
+		$ScriptInformation += @{ Data = "Failover Partner Instance"; Value = $farm.failoverPartnerServerName; }
+		$ScriptInformation += @{ Data = "MultiSubnetFailover"; Value = $MultiSubnetFailover; }
 		$ScriptInformation += @{ Data = $xadGroupsEnabled; Value = ""; }
 		$Table = AddWordTable -Hashtable $ScriptInformation `
 		-Columns Data,Value `
@@ -6448,19 +6538,13 @@ Function OutputFarm
 		Line 0 "Status"
 		Line 1 "Current status of the farm:"
 		Line 2 "Database server`t: " $farm.databaseServerName
-		If(![String]::IsNullOrEmpty($farm.databaseInstanceName))
-		{
-			Line 2 "Database instance`t: " $farm.databaseInstanceName
-		}
+		Line 2 "Database server IP`t: " $SQLServerIPAddress
+		Line 2 "Database instance`t: " $farm.databaseInstanceName
 		Line 2 "Database`t: " $farm.databaseName
-		If(![String]::IsNullOrEmpty($farm.failoverPartnerServerName))
-		{
-			Line 2 "Failover Partner Server: " $farm.failoverPartnerServerName
-		}
-		If(![String]::IsNullOrEmpty($farm.failoverPartnerInstanceName))
-		{
-			Line 2 "Failover Partner Instance: " $farm.failoverPartnerInstanceName
-		}
+		Line 2 "Failover Partner Server: " $farm.failoverPartnerServerName
+		Line 2 "Failover Partner Server IP: " $FailoverSQLServerIPAddress
+		Line 2 "Failover Partner Instance: " $farm.failoverPartnerInstanceName
+		Line 2 "MultiSubnetFailover`t`t: " $MultiSubnetFailover
 		Line 2 "" $xadGroupsEnabled
 		Line 0 ""
 	}
@@ -6469,19 +6553,13 @@ Function OutputFarm
 		WriteHTMLLine 2 0 "Status"
 		$rowdata = @()
 		$columnHeaders = @("Database server",($htmlsilver -bor $htmlbold),$farm.databaseServerName,$htmlwhite)
-		If(![String]::IsNullOrEmpty($farm.databaseInstanceName))
-		{
-			$rowdata += @(,('Database instance',($htmlsilver -bor $htmlbold),$farm.databaseInstanceName,$htmlwhite))
-		}
+		$rowdata += @(,('Database server IP',($htmlsilver -bor $htmlbold),$SQLServerIPAddress,$htmlwhite))
+		$rowdata += @(,('Database instance',($htmlsilver -bor $htmlbold),$farm.databaseInstanceName,$htmlwhite))
 		$rowdata += @(,('Database',($htmlsilver -bor $htmlbold),$farm.databaseName,$htmlwhite))
-		If(![String]::IsNullOrEmpty($farm.failoverPartnerServerName))
-		{
-			$rowdata += @(,('Failover Partner Server',($htmlsilver -bor $htmlbold),$farm.failoverPartnerServerName,$htmlwhite))
-		}
-		If(![String]::IsNullOrEmpty($farm.failoverPartnerInstanceName))
-		{
-			$rowdata += @(,('Failover Partner Instance',($htmlsilver -bor $htmlbold),$farm.failoverPartnerInstanceName,$htmlwhite))
-		}
+		$rowdata += @(,('Failover Partner Server',($htmlsilver -bor $htmlbold),$farm.failoverPartnerServerName,$htmlwhite))
+		$rowdata += @(,('Failover Partner Server IP',($htmlsilver -bor $htmlbold),$FailoverSQLServerIPAddress,$htmlwhite))
+		$rowdata += @(,('Failover Partner Instance',($htmlsilver -bor $htmlbold),$farm.failoverPartnerInstanceName,$htmlwhite))
+		$rowdata += @(,('MultiSubnetFailover',($htmlsilver -bor $htmlbold),$MultiSubnetFailover,$htmlwhite))
 		$rowdata += @(,('',($htmlsilver -bor $htmlbold),$xadGroupsEnabled,$htmlwhite))
 		
 		$msg = "Current status of the farm"
@@ -6541,7 +6619,7 @@ Function OutputFarm
 		If($HTML)
 		{
 			WriteHTMLLine 2 0 "Problem Report"
-			WriteHTMLLine 3 0 "Configure your My Citrix credentials in order to submit problem reports"
+			WriteHTMLLine 0 0 "Configure your My Citrix credentials in order to submit problem reports"
 			$rowdata = @()
 			$columnHeaders = @("My Citrix Username",($htmlsilver -bor $htmlbold),$CISUserName,$htmlwhite)
 			
@@ -6715,7 +6793,7 @@ Function OutputSite
 		WriteWordLine 0 0 "Auto-Add"
 		[System.Collections.Hashtable[]] $ScriptInformation = @()
 		$ScriptInformation += @{ Data = "Add new devices to this collection"; Value = $xAutoAdd; }
-		$ScriptInformation += @{ Data = "Seconds between vDisk inventory scans"; Value = $PVSSite.InventoryFilePollingInterval; }
+		$ScriptInformation += @{ Data = "Seconds between vDisk inventory scans"; Value = $PVSSite.InventoryFilePollingInterval.ToString(); }
 		$Table = AddWordTable -Hashtable $ScriptInformation `
 		-Columns Data,Value `
 		-List `
@@ -6735,7 +6813,7 @@ Function OutputSite
 		Line 0 "Options"
 		Line 1 "Auto-Add"
 		Line 2 "Add new devices to this collection`t: " $xAutoAdd
-		Line 2 "Seconds between vDisk inventory scans`t: " $PVSSite.InventoryFilePollingInterval
+		Line 2 "Seconds between vDisk inventory scans`t: " $PVSSite.InventoryFilePollingInterval.ToString()
 		Line 0 ""
 	}
 	If($HTML)
@@ -6744,7 +6822,7 @@ Function OutputSite
 		WriteHTMLLine 0 0 "Auto-Add"
 		$rowdata = @()
 		$columnHeaders = @("Add new devices to this collection",($htmlsilver -bor $htmlbold),$xAutoAdd,$htmlwhite)
-		$rowdata += @(,('Seconds between vDisk inventory scans',($htmlsilver -bor $htmlbold),$PVSSite.InventoryFilePollingInterval,$htmlwhite))
+		$rowdata += @(,('Seconds between vDisk inventory scans',($htmlsilver -bor $htmlbold),$PVSSite.InventoryFilePollingInterval.ToString(),$htmlwhite))
 		
 		$msg = ""
 		FormatHTMLTable $msg "auto" -rowArray $rowdata -columnArray $columnHeaders
@@ -9131,7 +9209,7 @@ Function OutputSite
 					$AuthGroupUsages = Get-PvsAuthGroupUsage -Name $authgroup.authGroupName 4>$Null
 					If($? -and $Null -ne $AuthGroupUsages)
 					{
-                        If($AuthGroupUsages.Role -eq 300)
+                        If($AuthGroupUsages.Role -eq 300 -and $AuthGroupUsage.Name -eq $Collection.collectionName)
                         {
     						$tmpAuthGroups += $authGroup
                         }
@@ -9168,7 +9246,7 @@ Function OutputSite
 					$AuthGroupUsages = Get-PvsAuthGroupUsage -Name $authgroup.authGroupName 4>$Null
 					If($? -and $Null -ne $AuthGroupUsages)
 					{
-                        If($AuthGroupUsages.Role -eq 400)
+                        If($AuthGroupUsages.Role -eq 400 -and $AuthGroupUsage.Name -eq $Collection.collectionName)
                         {
     						$tmpAuthGroups += $authGroup
                         }
@@ -9225,6 +9303,7 @@ Function OutputSite
 				{
 					$TDN = $Collection.templateDeviceName
 				}
+
 				If($MSWord -or $PDF)
 				{
 					[System.Collections.Hashtable[]] $ScriptInformation = @()
