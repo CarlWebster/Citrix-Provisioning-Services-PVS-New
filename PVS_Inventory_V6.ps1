@@ -6491,18 +6491,11 @@ Function OutputFarm
 	
 	If($Script:Version -ge "7.11")
 	{
-		If($Script:farm.multiSubnetFailover -eq "1")
-		{
-			$MultiSubnetFailover = "True"
-		}
-		Else
-		{
-			$MultiSubnetFailover = "False"
-		}
+		$MultiSubnetFailover = $farm.multiSubnetFailover
 	}
 	Else
 	{
-		$MultiSubnetFailover = "No supported on PVS $($Script:PVSFullVersion)"
+		$MultiSubnetFailover = "No supported on PVS $($Script:Version)"
 	}
 
 	If($MSword -or $PDF)
