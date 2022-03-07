@@ -8119,7 +8119,7 @@ Function OutputSite
 				{
 					[System.Collections.Hashtable[]] $ScriptInformation = @()
 					$ScriptInformation += @{ Data = "Boot production devices from version"; Value = $tmp; }
-					$First = $True
+					$FirstWord = $True
 				}
 				If($Text)
 				{
@@ -8129,7 +8129,7 @@ Function OutputSite
 				{
 					$rowdata = @()
 					$columnHeaders = @("Boot production devices from version",($htmlsilver -bor $htmlbold),$tmp,$htmlwhite)
-					$First = $True
+					$FirstHTML = $True
 				}
 				
 				ForEach($DiskVersion in $DiskVersions)
@@ -8230,7 +8230,7 @@ Function OutputSite
 
 					If($MSWord -or $PDF)
 					{
-						If(!$First)
+						If(!$FirstWord)
 						{
 							[System.Collections.Hashtable[]] $ScriptInformation = @()
 						}
@@ -8271,7 +8271,7 @@ Function OutputSite
 						FindWordDocumentEnd
 						$Table = $Null
 						WriteWordLine 0 0 ""
-						$First = $False
+						$FirstWord = $False
 					}
 					If($Text)
 					{
@@ -8303,7 +8303,7 @@ Function OutputSite
 					}
 					If($HTML)
 					{
-						If(!$First)
+						If(!$FirstHTML)
 						{
 							$rowdata = @()
 							$columnHeaders = @("Version",($htmlsilver -bor $htmlbold),$BootFromVersion,$htmlwhite)
@@ -8339,7 +8339,7 @@ Function OutputSite
 						$msg = "Boot production devices from version: $($tmp)"
 						FormatHTMLTable $msg "auto" -rowArray $rowdata -columnArray $columnHeaders
 						#WriteHTMLLine 0 0 " "
-						$First = $False
+						$FirstHTML = $False
 					}
 				}
 			}
@@ -9202,10 +9202,13 @@ Function OutputSite
 					$AuthGroupUsages = Get-PvsAuthGroupUsage -Name $authgroup.authGroupName 4>$Null
 					If($? -and $Null -ne $AuthGroupUsages)
 					{
-                        If($AuthGroupUsages.Role -eq 300 -and $AuthGroupUsage.Name -eq $Collection.collectionName)
-                        {
-    						$tmpAuthGroups += $authGroup
-                        }
+						ForEach($AuthGroupUsage in $AuthGroupUsages)
+						{
+							If($AuthGroupUsage.Role -eq 300 -and $AuthGroupUsage.Name -eq $Collection.collectionName)
+							{
+								$tmpAuthGroups += $authGroup
+							}
+						}
 					}
 					ElseIf($? -and $Null -eq $AuthGroupUsages)
 					{
@@ -9239,10 +9242,13 @@ Function OutputSite
 					$AuthGroupUsages = Get-PvsAuthGroupUsage -Name $authgroup.authGroupName 4>$Null
 					If($? -and $Null -ne $AuthGroupUsages)
 					{
-                        If($AuthGroupUsages.Role -eq 400 -and $AuthGroupUsage.Name -eq $Collection.collectionName)
-                        {
-    						$tmpAuthGroups += $authGroup
-                        }
+						ForEach($AuthGroupUsage in $AuthGroupUsages)
+						{
+							If($AuthGroupUsage.Role -eq 400 -and $AuthGroupUsage.Name -eq $Collection.collectionName)
+							{
+								$tmpAuthGroups += $authGroup
+							}
+						}
 					}
 					ElseIf($? -and $Null -eq $AuthGroupUsages)
 					{
