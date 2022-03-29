@@ -10,6 +10,11 @@
 
 #Version 6.05 29-Mar-2022
 #	Fixed bug in Function DeviceStatus where I used the wrong device property to check for the active status
+#	In Function DeviceStatus, added the following BDM properties:
+#		BDM Boot type: Use PXE boot when set to 0, BDM (Bios) boot when set to 1 and BDM (Uefi) boot when set to 2.  Default=0
+#		BDM Boot format: 1 use VHD for BDMboot, 2 use ISO, 3 use USB. Default=0
+#		BDM created: Timestamp when BDM device was created  Default=Empty
+#		BDM updated: Timestamp of the last BDM boot disk update. Default=Empty
 #	Removed Function Check-NeededPSSnapins
 #	Some general code cleanup
 
