@@ -488,9 +488,9 @@
 	No objects are output from this script. This script creates a Word or PDF document.
 .NOTES
 	NAME: PVS_Inventory_V6.ps1
-	VERSION: 6.04
+	VERSION: 6.05
 	AUTHOR: Carl Webster
-	LASTEDIT: March 6, 2022
+	LASTEDIT: March 29, 2022
 #>
 
 #endregion
@@ -620,6 +620,11 @@ Param(
 #Created on December 21, 2020
 
 #Version 6.00 is based on 5.21
+#
+#Version 6.05 29-Mar-2022
+#	Fixed bug in Function DeviceStatus where I used the wrong device property to check for the active status
+#	Removed Function Check-NeededPSSnapins
+#	Some general code cleanup
 #
 #Version 6.04 6-Mar-2022
 #	Add Function Get-IPAddress
@@ -793,9 +798,9 @@ Set-StrictMode -Version Latest
 $PSDefaultParameterValues = @{"*:Verbose"=$True}
 $SaveEAPreference         = $ErrorActionPreference
 $ErrorActionPreference    = 'SilentlyContinue'
-$script:MyVersion         = '6.04'
+$script:MyVersion         = '6.05'
 $Script:ScriptName        = "PVS_Inventory_V6.ps1"
-$tmpdate                  = [datetime] "03/06/2022"
+$tmpdate                  = [datetime] "03/29/2022"
 $Script:ReleaseDate       = $tmpdate.ToUniversalTime().ToShortDateString()
 
 If($Null -eq $HTML)
@@ -1008,12 +1013,12 @@ If($MSWord -or $PDF)
 	[int]$wdSeekMainDocument      = 0
 	[int]$wdSeekPrimaryFooter     = 4
 	[int]$wdStory                 = 6
-	[int]$wdColorBlack            = 0
-	[int]$wdColorGray05           = 15987699 
+	#[int]$wdColorBlack            = 0
+	#[int]$wdColorGray05           = 15987699 
 	[int]$wdColorGray15           = 14277081
-	[int]$wdColorRed              = 255
+	#[int]$wdColorRed              = 255
 	[int]$wdColorWhite            = 16777215
-	[int]$wdColorYellow           = 65535
+	#[int]$wdColorYellow           = 65535
 	[int]$wdWord2007              = 12
 	[int]$wdWord2010              = 14
 	[int]$wdWord2013              = 15
@@ -1053,7 +1058,7 @@ If($MSWord -or $PDF)
 	[int]$wdStyleHeading4         = -5
 	[int]$wdStyleNoSpacing        = -158
 	[int]$wdTableGrid             = -155
-	[int]$wdTableLightListAccent3 = -206
+	#[int]$wdTableLightListAccent3 = -206
 
 	[int]$wdLineStyleNone       = 0
 	[int]$wdLineStyleSingle     = 1
@@ -5075,68 +5080,6 @@ Function SecondsToMinutes
 	Return "$xMinutes`:$xSeconds"
 }
 
-Function Check-NeededPSSnapins
-{
-	Param([parameter(Mandatory = $True)][alias("Snapin")][string[]]$Snapins)
-
-	#Function specifics
-	$MissingSnapins = @()
-	[bool]$FoundMissingSnapin = $False
-	$LoadedSnapins = @()
-	$RegisteredSnapins = @()
-
-	#Creates arrays of strings, rather than objects, we're passing strings so this will be more robust.
-	$loadedSnapins += Get-PSSnapin | ForEach-Object {$_.name}
-	$registeredSnapins += Get-PSSnapin -Registered | ForEach-Object {$_.name}
-
-	ForEach($Snapin in $Snapins)
-	{
-		#check if the snapin is loaded
-		If(!($LoadedSnapins -like $snapin))
-		{
-			#Check if the snapin is missing
-			If(!($RegisteredSnapins -like $Snapin))
-			{
-				#set the flag if it's not already
-				If(!($FoundMissingSnapin))
-				{
-					$FoundMissingSnapin = $True
-				}
-				#add the entry to the list
-				$MissingSnapins += $Snapin
-			}
-			Else
-			{
-				#Snapin is registered, but not loaded, loading it now:
-				Write-Host "Loading Windows PowerShell snap-in: $snapin"
-				Add-PSSnapin -Name $snapin -EA 0
-
-				If(!($?))
-				{
-					Write-Error "
-	`n`n
-	Error loading snapin: $($error[0].Exception.Message)
-	`n`n
-	Script cannot continue.
-	`n`n"
-					Return $false
-				}				
-			}
-		}
-	}
-
-	If($FoundMissingSnapin)
-	{
-		Write-Warning "Missing Windows PowerShell snap-ins Detected:"
-		$missingSnapins | ForEach-Object {Write-Warning "($_)"}
-		Return $False
-	}
-	Else
-	{
-		Return $True
-	}
-}
-
 Function OutputViewMembers
 {		 
 	Param([object] $Members)
@@ -5202,7 +5145,7 @@ Function DeviceStatus
 {
 	Param($xDevice)
 
-	If($Null -eq $xDevice -or $xDevice.status -eq "" -or $xDevice.status -eq "0")
+	If($Null -eq $xDevice -or $xDevice.Active -eq $False)
 	{
 		If($MSWord -or $PDF)
 		{
@@ -5231,13 +5174,43 @@ Function DeviceStatus
 			Default {$xDevicediskVersionAccess = "vDisk access type could not be determined: $($xDevice.diskVersionAccess)"; Break}
 		}
 
+		#Added in 6.05
+		<#
+			BdmBoot: Boolean, Read-Write, Use PXE boot when set to false, BDM boot when set to true. Default is PXE Default=false
+			BdmType: UInt32, Read-Write, Use PXE boot when set to 0, BDM (Bios) boot when set to 1 and BDM (Uefi) boot when set to 2.  Default=0
+			BdmFormat: UInt32, Read-Write, 1 use VHD for BDMboot, 2 use ISO, 3 use USB. Default=0
+			BdmUpdated: DateTime, Read-Write, Timestamp of the last BDM boot disk update. Default=Empty
+			BdmCreated: DateTime, Read-Write, Timestamp when BDM device was created  Default=Empty
+		#>
+
 		Switch ($xDevice.bdmBoot)
 		{
-			0 		{$xDevicebdmBoot = "PXE boot"; Break}
-			1 		{$xDevicebdmBoot = "BDM disk"; Break}
-			Default {$xDevicebdmBoot = "Boot mode could not be determined: $($xDevice.bdmBoot)"; Break}
+			$False	{$xDevicebdmBoot = "PXE boot"; Break}
+			$True	{$xDevicebdmBoot = "BDM disk"; Break}
+			Default	{$xDevicebdmBoot = "Boot mode could not be determined: $($xDevice.bdmBoot)"; Break}
 		}
 
+		Switch ($xDevice.bdmType)
+		{
+			0	{$xDevicebdmType = "PXE boot"; Break}
+			1	{$xDevicebdmType = "BDM (Bios) boot"; Break}
+			2	{$xDevicebdmType = "BDM (Uefi) boot"; Break}
+			Default	{$xDevicebdmType = "BDM Type mode could not be determined: $($xDevice.bdmType)"; Break}
+		}
+
+		Switch ($xDevice.bdmFormat)
+		{
+			0	{$xDevicebdmFormat = "Default"; Break}
+			1	{$xDevicebdmFormat = "Use VHD for BDMboot"; Break}
+			2	{$xDevicebdmFormat = "Use ISO for BDMboot"; Break}
+			3	{$xDevicebdmFormat = "Use USB for BDMboot"; Break}
+			Default	{$xDevicebdmFormat = "BDM Format mode could not be determined: $($xDevice.bdmFormat)"; Break}
+		}
+
+		$xDevicebdmUpdated = $xDevice.BdmUpdated.ToString()
+		$xdevicebdmCreated = $xDevice.BdmCreated.ToString()
+		#end Added in 6.05
+		
 		Switch ($xDevice.licenseType)
 		{
 			0 		{$xDevicelicenseType = "No License"; Break}
@@ -5273,7 +5246,11 @@ Function DeviceStatus
 			$ScriptInformation += @{ Data = "vDisk name"; Value = $xDevice.diskFileName; }
 			$ScriptInformation += @{ Data = "vDisk access"; Value = $xDevicediskVersionAccess; }
 			$ScriptInformation += @{ Data = "Local write cache disk"; Value = "$($xDevice.localWriteCacheDiskSize)GB"; }
-			$ScriptInformation += @{ Data = "Boot mode"; Value = $xDevicebdmBoot; }
+			$ScriptInformation += @{ Data = "BDM Boot mode"; Value = $xDevicebdmBoot; }
+			$ScriptInformation += @{ Data = "BDM Boot type"; Value = $xDevicebdmType; }
+			$ScriptInformation += @{ Data = "BDM Boot format"; Value = $xDevicebdmFormat; }
+			$ScriptInformation += @{ Data = "BDM created"; Value = $xdevicebdmCreated; }
+			$ScriptInformation += @{ Data = "BDM updated"; Value = $xDevicebdmUpdated; }
 			$ScriptInformation += @{ Data = $xDevicelicenseType; Value = ""; }
 			$Table = AddWordTable -Hashtable $ScriptInformation `
 			-Columns Data,Value `
@@ -5319,7 +5296,11 @@ Function DeviceStatus
 			Line 3 "vDisk name`t`t: " $xDevice.diskFileName
 			Line 3 "vDisk access`t`t: " $xDevicediskVersionAccess
 			Line 3 "Local write cache disk`t:$($xDevice.localWriteCacheDiskSize)GB"
-			Line 3 "Boot mode`t`t:" $xDevicebdmBoot
+			Line 3 "BDM Boot mode`t`t: " $xDevicebdmBoot
+			Line 3 "BDM Boot type`t`t: " $xDevicebdmType
+			Line 3 "BDM Boot format`t`t: " $xDevicebdmFormat
+			Line 3 "BDM created`t`t: " $xdevicebdmCreated
+			Line 3 "BDM updated`t`t: " $xDevicebdmUpdated
 			Line 3 $xDevicelicenseType
 			
 			Line 2 "Logging"
@@ -5339,7 +5320,11 @@ Function DeviceStatus
 			$rowdata += @(,('vDisk name',($htmlsilver -bor $htmlbold),$xDevice.diskFileName,$htmlwhite))
 			$rowdata += @(,('vDisk access',($htmlsilver -bor $htmlbold),$xDevicediskVersionAccess,$htmlwhite))
 			$rowdata += @(,('Local write cache disk',($htmlsilver -bor $htmlbold),"$($xDevice.localWriteCacheDiskSize)GB",$htmlwhite))
-			$rowdata += @(,('Boot mode',($htmlsilver -bor $htmlbold),$xDevicebdmBoot,$htmlwhite))
+			$rowdata += @(,('BDM Boot mode',($htmlsilver -bor $htmlbold),$xDevicebdmBoot,$htmlwhite))
+			$rowdata += @(,('BDM Boot type',($htmlsilver -bor $htmlbold),$xDevicebdmType,$htmlwhite))
+			$rowdata += @(,('BDM Boot format',($htmlsilver -bor $htmlbold),$xDevicebdmFormat,$htmlwhite))
+			$rowdata += @(,('BDM created',($htmlsilver -bor $htmlbold),$xDevicebdmCreated,$htmlwhite))
+			$rowdata += @(,('BDM updated',($htmlsilver -bor $htmlbold),$xDevicebdmUpdated,$htmlwhite))
 			$rowdata += @(,($xDevicelicenseType,($htmlsilver -bor $htmlbold),"",$htmlwhite))
 
 			$msg = ""
@@ -5568,7 +5553,6 @@ Function OutputAuditTrail
 		If($MSWord -or $PDF)
 		{
 			[System.Collections.Hashtable[]] $AuditWordTable = @();
-			[System.Collections.Hashtable[]] $HighlightedCells = @();
 			[int] $CurrentServiceIndex = 2;
 		}
 		If($HTML)
@@ -11445,8 +11429,8 @@ Function GetStoreFreeSpace
 						If($? -and $Null -ne $Results)
 						{
 							$obj1 = New-Object -TypeName PSObject
-							$obj1 | Add-Member -MemberType NoteProperty -Name ServerName		-Value $Server.serverName
-							$obj1 | Add-Member -MemberType NoteProperty -Name StoreFreeSpace	-Value $Results.ToString()
+							$obj1 | Add-Member -MemberType NoteProperty -Name ServerName     -Value $Server.serverName
+							$obj1 | Add-Member -MemberType NoteProperty -Name StoreFreeSpace -Value $Results.ToString()
 							$FreeSpaceArray +=  $obj1
 						}
 					}
@@ -11461,8 +11445,8 @@ Function GetStoreFreeSpace
 			If($? -and $Null -ne $Results)
 			{
 				$obj1 = New-Object -TypeName PSObject
-				$obj1 | Add-Member -MemberType NoteProperty -Name ServerName		-Value $AdminAddress
-				$obj1 | Add-Member -MemberType NoteProperty -Name StoreFreeSpace	-Value $Results.ToString()
+				$obj1 | Add-Member -MemberType NoteProperty -Name ServerName     -Value $AdminAddress
+				$obj1 | Add-Member -MemberType NoteProperty -Name StoreFreeSpace -Value $Results.ToString()
 				$FreeSpaceArray +=  $obj1
 			}
 		}
@@ -11475,8 +11459,8 @@ Function GetStoreFreeSpace
 		If($? -and $Null -ne $Results)
 		{
 			$obj1 = New-Object -TypeName PSObject
-			$obj1 | Add-Member -MemberType NoteProperty -Name ServerName		-Value $AdminAddress
-			$obj1 | Add-Member -MemberType NoteProperty -Name StoreFreeSpace	-Value $Results.ToString()
+			$obj1 | Add-Member -MemberType NoteProperty -Name ServerName     -Value $AdminAddress
+			$obj1 | Add-Member -MemberType NoteProperty -Name StoreFreeSpace -Value $Results.ToString()
 			$FreeSpaceArray +=  $obj1
 		}
 	}
@@ -11519,15 +11503,15 @@ Function OutputAppendixA
 		If($MSWord -or $PDF)
 		{
 			$WordTableRowHash = @{ 
-			ServerName = $Item.serverName; 
-			ThreadsperPort = $Item.threadsPerPort; 
-			BuffersperThread = $Item.buffersPerThread; 
-			ServerCacheTimeout = $Item.serverCacheTimeout; 
-			LocalConcurrentIOLimit = $Item.localConcurrentIoLimit; 
+			ServerName              = $Item.serverName; 
+			ThreadsperPort          = $Item.threadsPerPort; 
+			BuffersperThread        = $Item.buffersPerThread; 
+			ServerCacheTimeout      = $Item.serverCacheTimeout; 
+			LocalConcurrentIOLimit  = $Item.localConcurrentIoLimit; 
 			RemoteConcurrentIOLimit = $Item.remoteConcurrentIoLimit; 
-			EthernetMTU = $Item.maxTransmissionUnits; 
-			IOBurstSize = $Item.ioBurstSize; 
-			EnableNonblockingIO = $Item.nonBlockingIoEnabled}
+			EthernetMTU             = $Item.maxTransmissionUnits; 
+			IOBurstSize             = $Item.ioBurstSize; 
+			EnableNonblockingIO     = $Item.nonBlockingIoEnabled}
 
 			$ItemsWordTable += $WordTableRowHash;
 
@@ -11644,12 +11628,12 @@ Function OutputAppendixB
 		If($MSWord -or $PDF)
 		{
 			$WordTableRowHash = @{ 
-			ServerName = $Item.serverName; 
-			BootPauseSeconds = $Item.bootPauseSeconds; 
-			MaximumBootTime = $Item.maxBootSeconds; 
+			ServerName            = $Item.serverName; 
+			BootPauseSeconds      = $Item.bootPauseSeconds; 
+			MaximumBootTime       = $Item.maxBootSeconds; 
 			MaximumDevicesBooting = $Item.maxBootDevicesAllowed; 
-			vDiskCreationPacing = $Item.vDiskCreatePacing; 
-			LicenseTimeout = $Item.licenseTimeout}
+			vDiskCreationPacing   = $Item.vDiskCreatePacing; 
+			LicenseTimeout        = $Item.licenseTimeout}
 
 			$ItemsWordTable += $WordTableRowHash;
 
