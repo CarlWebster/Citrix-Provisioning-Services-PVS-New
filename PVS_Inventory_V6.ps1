@@ -488,9 +488,9 @@
 	No objects are output from this script. This script creates a Word or PDF document.
 .NOTES
 	NAME: PVS_Inventory_V6.ps1
-	VERSION: 6.06
+	VERSION: 6.07
 	AUTHOR: Carl Webster
-	LASTEDIT: April 25, 2022
+	LASTEDIT: April 17, 2023
 #>
 
 #endregion
@@ -620,6 +620,34 @@ Param(
 #Created on December 21, 2020
 
 #Version 6.00 is based on 5.21
+#
+#Version 6.07
+#	Added new Farm properties introduced in 2303, SetupType and CloudSetupActive
+#		If(SetupType -eq 1 -and CloudSetupActive -eq $True )
+#		{
+#			"Farm is in cloud setup and all PVS servers have updated to cloud mode"
+#		}
+#		ElseIf(SetupType -eq 1 -and CloudSetupActive -eq $False )
+#		{
+#			"Farm is in cloud setup and all PVS servers have not updated to cloud mode"
+#		}
+#		ElseIf(SetupType -eq 0)
+#		{
+#			"Farm is in on-premises mode"
+#		}
+#	For Text output, fixed some formatting and alignment issues
+#	In Function OutputSite:
+#		If SetupType is 1 (Cloud), output the Cloud Customer ID and Name in the Licensing section
+#		Added two new Virtual Hosting Pool connection types added in 2303:
+#			4 = Azure
+#			5 = Google Cloud Platform
+#		Notes:
+#			You must run the PVS server and console in Azure to see Azure-specific options.
+#			You must run the PVS server and console in GCP to see GCP-specific options.
+#			You cannot stream to Azure or GCP from On-premises, for example.
+#			Citrix only supports creating PVS targets in Azure or GCP as part of streaming CVAD catalog VDAs. 
+#			Citrix only supports creating virtual hosting pool records for Azure and GCP from a CVAD 
+#				Hosting unit as part of the CVAD Setup Wizard.
 #
 #Version 6.06 25-Apr-2022
 #	Change all Get-WMIObject to Get-CIMInstance
@@ -810,9 +838,9 @@ Set-StrictMode -Version Latest
 $PSDefaultParameterValues = @{"*:Verbose"=$True}
 $SaveEAPreference         = $ErrorActionPreference
 $ErrorActionPreference    = 'SilentlyContinue'
-$script:MyVersion         = '6.06'
+$script:MyVersion         = '6.07'
 $Script:ScriptName        = "PVS_Inventory_V6.ps1"
-$tmpdate                  = [datetime] "04/25/2022"
+$tmpdate                  = [datetime] "04/17/2023"
 $Script:ReleaseDate       = $tmpdate.ToUniversalTime().ToShortDateString()
 
 If($Null -eq $HTML)
@@ -1639,15 +1667,15 @@ Function OutputComputerItem
 	}
 	If($Text)
 	{
-		Line 2 "Manufacturer`t`t`t: " $Item.manufacturer
-		Line 2 "Model`t`t`t`t: " $Item.model
-		Line 2 "Domain`t`t`t`t: " $Item.domain
-		Line 2 "Operating System`t`t: " $OS
-		Line 2 "Power Plan`t`t`t: " $PowerPlan
-		Line 2 "Total Ram`t`t`t: $($Item.totalphysicalram) GB"
-		Line 2 "Physical Processors (sockets)`t: " $Item.NumberOfProcessors
-		Line 2 "Logical Processors (cores w/HT)`t: " $Item.NumberOfLogicalProcessors
-		Line 2 ""
+		Line 5 "Manufacturer`t`t`t: " $Item.manufacturer
+		Line 5 "Model`t`t`t`t: " $Item.model
+		Line 5 "Domain`t`t`t`t: " $Item.domain
+		Line 5 "Operating System`t`t: " $OS
+		Line 5 "Power Plan`t`t`t: " $PowerPlan
+		Line 5 "Total Ram`t`t`t: $($Item.totalphysicalram) GB"
+		Line 5 "Physical Processors (sockets)`t: " $Item.NumberOfProcessors
+		Line 5 "Logical Processors (cores w/HT)`t: " $Item.NumberOfLogicalProcessors
+		Line 5 ""
 	}
 	If($HTML)
 	{
@@ -1743,27 +1771,27 @@ Function OutputDriveItem
 	}
 	If($Text)
 	{
-		Line 2 "Caption`t`t: " $drive.caption
-		Line 2 "Size`t`t: $($drive.drivesize) GB"
+		Line 5 "Caption`t`t: " $drive.caption
+		Line 5 "Size`t`t: $($drive.drivesize) GB"
 		If(![String]::IsNullOrEmpty($drive.filesystem))
 		{
-			Line 2 "File System`t: " $drive.filesystem
+			Line 5 "File System`t: " $drive.filesystem
 		}
-		Line 2 "Free Space`t: $($drive.drivefreespace) GB"
+		Line 5 "Free Space`t: $($drive.drivefreespace) GB"
 		If(![String]::IsNullOrEmpty($drive.volumename))
 		{
-			Line 2 "Volume Name`t: " $drive.volumename
+			Line 5 "Volume Name`t: " $drive.volumename
 		}
 		If(![String]::IsNullOrEmpty($drive.volumedirty))
 		{
-			Line 2 "Volume is Dirty`t: " $xVolumeDirty
+			Line 5 "Volume is Dirty`t: " $xVolumeDirty
 		}
 		If(![String]::IsNullOrEmpty($drive.volumeserialnumber))
 		{
-			Line 2 "Volume Serial #`t: " $drive.volumeserialnumber
+			Line 5 "Volume Serial #`t: " $drive.volumeserialnumber
 		}
-		Line 2 "Drive Type`t: " $xDriveType
-		Line 2 ""
+		Line 5 "Drive Type`t: " $xDriveType
+		Line 5 ""
 	}
 	If($HTML)
 	{
@@ -1868,27 +1896,27 @@ Function OutputProcessorItem
 	}
 	If($Text)
 	{
-		Line 2 "Name`t`t`t`t: " $processor.name
-		Line 2 "Description`t`t`t: " $processor.description
-		Line 2 "Max Clock Speed`t`t`t: $($processor.maxclockspeed) MHz"
+		Line 5 "Name`t`t`t`t: " $processor.name
+		Line 5 "Description`t`t`t: " $processor.description
+		Line 5 "Max Clock Speed`t`t`t: $($processor.maxclockspeed) MHz"
 		If($processor.l2cachesize -gt 0)
 		{
-			Line 2 "L2 Cache Size`t`t`t: $($processor.l2cachesize) KB"
+			Line 5 "L2 Cache Size`t`t`t: $($processor.l2cachesize) KB"
 		}
 		If($processor.l3cachesize -gt 0)
 		{
-			Line 2 "L3 Cache Size`t`t`t: $($processor.l3cachesize) KB"
+			Line 5 "L3 Cache Size`t`t`t: $($processor.l3cachesize) KB"
 		}
 		If($processor.numberofcores -gt 0)
 		{
-			Line 2 "# of Cores`t`t`t: " $processor.numberofcores
+			Line 5 "# of Cores`t`t`t: " $processor.numberofcores
 		}
 		If($processor.numberoflogicalprocessors -gt 0)
 		{
-			Line 2 "# of Logical Procs (cores w/HT)`t: " $processor.numberoflogicalprocessors
+			Line 5 "# of Logical Procs (cores w/HT)`t: " $processor.numberoflogicalprocessors
 		}
-		Line 2 "Availability`t`t`t: " $xAvailability
-		Line 2 ""
+		Line 5 "Availability`t`t`t: " $xAvailability
+		Line 5 ""
 	}
 	If($HTML)
 	{
@@ -2200,104 +2228,104 @@ Function OutputNicItem
 	}
 	If($Text)
 	{
-		Line 2 "Name`t`t`t: " $ThisNic.Name
+		Line 5 "Name`t`t`t: " $ThisNic.Name
 		If($ThisNic.Name -ne $nic.description)
 		{
-			Line 2 "Description`t`t: " $nic.description
+			Line 5 "Description`t`t: " $nic.description
 		}
-		Line 2 "Connection ID`t`t: " $ThisNic.NetConnectionID
+		Line 5 "Connection ID`t`t: " $ThisNic.NetConnectionID
 		If(validObject $Nic Manufacturer)
 		{
-			Line 2 "Manufacturer`t`t: " $Nic.manufacturer
+			Line 5 "Manufacturer`t`t: " $Nic.manufacturer
 		}
-		Line 2 "Availability`t`t: " $xAvailability
-		Line 2 "Allow computer to turn "
-		Line 2 "off device to save power: " $PowerSaving
-		Line 2 "Physical Address`t: " $nic.macaddress
-		Line 2 "Receive Side Scaling`t: " $RSSEnabled
-		Line 2 "IP Address`t`t: " $xIPAddress[0]
+		Line 5 "Availability`t`t: " $xAvailability
+		Line 5 "Allow computer to turn "
+		Line 5 "off device to save power: " $PowerSaving
+		Line 5 "Physical Address`t: " $nic.macaddress
+		Line 5 "Receive Side Scaling`t: " $RSSEnabled
+		Line 5 "IP Address`t`t: " $xIPAddress[0]
 		$cnt = -1
 		ForEach($tmp in $xIPAddress)
 		{
 			$cnt++
 			If($cnt -gt 0)
 			{
-				Line 8 "  " $tmp
+				Line 11 "  " $tmp
 			}
 		}
-		Line 2 "Default Gateway`t`t: " $Nic.Defaultipgateway
-		Line 2 "Subnet Mask`t`t: " $xIPSubnet[0]
+		Line 5 "Default Gateway`t`t: " $Nic.Defaultipgateway
+		Line 5 "Subnet Mask`t`t: " $xIPSubnet[0]
 		$cnt = -1
 		ForEach($tmp in $xIPSubnet)
 		{
 			$cnt++
 			If($cnt -gt 0)
 			{
-				Line 8 "  " $tmp
+				Line 11 "  " $tmp
 			}
 		}
 		If($nic.dhcpenabled)
 		{
-			Line 2 "DHCP Enabled`t`t: " $nic.dhcpenabled.ToString()
-			Line 2 "DHCP Lease Obtained`t: " $dhcpleaseobtaineddate
-			Line 2 "DHCP Lease Expires`t: " $dhcpleaseexpiresdate
-			Line 2 "DHCP Server`t`t:" $nic.dhcpserver
+			Line 5 "DHCP Enabled`t`t: " $nic.dhcpenabled.ToString()
+			Line 5 "DHCP Lease Obtained`t: " $dhcpleaseobtaineddate
+			Line 5 "DHCP Lease Expires`t: " $dhcpleaseexpiresdate
+			Line 5 "DHCP Server`t`t:" $nic.dhcpserver
 		}
 		Else
 		{
-			Line 2 "DHCP Enabled`t`t: " $nic.dhcpenabled.ToString()
+			Line 5 "DHCP Enabled`t`t: " $nic.dhcpenabled.ToString()
 		}
 		If(![String]::IsNullOrEmpty($nic.dnsdomain))
 		{
-			Line 2 "DNS Domain`t`t: " $nic.dnsdomain
+			Line 5 "DNS Domain`t`t: " $nic.dnsdomain
 		}
 		If($Null -ne $nic.dnsdomainsuffixsearchorder -and $nic.dnsdomainsuffixsearchorder.length -gt 0)
 		{
 			[int]$x = 1
-			Line 2 "DNS Search Suffixes`t: " $xnicdnsdomainsuffixsearchorder[0]
+			Line 5 "DNS Search Suffixes`t: " $xnicdnsdomainsuffixsearchorder[0]
 			$cnt = -1
 			ForEach($tmp in $xnicdnsdomainsuffixsearchorder)
 			{
 				$cnt++
 				If($cnt -gt 0)
 				{
-					Line 8 "  " $tmp
+					Line 11 "  " $tmp
 				}
 			}
 		}
-		Line 2 "DNS WINS Enabled`t: " $xdnsenabledforwinsresolution
+		Line 5 "DNS WINS Enabled`t: " $xdnsenabledforwinsresolution
 		If($Null -ne $nic.dnsserversearchorder -and $nic.dnsserversearchorder.length -gt 0)
 		{
 			[int]$x = 1
-			Line 2 "DNS Servers`t`t: " $xnicdnsserversearchorder[0]
+			Line 5 "DNS Servers`t`t: " $xnicdnsserversearchorder[0]
 			$cnt = -1
 			ForEach($tmp in $xnicdnsserversearchorder)
 			{
 				$cnt++
 				If($cnt -gt 0)
 				{
-					Line 8 "  " $tmp
+					Line 11 "  " $tmp
 				}
 			}
 		}
-		Line 2 "NetBIOS Setting`t`t: " $xTcpipNetbiosOptions
-		Line 2 "WINS:"
-		Line 3 "Enabled LMHosts`t: " $xwinsenablelmhostslookup
+		Line 5 "NetBIOS Setting`t`t: " $xTcpipNetbiosOptions
+		Line 5 "WINS:"
+		Line 6 "Enabled LMHosts`t: " $xwinsenablelmhostslookup
 		If(![String]::IsNullOrEmpty($nic.winshostlookupfile))
 		{
-			Line 3 "Host Lookup File`t: " $nic.winshostlookupfile
+			Line 6 "Host Lookup File`t: " $nic.winshostlookupfile
 		}
 		If(![String]::IsNullOrEmpty($nic.winsprimaryserver))
 		{
-			Line 3 "Primary Server`t: " $nic.winsprimaryserver
+			Line 6 "Primary Server`t: " $nic.winsprimaryserver
 		}
 		If(![String]::IsNullOrEmpty($nic.winssecondaryserver))
 		{
-			Line 3 "Secondary Server`t: " $nic.winssecondaryserver
+			Line 6 "Secondary Server`t: " $nic.winssecondaryserver
 		}
 		If(![String]::IsNullOrEmpty($nic.winsscopeid))
 		{
-			Line 3 "Scope ID`t`t: " $nic.winsscopeid
+			Line 6 "Scope ID`t`t: " $nic.winsscopeid
 		}
 		Line 0 ""
 	}
@@ -6279,12 +6307,43 @@ Function OutputFarm
 				$ScriptInformation += @{ Data = "     On-Premises"; Value = "Yes"; }
 				$ScriptInformation += @{ Data = "          Use Datacenter licenses for desktops if no Desktop licenses are available"; Value = $DatacenterLicense; }
 				$ScriptInformation += @{ Data = "     Cloud"; Value = "No"; }
+				If(validObject $farm CloudSetupActive) #added in PVS 2303
+				{
+					<#
+						SetupType: Either on-premise or cloud. 0 for on-premise mode, 1 for cloud mode. Min=0, Max=1, Default=0
+						
+						CloudSetupActive: True if farm is in cloud setup and all PVS servers have also been updated to cloud mode.
+						Default=false
+					#>
+					$ScriptInformation += @{ Data = "     Farm is in on-premises mode"; Value = ""; }
+				}
 			}
 			ElseIf($farm.LicenseSKU -eq 1)
 			{
 				$ScriptInformation += @{ Data = "     On-Premises"; Value = "No"; }
 				$ScriptInformation += @{ Data = "          Use Datacenter licenses for desktops if no Desktop licenses are available"; Value = $DatacenterLicense; }
 				$ScriptInformation += @{ Data = "     Cloud"; Value = "Yes"; }
+				If(validObject $farm CloudSetupActive) #added in PVS 2303
+				{
+					<#
+						SetupType: Either on-premise or cloud. 0 for on-premise mode, 1 for cloud mode. Min=0, Max=1, Default=0
+						
+						CloudSetupActive: True if farm is in cloud setup and all PVS servers have also been updated to cloud mode.
+						Default=false
+					#>
+					If($farm.SetupType -eq 1 -and $farm.CloudSetupActive -eq $True )
+					{
+						$ScriptInformation += @{ Data = "     Cloud Customer ID"; Value = $farm.CustomerId; }
+						$ScriptInformation += @{ Data = "     Cloud Customer Name"; Value = $farm.CustomerName; }
+						$ScriptInformation += @{ Data = "     Farm is in cloud setup and all PVS servers have updated to cloud mode"; Value = ""; }
+					}
+					ElseIf($farm.SetupType -eq 1 -and $farm.CloudSetupActive -eq $False )
+					{
+						$ScriptInformation += @{ Data = "     Cloud Customer ID"; Value = $farm.CustomerId; }
+						$ScriptInformation += @{ Data = "     Cloud Customer Name"; Value = $farm.CustomerName; }
+						$ScriptInformation += @{ Data = "     Farm is in cloud setup and all PVS servers have not updated to cloud mode"; Value = ""; }
+					}
+				}
 			}
 			Else
 			{
@@ -6295,6 +6354,7 @@ Function OutputFarm
 		{
 			$ScriptInformation += @{ Data = "Use Datacenter licenses for desktops if no Desktop licenses are available"; Value = $DatacenterLicense; }
 		}
+
 		$Table = AddWordTable -Hashtable $ScriptInformation `
 		-Columns Data,Value `
 		-List `
@@ -6323,12 +6383,43 @@ Function OutputFarm
 				Line 2 "On-Premises`t: " "Yes"
 				Line 3 "Use Datacenter licenses for desktops if no Desktop licenses are available: " $DatacenterLicense
 				Line 2 "Cloud`t`t: " "No"
+				If(validObject $farm CloudSetupActive) #added in PVS 2303
+				{
+					<#
+						SetupType: Either on-premise or cloud. 0 for on-premise mode, 1 for cloud mode. Min=0, Max=1, Default=0
+						
+						CloudSetupActive: True if farm is in cloud setup and all PVS servers have also been updated to cloud mode.
+						Default=false
+					#>
+					Line 3 "Farm is in on-premises mode"
+				}
 			}
 			ElseIf($farm.LicenseSKU -eq 1)
 			{
 				Line 2 "On-Premises`t: " "No"
 				Line 3 "Use Datacenter licenses for desktops if no Desktop licenses are available: " $DatacenterLicense
 				Line 2 "Cloud`t`t: " "Yes"
+				If(validObject $farm CloudSetupActive) #added in PVS 2303
+				{
+					<#
+						SetupType: Either on-premise or cloud. 0 for on-premise mode, 1 for cloud mode. Min=0, Max=1, Default=0
+						
+						CloudSetupActive: True if farm is in cloud setup and all PVS servers have also been updated to cloud mode.
+						Default=false
+					#>
+					If($farm.SetupType -eq 1 -and $farm.CloudSetupActive -eq $True )
+					{
+						Line 3 "Cloud Customer ID`t: " $farm.CustomerId
+						Line 3 "Cloud Customer Name`t: " $farm.CustomerName
+						Line 3 "Farm is in cloud setup and all PVS servers have updated to cloud mode"
+					}
+					ElseIf($farm.SetupType -eq 1 -and $farm.CloudSetupActive -eq $False )
+					{
+						Line 3 "Cloud Customer ID`t: " $farm.CustomerId
+						Line 3 "Cloud Customer Name`t: " $farm.CustomerName
+						Line 3 "Farm is in cloud setup and all PVS servers have not updated to cloud mode"
+					}
+				}
 			}
 			Else
 			{
@@ -6356,12 +6447,43 @@ Function OutputFarm
 				$rowdata += @(,("     On-Premises",($htmlsilver -bor $htmlbold),"Yes",$htmlwhite))
 				$rowdata += @(,("          Use Datacenter licenses for desktops if no Desktop licenses are available",($htmlsilver -bor $htmlbold),$DatacenterLicense,$htmlwhite))
 				$rowdata += @(,("     Cloud",($htmlsilver -bor $htmlbold),"No",$htmlwhite))
+				If(validObject $farm CloudSetupActive) #added in PVS 2303
+				{
+					<#
+						SetupType: Either on-premise or cloud. 0 for on-premise mode, 1 for cloud mode. Min=0, Max=1, Default=0
+						
+						CloudSetupActive: True if farm is in cloud setup and all PVS servers have also been updated to cloud mode.
+						Default=false
+					#>
+					rowdata += @(,("     Farm is in on-premises mode",($htmlsilver -bor $htmlbold),"",$htmlwhite))
+				}
 			}
 			ElseIf($farm.LicenseSKU -eq 1)
 			{
 				$rowdata += @(,("     On-Premises",($htmlsilver -bor $htmlbold),"No",$htmlwhite))
 				$rowdata += @(,("          Use Datacenter licenses for desktops if no Desktop licenses are available",($htmlsilver -bor $htmlbold),$DatacenterLicense,$htmlwhite))
 				$rowdata += @(,("     Cloud",($htmlsilver -bor $htmlbold),"Yes",$htmlwhite))
+				If(validObject $farm CloudSetupActive) #added in PVS 2303
+				{
+					<#
+						SetupType: Either on-premise or cloud. 0 for on-premise mode, 1 for cloud mode. Min=0, Max=1, Default=0
+						
+						CloudSetupActive: True if farm is in cloud setup and all PVS servers have also been updated to cloud mode.
+						Default=false
+					#>
+					If($farm.SetupType -eq 1 -and $farm.CloudSetupActive -eq $True )
+					{
+						$rowdata += @(,("     Cloud Customer ID",($htmlsilver -bor $htmlbold),$farm.CustomerId,$htmlwhite))
+						$rowdata += @(,("     Cloud Customer Name",($htmlsilver -bor $htmlbold),$farm.CustomerName,$htmlwhite))
+						$rowdata += @(,("     Farm is in cloud setup and all PVS servers have updated to cloud mode",($htmlsilver -bor $htmlbold),"",$htmlwhite))
+					}
+					ElseIf($farm.SetupType -eq 1 -and $farm.CloudSetupActive -eq $False )
+					{
+						$rowdata += @(,("     Cloud Customer ID",($htmlsilver -bor $htmlbold),$farm.CustomerId,$htmlwhite))
+						$rowdata += @(,("     Cloud Customer Name",($htmlsilver -bor $htmlbold),$farm.CustomerName,$htmlwhite))
+						$rowdata += @(,("     Farm is in cloud setup and all PVS servers have not updated to cloud mode",($htmlsilver -bor $htmlbold),"",$htmlwhite))
+					}
+				}
 			}
 			Else
 			{
@@ -6550,7 +6672,7 @@ Function OutputFarm
 		$ScriptInformation += @{ Data = "Failover Partner Server"; Value = $farm.failoverPartnerServerName; }
 		$ScriptInformation += @{ Data = "Failover Partner Server IP"; Value = $FailoverSQLServerIPAddress; }
 		$ScriptInformation += @{ Data = "Failover Partner Instance"; Value = $farm.failoverPartnerServerName; }
-		$ScriptInformation += @{ Data = "MultiSubnetFailover"; Value = $MultiSubnetFailover; }
+		$ScriptInformation += @{ Data = "Multi-subnet Failover"; Value = $MultiSubnetFailover; }
 		$ScriptInformation += @{ Data = $xadGroupsEnabled; Value = ""; }
 		$Table = AddWordTable -Hashtable $ScriptInformation `
 		-Columns Data,Value `
@@ -6570,14 +6692,14 @@ Function OutputFarm
 	{
 		Line 0 "Status"
 		Line 1 "Current status of the farm:"
-		Line 2 "Database server`t: " $farm.databaseServerName
-		Line 2 "Database server IP`t: " $SQLServerIPAddress
-		Line 2 "Database instance`t: " $farm.databaseInstanceName
-		Line 2 "Database`t: " $farm.databaseName
-		Line 2 "Failover Partner Server: " $farm.failoverPartnerServerName
-		Line 2 "Failover Partner Server IP: " $FailoverSQLServerIPAddress
-		Line 2 "Failover Partner Instance: " $farm.failoverPartnerInstanceName
-		Line 2 "MultiSubnetFailover`t`t: " $MultiSubnetFailover
+		Line 2 "Database server`t`t`t: " $farm.databaseServerName
+		Line 2 "Database server IP`t`t: " $SQLServerIPAddress
+		Line 2 "Database instance`t`t: " $farm.databaseInstanceName
+		Line 2 "Database`t`t`t: " $farm.databaseName
+		Line 2 "Failover Partner Server`t`t: " $farm.failoverPartnerServerName
+		Line 2 "Failover Partner Server IP`t: " $FailoverSQLServerIPAddress
+		Line 2 "Failover Partner Instance`t: " $farm.failoverPartnerInstanceName
+		Line 2 "Multi-subnet Failover`t`t: " $MultiSubnetFailover
 		Line 2 "" $xadGroupsEnabled
 		Line 0 ""
 	}
@@ -6592,7 +6714,7 @@ Function OutputFarm
 		$rowdata += @(,('Failover Partner Server',($htmlsilver -bor $htmlbold),$farm.failoverPartnerServerName,$htmlwhite))
 		$rowdata += @(,('Failover Partner Server IP',($htmlsilver -bor $htmlbold),$FailoverSQLServerIPAddress,$htmlwhite))
 		$rowdata += @(,('Failover Partner Instance',($htmlsilver -bor $htmlbold),$farm.failoverPartnerInstanceName,$htmlwhite))
-		$rowdata += @(,('MultiSubnetFailover',($htmlsilver -bor $htmlbold),$MultiSubnetFailover,$htmlwhite))
+		$rowdata += @(,('Multi-subnet Failover',($htmlsilver -bor $htmlbold),$MultiSubnetFailover,$htmlwhite))
 		$rowdata += @(,('',($htmlsilver -bor $htmlbold),$xadGroupsEnabled,$htmlwhite))
 		
 		$msg = "Current status of the farm"
@@ -10149,6 +10271,8 @@ Function OutputSite
 				1 		{$vHostType = "Microsoft SCVMM/Hyper-V"; Break}
 				2 		{$vHostType = "VMWare vSphere/ESX"; Break}
 				3 		{$vHostType = "Nutanix"; Break}
+				4 		{$vHostType = "Azure"; Break} #added in 2303
+				5 		{$vHostType = "GCP"; Break} #added in 2303
 				Default {$vHostType = "Virtualization Host type could not be determined: $($vHost.type)"; Break}
 			}
 

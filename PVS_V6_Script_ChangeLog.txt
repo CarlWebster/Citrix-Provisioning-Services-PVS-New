@@ -8,6 +8,34 @@
 #Version 6.00 is based on 5.21
 #
 
+#Version 6.07 17-Apr-2023
+#	Added new Farm properties introduced in 2303, SetupType and CloudSetupActive
+#		If(SetupType -eq 1 -and CloudSetupActive -eq $True )
+#		{
+#			"Farm is in cloud setup and all PVS servers have updated to cloud mode"
+#		}
+#		ElseIf(SetupType -eq 1 -and CloudSetupActive -eq $False )
+#		{
+#			"Farm is in cloud setup and all PVS servers have not updated to cloud mode"
+#		}
+#		ElseIf(SetupType -eq 0)
+#		{
+#			"Farm is in on-premises mode"
+#		}
+#	For Text output, fixed some formatting and alignment issues
+#	In Function OutputSite:
+#		If SetupType is 1 (Cloud), output the Cloud Customer ID and Name in the Licensing section
+#		Added two new Virtual Hosting Pool connection types added in 2303:
+#			4 = Azure
+#			5 = Google Cloud Platform
+#		Notes:
+#			You must run the PVS server and console in Azure to see Azure-specific options.
+#			You must run the PVS server and console in GCP to see GCP-specific options.
+#			You cannot stream to Azure or GCP from On-premises, for example.
+#			Citrix only supports creating PVS targets in Azure or GCP as part of streaming CVAD catalog VDAs. 
+#			Citrix only supports creating virtual hosting pool records for Azure and GCP from a CVAD 
+#				Hosting unit as part of the CVAD Setup Wizard.
+
 #Version 6.06 25-Apr-2022
 #	Change all Get-WMIObject to Get-CIMInstance
 #	General code cleanup
